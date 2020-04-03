@@ -1,0 +1,15 @@
+.wrap-audio {
+	position: fixed;
+	top: -10px;
+	left: -10px;
+	width: 1px;
+	height: 1px;
+	opacity: 0;
+
+	audio {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		opacity: 0;
+	}
+}

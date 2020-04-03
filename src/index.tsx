@@ -1,17 +1,15 @@
+/**
+ * Index entry
+ * 
+ * @authors Luo-jinghui (luojinghui424@gmail.com)
+ * @date  2019-10-14 18:20:28
+ */
+
 import React from 'react';
-import ReactDOM from 'react-dom';
-import './index.css';
-import App from './App';
-import * as serviceWorker from './serviceWorker';
+import { render } from 'react-dom';
+import Home from './component';
+// import VConsole from 'vconsole';
 
-ReactDOM.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-  document.getElementById('root')
-);
+// new VConsole();
 
-// If you want your app to work offline and load faster, you can change
-// unregister() to register() below. Note this comes with some pitfalls.
-// Learn more about service workers: https://bit.ly/CRA-PWA
-serviceWorker.unregister();
+render(<Home />, document.getElementById("root"));

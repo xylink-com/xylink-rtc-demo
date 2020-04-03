@@ -1,0 +1,193 @@
+body {
+	background-color: #282828;
+	padding: 0px;
+	width: 100vw;
+	height: 100vh;
+
+	min-width: 768px;
+	min-height: 432px;
+	overflow: hidden;
+}
+
+.container {
+	background-color: #282828;
+}
+
+.meeting-header {
+	height: 32px;
+	width: 100%;
+	text-align: center;
+	color: #e7e7e7;
+	background-color: rgba(25, 29, 40, 0.5);
+	z-index: 10;
+
+	position: fixed;
+	top: 0;
+	left: 0;
+
+	display: flex;
+	align-items: center;
+	justify-content: space-around;
+}
+
+.meeting-footer {
+	width: 100%;
+	height: 60px;
+	color: #e7e7e7;
+	background-color: rgba(25, 29, 40, 0.5);
+	overflow: hidden;
+
+	position: fixed;
+	bottom: 0;
+	left: 0;
+
+	display: flex;
+	align-items: center;
+	justify-content: space-around;
+}
+
+.meeting-content {
+	width: 100vw;
+	height: calc(100vh - 92px);
+	// height: 100vh;
+	z-index: 10;
+
+	position: fixed;
+	top: 32px;
+	left: 0;
+
+	background-color: #282828;
+	color: #e7e7e7;
+
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.meeting-layout {
+	position: relative;
+}
+
+.login {
+	text-align: center;
+	background-color: #282828;
+}
+
+.login-form {
+	width: 500px;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	color: #e7e7e7;
+}
+
+input {
+	-webkit-appearance: none;
+}
+
+.ant-input {
+	background-color: #282828;
+	color: #e7e7e7;
+}
+
+.has-error .ant-input,
+.has-error .ant-input:hover {
+	background-color: #282828;
+	color: #e7e7e7;
+}
+
+.ant-row {
+	z-index: 1000;
+}
+
+:global {
+	.ant-form-item {
+		margin-bottom: 5px;
+	}
+}
+
+.loading {
+	width: 100vw;
+	height: 100vh;
+	background: #000 url("./img/meeting_bg.png") 0 0 no-repeat;
+	background-size: cover;
+	color: #fff;
+
+	display: flex;
+	align-items: center;
+	justify-content: center;
+
+	overflow: hidden;
+	&-content {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.avatar {
+		width: 100px;
+		height: 100px;
+		border-radius: 100%;
+		border: 2px solid #efefef;
+
+		img {
+			width: 100%;
+			height: 100%;
+		}
+	}
+
+	.name {
+		margin: 26px 0 48px;
+		color: #fff;
+		font-size: 14px;
+	}
+
+	.stop {
+		width: 67px;
+		height: 27px;
+		cursor: pointer;
+
+		transition: opacity ease .3s;
+		&:hover {
+			opacity: 0.8;
+		}
+
+		&:active {
+			opacity: 1.2;
+		}
+
+		img {
+			width: 100%;
+			height: 100%;
+		}
+	}
+}
+
+.hidden {
+	img {
+		display: none;
+	}
+}
+
+.test {
+	position: fixed;
+	top: 0;
+	left: 0;
+	z-index: 100;
+	display: none;
+
+	video {
+		width: 164px;
+		height: 146px;
+	}
+}
+
+.ant-form-item-has-error .ant-input, .ant-form-item-has-error .ant-input-affix-wrapper, .ant-form-item-has-error .ant-input:hover, .ant-form-item-has-error .ant-input-affix-wrapper:hover {
+  background-color: #282828;
+}
