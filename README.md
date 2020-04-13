@@ -18,7 +18,7 @@ $ yarn start
 $ yarn build
 ```
 
-### 备注
+### 准备工作
 1. 注意在`src/component/index.tsx`中配置第三方登录所需的
   * extId
   * clientId
