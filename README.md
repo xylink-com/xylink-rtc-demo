@@ -3,23 +3,29 @@
 
 此项目使用到的技术栈：react+typescript+hook
 
-### dev
-
-```bash
-$ yarn
-
-$ yarn start
-```
-
-### build
-构建完成后，所有的依赖都打包到lib目录下面，可通过script或es6模块引用。
-
-```bash
-$ yarn build
-```
-
 ### 准备工作
 1. 注意在`src/component/index.tsx`中配置第三方登录所需的
   * extId
   * clientId
   * clientSecret
+
+### 运行
+
+#### 安装依赖
+```bash
+$ yarn
+or
+$ npm install
+```
+
+#### 运行
+```bash
+$ yarn start
+or
+$ npm run start
+```
+所用到的工具自行学习了解：
+1. [yarn](https://yarn.bootcss.com/)
+2. [node](https://nodejs.org/zh-cn/)
+3. [react](https://reactjs.org/)
+
