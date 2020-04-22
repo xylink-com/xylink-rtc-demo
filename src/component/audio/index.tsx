@@ -1,10 +1,3 @@
-/**
- * Audio Component
- * 
- * @authors Luo-jinghui (luojinghui424@gmail.com)
- * @date  2020-03-03 20:18:50
- */
-
 import React, { useLayoutEffect, useEffect } from 'react';
 import './index.scss';
 

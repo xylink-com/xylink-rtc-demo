@@ -5,7 +5,6 @@
  * @date  2020-03-03 20:19:35
  */
 
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Button, Row, Col, Form, Input, message } from 'antd';
 import xyRTC from 'xy-rtc-sdk';
@@ -15,17 +14,19 @@ import Video from './video';
 import Audio from './audio';
 import store from '../utils/store';
 
-import { IDisconnected, IParticipantCount, ILayout, IScreenInfo, IAudioTrack, ICallStatus, IAudioStatus } from '../type/index';
+import { IDisconnected, IParticipantCount, ILayout, IScreenInfo, IAudioTrack, ICallStatus, IAudioStatus, IRoster } from '../type/index';
 
 let client: any;
 let stream: any;
 
 function Home(props: any) {
-  const { meeting = "", meetingPassword = "", meetingName = "" }: any = store.get("user") || {};
+  const { phone = "", password = "", meeting = "", meetingPassword = "", meetingName = "" }: any = store.get("user") || {};
 
   const [callMeeting, setCallMeeting] = useState(false);
   const [callLoading, setCallLoading] = useState(false);
   const [user, setUser] = useState({
+    phone,
+    password,
     meeting,
     meetingPassword,
     meetingName
@@ -36,16 +37,16 @@ function Home(props: any) {
     rateHeight: 0
   });
   const [audioList, setAudioList] = useState<any>([]);
-
   const [video, setVideo] = useState('unmuteVideo');
   const [audio, setAudio] = useState('unmute');
   const [disableAudio, setDisableAudio] = useState(false);
-
   const [layoutModel, setLayoutModel] = useState('speaker');
   const [participantsCount, setParticipantsCount] = useState(0);
+  const [autoBandwidth, setAutoBandwidth] = useState(true);
+  const [micLevel, setMicLevel] = useState(0);
+  const [shareContentStatus, setShareContentStatus] = useState(false);
 
   const audioLevel = useRef<any>();
-  const [micLevel, setMicLevel] = useState(0);
 
   // 获取实时音量大小
   useEffect(() => {
@@ -57,6 +58,7 @@ function Home(props: any) {
             if (stream) {
               const level = stream.getAudioLevel();
 
+              // 更新Audio的实时音量显示
               setMicLevel(level);
             }
           }, 500);
@@ -73,31 +75,39 @@ function Home(props: any) {
     }
 
     return () => {
+      // 组件卸载时，清理定时器
       audioLevel.current && clearInterval(audioLevel.current);
       audioLevel.current = null;
     }
   }, [audio, callMeeting, callLoading]);
 
+  // 挂断会议
   const disconnected = (msg = "", reason?: string) => {
     message.info(msg);
 
     stop(reason);
   }
 
+  // 结束会议操作
   const stop = (reason: string = 'OK') => {
+    // sdk清理操作
     stream && stream.close();
     client && client.close(reason);
 
+    // 清理组件状态
     setCallMeeting(false);
     setCallLoading(false);
     setLayout([]);
+    setMicLevel(0);
 
+    // 清理定时器
     audioLevel.current && clearInterval(audioLevel.current);
     audioLevel.current = null;
-    setMicLevel(0);
   }
 
+  // 监听client的内部事件
   const initEventListener = (client: any) => {
+    // 退会消息监听，注意此消息很重要，内部的会议挂断都是通过此消息通知
     client.on("disconnected", (e: IDisconnected) => {
       console.log("demo page disconnected message: ", e);
 
@@ -106,26 +116,31 @@ function Home(props: any) {
       disconnected(showMessage, 'EXPIRED');
     })
 
+    // 会议成员数量数据
     client.on("participants-count", (e: IParticipantCount) => {
       setParticipantsCount(e.participantsNum);
     })
 
+    // 会议layout数据
     client.on("layout", (e: ILayout[]) => {
       console.log("demo get layout: ", e);
 
       setLayout(cloneDeep(e));
     })
 
+    // 动态计算的显示容器信息
     client.on("screenInfo", (e: IScreenInfo) => {
       setScreenInfo(e);
     })
 
+    // audio list数据
     client.on("audioTrack", (e: IAudioTrack[]) => {
       console.log("demo get audioTrack list: ", e);
 
       setAudioList(e);
     })
 
+    // 呼叫状态
     client.on('callStatus', (e: ICallStatus) => {
       // 10518入会成功
       // 10519正在呼叫中
@@ -146,6 +161,7 @@ function Home(props: any) {
       }
     })
 
+    // 麦克风状态
     client.on('audio-status', (e: IAudioStatus) => {
       console.log("demo get audio status: ", e);
 
@@ -169,6 +185,13 @@ function Home(props: any) {
         message.info("您已被主持人取消静音");
       }
     })
+
+    // 分享content消息
+    client.on('content', (e: { data: IRoster }) => {
+      if (e.data) {
+        message.info("您正在接收共享内容", 3);
+      }
+    })
   }
 
   const join = async () => {
@@ -183,12 +206,16 @@ function Home(props: any) {
       // xyRTC.logger.setLogLevel("NONE");
 
       client = xyRTC.createClient({
+        wssServer: "wss://testdevapi.xylink.com",
+        httpServer: "https://testdevapi.xylink.com",
+        logServer: "https://txdevlog.xylink.com",
         container: {
           offsetHeight: 92
         }
       });
 
       initEventListener(client);
+
 
       /**
        * 重要提示
@@ -200,7 +227,7 @@ function Home(props: any) {
        * 重要提示
        */
       const result = await client.loginExternalAccount({
-        displayName: user.meetingName,
+        displayName: '',
         extId: '',
         clientId: '',
         clientSecret: ''
@@ -233,7 +260,7 @@ function Home(props: any) {
         stream = xyRTC.createStream();
         await stream.init();
 
-        client.publish(stream);
+        client.publish(stream, { isSharePeople: true });
       }
 
     } catch (err) {
@@ -243,7 +270,8 @@ function Home(props: any) {
     }
   }
 
-  // MackCall
+  // 表单数据提交
+  // 开始进行入会操作
   const handleSubmit = (values: any) => {
     const isSupport = xyRTC.checkSupportWebRTC();
 
@@ -253,14 +281,12 @@ function Home(props: any) {
       return;
     }
 
-    console.log("value: ", values);
     setUser(values);
     store.set("user", values);
 
     join();
   };
 
-  // input change
   const onChangeInput = (e: any, type: string) => {
     const inputVal = e.target.value;
 
@@ -269,7 +295,7 @@ function Home(props: any) {
     setUser(users);
   }
 
-  // video 操作
+  // 摄像头操作
   const videoOperate = () => {
     if (video === 'unmuteVideo') {
       client.muteVideo();
@@ -282,7 +308,7 @@ function Home(props: any) {
     }
   }
 
-  //audio操作
+  // 麦克风操作
   const audioOperate = () => {
     if (audio === "mute" && disableAudio) {
       return;
@@ -299,7 +325,7 @@ function Home(props: any) {
     }
   }
 
-  // 上传日志
+  // 上传呼叫日志
   const upload = async () => {
     const result = await xyRTC.logger.uploadLog(user.meetingName);
 
@@ -310,12 +336,12 @@ function Home(props: any) {
     }
   }
 
-  // 下载日志
+  // 下载呼叫数据到本地
   const download = async () => {
     await xyRTC.logger.downloadLog();
   }
 
-  // 切换layout布局
+  // 切换布局
   const switchLayout = () => {
     client.switchLayout();
 
@@ -399,6 +425,44 @@ function Home(props: any) {
     return null;
   }
 
+  // 切换动态带宽
+  const switchAutoBandwidth = () => {
+    const status = client.switchAutoBandwidth();
+
+    setAutoBandwidth(status);
+  }
+
+  // 停止分享content
+  const stopShareContent = () => {
+    client.stopShareContent();
+
+    setShareContentStatus(false);
+  }
+
+  // 分享content内容
+  const shareContent = async () => {
+    const result = await stream.createContentStream();
+
+    // 创建分享屏幕stream成功
+    if (result.code === 518) {
+      setShareContentStatus(true);
+
+      stream.on('start-share-content', () => {
+        client.publish(stream, { isShareContent: true });
+      })
+
+      stream.on('stop-share-content', () => {
+        stopShareContent();
+      })
+    } else {
+      if (result && result.code !== 500) {
+
+        message.info(result.msg || '分享屏幕失败');
+        return;
+      }
+    }
+  }
+
   const renderMeeting = () => {
     if (callMeeting && !callLoading) {
       return (
@@ -441,6 +505,19 @@ function Home(props: any) {
             <div>
               <Button onClick={switchLayout} type="primary">切换布局</Button>
             </div>
+            <div>
+              <Button onClick={switchAutoBandwidth} type="primary">自动带宽：{autoBandwidth ? 'Yes' : 'No'}</Button>
+            </div>
+            {
+              shareContentStatus ?
+                <div>
+                  <Button onClick={stopShareContent} type="primary">结束共享</Button>
+                </div>
+                :
+                <div>
+                  <Button onClick={shareContent} type="primary">共享</Button>
+                </div>
+            }
           </div>
         </>
       )
@@ -457,6 +534,30 @@ function Home(props: any) {
 
           <Row justify="center">
             <Form onFinish={handleSubmit} className="login-form" initialValues={user}>
+              <Form.Item
+                name="phone"
+                rules={[{ required: true, message: 'Please input your phone!' }]}
+              >
+                <Input
+                  type="phone"
+                  placeholder="手机号"
+                  onChange={(e) => {
+                    onChangeInput(e, 'phone')
+                  }}
+                />
+              </Form.Item>
+              <Form.Item
+                name="password"
+                rules={[{ required: true, message: 'Please input your Password!' }]}
+              >
+                <Input
+                  type="text"
+                  placeholder="登录密码"
+                  onChange={(e) => {
+                    onChangeInput(e, 'password')
+                  }}
+                />
+              </Form.Item>
               <Form.Item
                 name="meeting"
                 rules={[{ required: true, message: 'Please input your meeting id!' }]}

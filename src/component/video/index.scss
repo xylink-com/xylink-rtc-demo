@@ -23,6 +23,10 @@
 		top: 0px;
 		left: 0px;
 		z-index: 10;
+
+		&:hover .operate-icon {
+			opacity: 1;
+		}
 	}
 
 	video {
@@ -105,11 +109,33 @@
 	justify-content: center;
 	user-select: text;
 	z-index: 100;
-	padding-right: 5px;
+  padding-right: 5px;
 
 	p {
 		margin: 0;
 		line-height: 1;
 		font-size: 12px;
+	}
+}
+
+.operate-icon {
+	opacity: 0;
+
+	color: rgb(255, 255, 255);
+	font-size: 18px;
+	background-color: rgba(42, 46, 51, 0.4);
+	padding: 4px;
+	border-radius: 50%;
+
+	position: absolute;
+	top: 6px;
+  right: 6px;
+  
+  cursor: pointer;
+
+	transition: all ease 0.2s;
+
+	&:hover {
+		background-color: rgba(42, 46, 51, 0.8);
 	}
 }

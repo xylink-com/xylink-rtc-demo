@@ -1,12 +1,6 @@
-/**
- * Video Component
- * 
- * @authors Luo-jinghui (luojinghui424@gmail.com)
- * @date  2020-03-03 20:18:50
- */
-
-
-import React, { useLayoutEffect, useRef, useEffect, useState } from 'react';
+import React, { useLayoutEffect, useRef, useEffect, useState, useCallback } from 'react';
+import { MoreOutlined, FullscreenOutlined, BlockOutlined, FullscreenExitOutlined } from '@ant-design/icons';
+import { Menu, Dropdown } from 'antd';
 import './index.scss';
 
 const Video: React.FC<any> = (props: any) => {
@@ -19,11 +13,15 @@ const Video: React.FC<any> = (props: any) => {
   const [border, setBorder] = useState({});
   const [streamStatus, setStreamStatus] = useState('enabled');
 
+  const [operate, setOperate] = useState({
+    isFullScreen: false,
+    isPicture: false,
+    isDisabled: /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent)
+  });
+
   const timmer = useRef<any>(0);
 
   const onMute = () => {
-    console.log("--------------mute");
-
     clearTimeer();
 
     timmer.current = setTimeout(() => {
@@ -34,8 +32,6 @@ const Video: React.FC<any> = (props: any) => {
   }
 
   const onUnmute = () => {
-    console.log("--------------unmute");
-
     setStreamStatus('enabled');
     clearTimeer();
   }
@@ -65,6 +61,20 @@ const Video: React.FC<any> = (props: any) => {
     console.log(`-----${item.roster.displayName} on load error`);
   }
 
+  const showPictureInPicture = () => {
+    setOperate({
+      ...operate,
+      isPicture: true
+    })
+  }
+
+  const hidePictureInPicture = () => {
+    setOperate({
+      ...operate,
+      isPicture: false
+    })
+  }
+
   useEffect(() => {
     const id = item.roster.participantId;
     const streamId = (item.stream && item.stream.video && item.stream.video.id) || "";
@@ -80,6 +90,11 @@ const Video: React.FC<any> = (props: any) => {
     return () => {
       if (videoEle) {
         videoEle.pause();
+
+        // 进入画中画模式时候执行
+        videoEle.addEventListener('enterpictureinpicture', showPictureInPicture);
+        // 退出画中画模式时候执行
+        videoEle.addEventListener('leavepictureinpicture', hidePictureInPicture);
       }
 
       if (index >= 1 && item && item.stream && item.stream.track) {
@@ -111,6 +126,13 @@ const Video: React.FC<any> = (props: any) => {
 
       const videoEle: any = document.getElementById(id + streamId);
 
+      if (videoEle) {
+        // 进入画中画模式时候执行
+        videoEle.removeEventListener('enterpictureinpicture', showPictureInPicture);
+        // 退出画中画模式时候执行
+        videoEle.removeEventListener('leavepictureinpicture', hidePictureInPicture);
+      }
+
       if (videoEle && !videoEle.srcObject && item.stream.video) {
         videoEle.srcObject = item.stream.video;
 
@@ -128,6 +150,75 @@ const Video: React.FC<any> = (props: any) => {
       videoRef.current.style.width = `${realWidth}px`;
     }
   })
+
+  const renderVideoMenu = useCallback(
+    () => {
+      return (
+        <Menu>
+          <Menu.Item onClick={() => {
+            const doc = window.document;
+            const docEl = videoRef.current;
+
+            // @ts-ignore
+            const requestFullScreen = docEl.requestFullscreen || docEl.mozRequestFullScreen || docEl.webkitRequestFullScreen || docEl.msRequestFullscreen;
+            // @ts-ignore
+            const cancelFullScreen = doc.exitFullscreen || doc.mozCancelFullScreen || doc.webkitExitFullscreen || doc.msExitFullscreen;
+
+            // @ts-ignore
+            if (!doc.fullscreenElement && !doc.mozFullScreenElement && !doc.webkitFullscreenElement && !doc.msFullscreenElement) {
+              requestFullScreen.call(docEl);
+
+              setOperate({
+                ...operate,
+                isFullScreen: true
+              })
+            }
+            else {
+              cancelFullScreen.call(doc);
+
+              setOperate({
+                ...operate,
+                isFullScreen: false
+              })
+            }
+          }}>
+            {operate.isFullScreen ?
+              (
+                <><FullscreenExitOutlined />切换显示</>
+              ) :
+              (
+                <><FullscreenOutlined />切换显示</>
+              )
+            }
+          </Menu.Item>
+          <Menu.Item onClick={async () => {
+            const video = id + streamId;
+            const videoDom = document.getElementById(video);
+
+            if (video) {
+              if (operate.isPicture) {
+                // @ts-ignore
+                document.exitPictureInPicture()
+              } else {
+                // @ts-ignore
+                videoDom.requestPictureInPicture();
+              }
+            }
+          }}>
+            {operate.isPicture ?
+              (
+                <><BlockOutlined />退出画中画</>
+              ) :
+              (
+                <><BlockOutlined />画中画</>
+              )
+            }
+          </Menu.Item>
+        </Menu>
+      )
+    },
+    [operate],
+  );
 
   let videoStyle = {};
   let videoSty = {};
@@ -148,6 +239,10 @@ const Video: React.FC<any> = (props: any) => {
   }
 
   const renderVideoStatus = () => {
+    if (item.roster.isContent) {
+      return null;
+    }
+
     if (item.roster.videoTxMute) {
       return (
         <div className="video-bg">
@@ -193,6 +288,20 @@ const Video: React.FC<any> = (props: any) => {
     )
   }
 
+  const renderVideoOperate = () => {
+    return (
+      <div id={streamId}>
+        <Dropdown overlay={renderVideoMenu} placement="bottomRight" trigger={['click']} getPopupContainer={() => {
+          const dom: any = document.getElementById(streamId);
+
+          return dom;
+        }}>
+          <MoreOutlined className="operate-icon" />
+        </Dropdown>
+      </div>
+    )
+  }
+
   return (
     <div className="wrap-video" style={videoStyle} ref={videoRef}>
       <div className="video">
@@ -203,6 +312,10 @@ const Video: React.FC<any> = (props: any) => {
             </div>
             {
               renderVideoStatus()
+            }
+
+            {
+              !operate.isDisabled && renderVideoOperate()
             }
           </div>
         </div>
