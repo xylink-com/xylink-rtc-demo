@@ -1,6 +1,5 @@
 /**
  * Type interface
- * 
  * @authors Luo-jinghui (luojinghui424@gmail.com)
  * @date  2020-04-01 17:46:13
  */
@@ -22,6 +21,7 @@ export interface IRoster {
 	deviceType: string;
 	endpointId: string;
 	displayName: string;
+  mediagroupid: number;
 	participantId: number;
 	audioTxMute: boolean;
 	videoTxMute: boolean;

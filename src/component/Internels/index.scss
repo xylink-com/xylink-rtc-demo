@@ -1,0 +1,52 @@
+.debug {
+	position: fixed;
+	top: 30px;
+	width: 100%;
+	height: calc(100% - 100px);
+	background-color: #333333c2;
+	z-index: 12;
+	padding: 20px;
+
+	&__container {
+		width: 100%;
+
+		.close {
+			position: fixed;
+			right: 50px;
+			top: 50px;
+			width: 30px;
+			height: 30px;
+			background-color: #1790ff;
+			display: flex;
+			font-size: 16px;
+			align-items: center;
+			justify-content: center;
+			border-radius: 50%;
+			cursor: pointer;
+		}
+
+		.line {
+			display: flex;
+
+			span {
+				margin-right: 10px;
+				width: 180px;
+				text-align: left;
+			}
+		}
+
+		.table {
+			th {
+				padding: 0 10px;
+			}
+
+			tr,
+			td {
+				border-collapse: collapse;
+				padding: 0 4px;
+				text-align: center;
+				min-width: 100px;
+			}
+		}
+	}
+}

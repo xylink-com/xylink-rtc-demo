@@ -1,29 +1,31 @@
-/**
- * Meeting page
- * 
- * @authors Luo-jinghui (luojinghui424@gmail.com)
- * @date  2020-03-03 20:19:35
- */
 
-import React, { useState, useEffect, useRef } from 'react';
-import { Button, Row, Col, Form, Input, message } from 'antd';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Button, Row, message } from 'antd';
+import { IDisconnected, IParticipantCount, ILayout, IScreenInfo, IAudioTrack, ICallStatus, IAudioStatus, IRoster } from '../type/index';
+import { ENV, SERVER, ACCOUNT, THIRD } from '../utils/config';
 import xyRTC from 'xy-rtc-sdk';
-import '../style/index.scss';
-import cloneDeep from 'clone-deep';
 import Video from './video';
 import Audio from './audio';
+import Internels from './Internels';
 import store from '../utils/store';
+import Login from './Login';
 
-import { IDisconnected, IParticipantCount, ILayout, IScreenInfo, IAudioTrack, ICallStatus, IAudioStatus, IRoster } from '../type/index';
+import '../style/index.scss';
 
 let client: any;
 let stream: any;
+let audioLevelTimmer: any;
 
-function Home(props: any) {
+function Home() {
   const { phone = "", password = "", meeting = "", meetingPassword = "", meetingName = "" }: any = store.get("user") || {};
 
+  // 是否是第三方Demo版本
+  const [isThird] = useState(THIRD);
+  // 呼叫状态
   const [callMeeting, setCallMeeting] = useState(false);
+  // 是否呼叫中
   const [callLoading, setCallLoading] = useState(false);
+  // 登录/呼叫数据
   const [user, setUser] = useState({
     phone,
     password,
@@ -31,30 +33,49 @@ function Home(props: any) {
     meetingPassword,
     meetingName
   })
+  // 参会成员数据，包含stream，roster，postion等信息，最终依赖layout的数据进行画面布局、渲染、播放、状态显示
   const [layout, setLayout] = useState<any>([]);
+  // screen容器信息
   const [screenInfo, setScreenInfo] = useState({
     rateWidth: 0,
     rateHeight: 0
   });
+  // 所有声源列表
   const [audioList, setAudioList] = useState<any>([]);
+  // 摄像头状态
   const [video, setVideo] = useState('unmuteVideo');
+  // 麦克风状态
   const [audio, setAudio] = useState('unmute');
+  // 是否强制静音
   const [disableAudio, setDisableAudio] = useState(false);
+  // 桌面布局模式（语音激励模式/画廊模式）
   const [layoutModel, setLayoutModel] = useState('speaker');
+  // 会议成员数量
   const [participantsCount, setParticipantsCount] = useState(0);
+  // 自动带宽调整，默认为开启
   const [autoBandwidth, setAutoBandwidth] = useState(true);
+  // 音量等级
   const [micLevel, setMicLevel] = useState(0);
+  // 开启content的状态
   const [shareContentStatus, setShareContentStatus] = useState(false);
+  // 呼叫数据统计
+  const [senderStatus, setSenderStatus] = useState<any>({ sender: {}, receiver: {} });
+  // 是否是调试模式（开启则显示所有画面的呼叫数据）
+  const [debug, setDebug] = useState(false);
 
-  const audioLevel = useRef<any>();
+  // 缓存清理声量的timmer定时器函数
+  const clearTimmer = useCallback(() => {
+    audioLevelTimmer && clearInterval(audioLevelTimmer);
+    audioLevelTimmer = null;
+  }, [])
 
   // 获取实时音量大小
   useEffect(() => {
     // 呼叫成功时，开始获取实时音量
     if (callMeeting && !callLoading) {
       if (audio === "unmute") {
-        if (!audioLevel.current) {
-          audioLevel.current = setInterval(() => {
+        if (!audioLevelTimmer) {
+          audioLevelTimmer = setInterval(() => {
             if (stream) {
               const level = stream.getAudioLevel();
 
@@ -64,20 +85,17 @@ function Home(props: any) {
           }, 500);
         }
       } else {
-        audioLevel.current && clearInterval(audioLevel.current);
-        audioLevel.current = null;
+        clearTimmer();
         setMicLevel(0);
       }
     } else {
-      audioLevel.current && clearInterval(audioLevel.current);
-      audioLevel.current = null;
+      clearTimmer();
       setMicLevel(0);
     }
 
     return () => {
       // 组件卸载时，清理定时器
-      audioLevel.current && clearInterval(audioLevel.current);
-      audioLevel.current = null;
+      clearTimmer();
     }
   }, [audio, callMeeting, callLoading]);
 
@@ -94,15 +112,15 @@ function Home(props: any) {
     stream && stream.close();
     client && client.close(reason);
 
-    // 清理组件状态
+    // 清理组件状
     setCallMeeting(false);
     setCallLoading(false);
+    setShareContentStatus(false);
     setLayout([]);
     setMicLevel(0);
 
     // 清理定时器
-    audioLevel.current && clearInterval(audioLevel.current);
-    audioLevel.current = null;
+    clearTimmer();
   }
 
   // 监听client的内部事件
@@ -125,7 +143,7 @@ function Home(props: any) {
     client.on("layout", (e: ILayout[]) => {
       console.log("demo get layout: ", e);
 
-      setLayout(cloneDeep(e));
+      setLayout(e);
     })
 
     // 动态计算的显示容器信息
@@ -192,6 +210,12 @@ function Home(props: any) {
         message.info("您正在接收共享内容", 3);
       }
     })
+
+    client.on('sender-status', (e: any) => {
+      console.log("senders event: ", e);
+
+      setSenderStatus(e);
+    })
   }
 
   const join = async () => {
@@ -202,10 +226,17 @@ function Home(props: any) {
 
     try {
       const { meeting, meetingPassword, meetingName } = user;
+      const { wssServer, httpServer, logServer } = SERVER;
 
+      // 这里三方可以根据环境修改sdk log等级
       // xyRTC.logger.setLogLevel("NONE");
 
       client = xyRTC.createClient({
+        // 注意，第三方集成时，默认是prd环境，不需要配置wss/http/log server地址；
+        wssServer,
+        httpServer,
+        logServer,
+        debug: false,
         container: {
           offsetHeight: 92
         }
@@ -213,22 +244,28 @@ function Home(props: any) {
 
       initEventListener(client);
 
-
       /**
        * 重要提示
        * 重要提示
        * 重要提示
-       * 第三方登录，需要填写extId、clientId、clientSecret
+       * 第三方登录，请在config配置文件里面配置企业账户信息
        * 重要提示
        * 重要提示
        * 重要提示
        */
-      const result = await client.loginExternalAccount({
-        displayName: 'test',
-        extId: '',
-        clientId: '',
-        clientSecret: ''
-      });
+      let result;
+
+      if (isThird) {
+        const { extId, clientId, clientSecret } = ACCOUNT;
+
+        result = await client.loginExternalAccount({
+          // 用户名自行填写
+          displayName: 'thirdName',
+          extId,
+          clientId,
+          clientSecret
+        });
+      }
 
       if (result.code === 10104) {
         message.info("登录密码错误");
@@ -380,12 +417,13 @@ function Home(props: any) {
       .filter((item: ILayout) => item.roster.participantId)
       .map((item: ILayout, index: number) => {
         const id = item.roster.participantId;
+        const mediagroupid = item.roster.mediagroupid;
 
         const streamId = (item.stream && item.stream.video && item.stream.video.id) || "";
         const isRefresh = layoutLen > 1 && layoutLen === (index + 1);
 
         return (
-          <Video model={layoutModel} item={item} key={id + streamId} index={index} isRefresh={isRefresh}></Video>
+          <Video model={layoutModel} item={item} key={id + streamId + mediagroupid} index={index} isRefresh={isRefresh}></Video>
         )
       })
   }
@@ -460,6 +498,13 @@ function Home(props: any) {
     }
   }
 
+  const switchDebug = () => {
+    const status = !debug;
+
+    setDebug(status);
+    client.switchDebug(status);
+  }
+
   const renderMeeting = () => {
     if (callMeeting && !callLoading) {
       return (
@@ -482,39 +527,44 @@ function Home(props: any) {
                 renderAudioList()
               }
             </div>
+
+            <Internels debug={debug} senderStatus={senderStatus} switchDebug={switchDebug}></Internels>
           </div>
 
           <div className="meeting-footer">
             <div>
-              <span>声量：{micLevel}</span>
-            </div>
-            <div>
               <Button onClick={() => {
                 stop()
-              }} type="primary">Stop Call</Button>
+              }} type="primary" size="small">Stop Call</Button>
             </div>
             <div>
-              <Button onClick={audioOperate} type="primary">{audioStatus}</Button>
+              <Button onClick={audioOperate} type="primary" size="small">{audioStatus}</Button>
             </div>
             <div>
-              <Button onClick={videoOperate} type="primary">{video === "unmuteVideo" ? "muteVideo" : "unmuteVideo"}</Button>
+              <Button onClick={videoOperate} type="primary" size="small">{video === "unmuteVideo" ? "muteVideo" : "unmuteVideo"}</Button>
             </div>
             <div>
-              <Button onClick={switchLayout} type="primary">切换布局</Button>
+              <Button onClick={switchLayout} type="primary" size="small">切换布局</Button>
             </div>
             <div>
-              <Button onClick={switchAutoBandwidth} type="primary">自动带宽：{autoBandwidth ? 'Yes' : 'No'}</Button>
+              <Button onClick={switchAutoBandwidth} type="primary" size="small">自动带宽：{autoBandwidth ? 'Yes' : 'No'}</Button>
+            </div>
+            <div>
+              <Button onClick={switchDebug} type="primary" size="small">调试：{debug ? 'Yes' : 'No'}</Button>
             </div>
             {
               shareContentStatus ?
                 <div>
-                  <Button onClick={stopShareContent} type="primary">结束共享</Button>
+                  <Button onClick={stopShareContent} type="primary" size="small">结束共享</Button>
                 </div>
                 :
                 <div>
-                  <Button onClick={shareContent} type="primary">共享</Button>
+                  <Button onClick={shareContent} type="primary" size="small">共享</Button>
                 </div>
             }
+            <div>
+              <Button style={{ width: '90px' }} type="primary" size="small">声量：{micLevel}</Button>
+            </div>
           </div>
         </>
       )
@@ -527,51 +577,10 @@ function Home(props: any) {
     if (!callMeeting && !callLoading) {
       return (
         <div className="login">
-          <h1>XY RTC DEMO</h1>
+          <h1>XY RTC DEMO（{ENV}）</h1>
 
           <Row justify="center">
-            <Form onFinish={handleSubmit} className="login-form" initialValues={user}>
-              <Form.Item
-                name="meeting"
-                rules={[{ required: true, message: 'Please input your meeting id!' }]}
-              >
-                <Input
-                  type="text"
-                  placeholder="会议号"
-                  onChange={(e) => {
-                    onChangeInput(e, 'meeting')
-                  }}
-                />
-              </Form.Item>
-              <Form.Item
-                name="meetingPassword"
-              >
-                <Input
-                  type="text"
-                  placeholder="入会密码"
-                  onChange={(e) => {
-                    onChangeInput(e, 'meetingPassword')
-                  }}
-                />
-              </Form.Item>
-
-              <Form.Item
-                name="meetingName"
-                rules={[{ required: true, message: 'Please input your meeting name!' }]}
-              >
-                <Input
-                  type="text"
-                  placeholder="入会昵称"
-                  onChange={(e) => {
-                    onChangeInput(e, 'meetingName')
-                  }}
-                />
-              </Form.Item>
-
-              <Row justify="center">
-                <Col span={5}><Button type="primary" htmlType="submit">Make Call</Button></Col>
-              </Row>
-            </Form>
+            <Login isThird={isThird} onHandleSubmit={handleSubmit} user={user} onChangeInput={onChangeInput}></Login>
           </Row>
 
           <Row justify="center" style={{ marginTop: '50px' }}>
@@ -579,11 +588,6 @@ function Home(props: any) {
 
             <Button type="primary" onClick={download}>下载日志</Button>
           </Row>
-
-          <div className="hidden">
-            <img src="https://cdn.xylink.com/wechatMP/images/device_cm_ios%402x.png" alt="1" />
-            <img src="https://cdn.xylink.com/wechatMP/images/end.png" alt="2" />
-          </div>
         </div>
       )
     }

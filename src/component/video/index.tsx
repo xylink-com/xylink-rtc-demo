@@ -1,6 +1,6 @@
 import React, { useLayoutEffect, useRef, useEffect, useState, useCallback } from 'react';
 import { MoreOutlined, FullscreenOutlined, BlockOutlined, FullscreenExitOutlined } from '@ant-design/icons';
-import { Menu, Dropdown } from 'antd';
+import { Menu, Dropdown, Button } from 'antd';
 import './index.scss';
 
 const Video: React.FC<any> = (props: any) => {
@@ -44,12 +44,10 @@ const Video: React.FC<any> = (props: any) => {
   }
 
   const onLoadStart = () => {
-    console.log(`-----${item.roster.displayName} on load start`);
     setStreamStatus('comming');
   }
 
   const onLoadCanPlay = () => {
-    console.log(`-----${item.roster.displayName} on can play`);
     setStreamStatus('enabled');
   }
 
@@ -92,9 +90,9 @@ const Video: React.FC<any> = (props: any) => {
         videoEle.pause();
 
         // 进入画中画模式时候执行
-        videoEle.addEventListener('enterpictureinpicture', showPictureInPicture);
+        videoEle.removeEventListener('enterpictureinpicture', showPictureInPicture);
         // 退出画中画模式时候执行
-        videoEle.addEventListener('leavepictureinpicture', hidePictureInPicture);
+        videoEle.removeEventListener('leavepictureinpicture', hidePictureInPicture);
       }
 
       if (index >= 1 && item && item.stream && item.stream.track) {
@@ -126,18 +124,16 @@ const Video: React.FC<any> = (props: any) => {
 
       const videoEle: any = document.getElementById(id + streamId);
 
-      if (videoEle) {
-        // 进入画中画模式时候执行
-        videoEle.removeEventListener('enterpictureinpicture', showPictureInPicture);
-        // 退出画中画模式时候执行
-        videoEle.removeEventListener('leavepictureinpicture', hidePictureInPicture);
-      }
-
       if (videoEle && !videoEle.srcObject && item.stream.video) {
         videoEle.srcObject = item.stream.video;
 
         try {
           await videoEle.play();
+
+          // 进入画中画模式时候执行
+          videoEle.addEventListener('enterpictureinpicture', showPictureInPicture);
+          // 退出画中画模式时候执行
+          videoEle.addEventListener('leavepictureinpicture', hidePictureInPicture);
         } catch (err) {
           console.log("play video err: ", err);
         }
@@ -150,6 +146,21 @@ const Video: React.FC<any> = (props: any) => {
       videoRef.current.style.width = `${realWidth}px`;
     }
   })
+
+  const switchPictureInPicture = async () => {
+    const video = id + streamId;
+    const videoDom = document.getElementById(video);
+
+    if (video) {
+      if (operate.isPicture) {
+        // @ts-ignore
+        document.exitPictureInPicture()
+      } else {
+        // @ts-ignore
+        videoDom && videoDom.requestPictureInPicture();
+      }
+    }
+  }
 
   const renderVideoMenu = useCallback(
     () => {
@@ -191,20 +202,7 @@ const Video: React.FC<any> = (props: any) => {
               )
             }
           </Menu.Item>
-          <Menu.Item onClick={async () => {
-            const video = id + streamId;
-            const videoDom = document.getElementById(video);
-
-            if (video) {
-              if (operate.isPicture) {
-                // @ts-ignore
-                document.exitPictureInPicture()
-              } else {
-                // @ts-ignore
-                videoDom.requestPictureInPicture();
-              }
-            }
-          }}>
+          <Menu.Item onClick={switchPictureInPicture}>
             {operate.isPicture ?
               (
                 <><BlockOutlined />退出画中画</>
@@ -231,6 +229,14 @@ const Video: React.FC<any> = (props: any) => {
 
   if (index > 0) {
     videoSty = item.rotate;
+
+    if (item.roster.isContent) {
+      videoSty = {
+        ...videoSty,
+        width: 'auto',
+        objectFit: 'contain'
+      };
+    }
   } else {
     videoSty = {
       ...item.rotate,
@@ -239,6 +245,24 @@ const Video: React.FC<any> = (props: any) => {
   }
 
   const renderVideoStatus = () => {
+    if (operate.isPicture) {
+      return (
+        <div className="video-bg">
+          {
+            item.roster.audioTxMute && <div className="audio-muted-status"></div>
+          }
+
+          <div className="center">
+            <div className="displayname">{item.roster.displayName || "Local"}</div>
+            <div>画中画显示中...</div>
+            <div>
+              <Button type="link" onClick={switchPictureInPicture}>恢复</Button>
+            </div>
+          </div>
+        </div>
+      )
+    }
+
     if (item.roster.isContent) {
       return null;
     }
@@ -294,7 +318,7 @@ const Video: React.FC<any> = (props: any) => {
         <Dropdown overlay={renderVideoMenu} placement="bottomRight" trigger={['click']} getPopupContainer={() => {
           const dom: any = document.getElementById(streamId);
 
-          return dom;
+          return dom ? dom : document.body;
         }}>
           <MoreOutlined className="operate-icon" />
         </Dropdown>

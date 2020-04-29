@@ -4,8 +4,8 @@ body {
 	width: 100vw;
 	height: 100vh;
 
-	min-width: 768px;
-	min-height: 432px;
+	// min-width: 768px;
+	// min-height: 432px;
 	overflow: hidden;
 }
 
@@ -43,7 +43,12 @@ body {
 
 	display: flex;
 	align-items: center;
-	justify-content: space-around;
+	justify-content: center;
+	flex-wrap: wrap;
+
+	& > div {
+		padding: 0 5px;
+	}
 }
 
 .meeting-content {
@@ -68,30 +73,12 @@ body {
 	position: relative;
 }
 
-.login {
-	text-align: center;
-	background-color: #282828;
-}
-
-.login-form {
-	width: 500px;
-}
-
 h1,
 h2,
 h3,
 h4,
 h5,
 h6 {
-	color: #e7e7e7;
-}
-
-input {
-	-webkit-appearance: none;
-}
-
-.ant-input {
-	background-color: #282828;
 	color: #e7e7e7;
 }
 
@@ -188,6 +175,9 @@ input {
 	}
 }
 
-.ant-form-item-has-error .ant-input, .ant-form-item-has-error .ant-input-affix-wrapper, .ant-form-item-has-error .ant-input:hover, .ant-form-item-has-error .ant-input-affix-wrapper:hover {
-  background-color: #282828;
+.ant-form-item-has-error .ant-input,
+.ant-form-item-has-error .ant-input-affix-wrapper,
+.ant-form-item-has-error .ant-input:hover,
+.ant-form-item-has-error .ant-input-affix-wrapper:hover {
+	background-color: #282828;
 }

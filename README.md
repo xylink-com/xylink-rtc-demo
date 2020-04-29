@@ -4,7 +4,7 @@
 此项目使用到的技术栈：react+typescript+hook
 
 ### 准备工作
-1. 注意在`src/component/index.tsx`中配置第三方登录所需的
+1. 注意在`src/utils/config.ts`中配置第三方登录所需的
   * extId
   * clientId
   * clientSecret
