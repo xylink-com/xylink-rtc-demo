@@ -206,9 +206,6 @@ function Home(props: any) {
       // xyRTC.logger.setLogLevel("NONE");
 
       client = xyRTC.createClient({
-        wssServer: "wss://testdevapi.xylink.com",
-        httpServer: "https://testdevapi.xylink.com",
-        logServer: "https://txdevlog.xylink.com",
         container: {
           offsetHeight: 92
         }
@@ -227,7 +224,7 @@ function Home(props: any) {
        * 重要提示
        */
       const result = await client.loginExternalAccount({
-        displayName: '',
+        displayName: 'test',
         extId: '',
         clientId: '',
         clientSecret: ''
@@ -534,30 +531,6 @@ function Home(props: any) {
 
           <Row justify="center">
             <Form onFinish={handleSubmit} className="login-form" initialValues={user}>
-              <Form.Item
-                name="phone"
-                rules={[{ required: true, message: 'Please input your phone!' }]}
-              >
-                <Input
-                  type="phone"
-                  placeholder="手机号"
-                  onChange={(e) => {
-                    onChangeInput(e, 'phone')
-                  }}
-                />
-              </Form.Item>
-              <Form.Item
-                name="password"
-                rules={[{ required: true, message: 'Please input your Password!' }]}
-              >
-                <Input
-                  type="text"
-                  placeholder="登录密码"
-                  onChange={(e) => {
-                    onChangeInput(e, 'password')
-                  }}
-                />
-              </Form.Item>
               <Form.Item
                 name="meeting"
                 rules={[{ required: true, message: 'Please input your meeting id!' }]}
