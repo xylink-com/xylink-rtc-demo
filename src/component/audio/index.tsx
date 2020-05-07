@@ -1,3 +1,10 @@
+/**
+ * XYRTC Audio Component
+ * 
+ * @authors Luo-jinghui (luojinghui424@gmail.com)
+ * @date  2020-1-07 10:34:18
+ */
+
 import React, { useLayoutEffect, useEffect } from 'react';
 import './index.scss';
 

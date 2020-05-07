@@ -3315,9 +3315,13 @@ dexie-export-import@^1.0.0-rc.1:
   dependencies:
     dexie "^3.0.0-alpha.5 || ^2.0.4"
 
-dexie@^2.0.4, "dexie@^3.0.0-alpha.5 || ^2.0.4":
+dexie@^2.0.4:
   version "2.0.4"
   resolved "https://registry.npmjs.org/dexie/-/dexie-2.0.4.tgz#6027a5e05879424e8f9979d8c14e7420f27e3a11"
+
+"dexie@^3.0.0-alpha.5 || ^2.0.4":
+  version "3.0.1"
+  resolved "https://registry.npmjs.org/dexie/-/dexie-3.0.1.tgz#faafeb94be0d5e18b25d700546a2c05725511cfc"
 
 diff-sequences@^24.9.0:
   version "24.9.0"
@@ -9957,9 +9961,9 @@ xtend@^4.0.0, xtend@~4.0.1:
   version "4.0.2"
   resolved "https://registry.npm.taobao.org/xtend/download/xtend-4.0.2.tgz#bb72779f5fa465186b1f438f674fa347fdb5db54"
 
-xy-rtc-sdk@^1.1.5:
-  version "1.1.5"
-  resolved "https://registry.npmjs.org/xy-rtc-sdk/-/xy-rtc-sdk-1.1.5.tgz#d1649e43d2b244f1f70760fb4734335f8871b416"
+xy-rtc-sdk@^1.2.5:
+  version "1.2.5"
+  resolved "https://registry.npmjs.org/xy-rtc-sdk/-/xy-rtc-sdk-1.2.5.tgz#4d7405cd0fc7a4fe17084db3ee9fc83b9cd8224c"
   dependencies:
     dexie "^2.0.4"
     dexie-export-import "^1.0.0-rc.1"

@@ -1,18 +1,37 @@
+/**
+ * XYRTC Video Component
+ * 
+ * @authors Luo-jinghui (luojinghui424@gmail.com)
+ * @date  2020-1-07 10:34:18
+ */
+
 import React, { useLayoutEffect, useRef, useEffect, useState, useCallback } from 'react';
 import { MoreOutlined, FullscreenOutlined, BlockOutlined, FullscreenExitOutlined } from '@ant-design/icons';
 import { Menu, Dropdown, Button } from 'antd';
 import './index.scss';
 
-const Video: React.FC<any> = (props: any) => {
-  const { item, index, isRefresh, model } = props;
-  const id = item.roster.participantId;
+interface IProps {
+  // roster数据
+  item: any;
+  // 最后一位的画面需要每次渲染是刷新一下
+  isRefresh: boolean;
+  // 索引值
+  index: number;
+  // 桌面布局模式，语音激励和画廊模式
+  model: string;
+  // 当前video唯一的key值
+  videoId: string;
+}
+
+const Video: React.FC<any> = (props: IProps) => {
+  const { item, index, isRefresh, model, videoId } = props;
   const streamId = (item.stream && item.stream.video && item.stream.video.id) || "";
 
   const videoRef = useRef<any>(null);
 
   const [border, setBorder] = useState({});
   const [streamStatus, setStreamStatus] = useState('enabled');
-
+  // safari 关闭画中画功能
   const [operate, setOperate] = useState({
     isFullScreen: false,
     isPicture: false,
@@ -28,7 +47,7 @@ const Video: React.FC<any> = (props: any) => {
       if (streamStatus !== 'enabled') {
         setStreamStatus('comming');
       }
-    }, 1500);
+    }, 1200);
   }
 
   const onUnmute = () => {
@@ -74,10 +93,7 @@ const Video: React.FC<any> = (props: any) => {
   }
 
   useEffect(() => {
-    const id = item.roster.participantId;
-    const streamId = (item.stream && item.stream.video && item.stream.video.id) || "";
-
-    const videoEle: any = document.getElementById(id + streamId);
+    const videoEle: any = document.getElementById(videoId);
 
     if (index >= 1 && item && item.stream && item.stream.track) {
       item.stream.track.addEventListener('mute', onMute);
@@ -119,10 +135,7 @@ const Video: React.FC<any> = (props: any) => {
 
   useLayoutEffect(() => {
     (async () => {
-      const id = item.roster.participantId;
-      const streamId = (item.stream && item.stream.video && item.stream.video.id) || "";
-
-      const videoEle: any = document.getElementById(id + streamId);
+      const videoEle: any = document.getElementById(videoId);
 
       if (videoEle && !videoEle.srcObject && item.stream.video) {
         videoEle.srcObject = item.stream.video;
@@ -148,17 +161,14 @@ const Video: React.FC<any> = (props: any) => {
   })
 
   const switchPictureInPicture = async () => {
-    const video = id + streamId;
-    const videoDom = document.getElementById(video);
+    if (operate.isPicture) {
+      // @ts-ignore
+      document.exitPictureInPicture()
+    } else {
+      const videoDom = document.getElementById(videoId);
 
-    if (video) {
-      if (operate.isPicture) {
-        // @ts-ignore
-        document.exitPictureInPicture()
-      } else {
-        // @ts-ignore
-        videoDom && videoDom.requestPictureInPicture();
-      }
+      // @ts-ignore
+      videoDom && videoDom.requestPictureInPicture();
     }
   }
 
@@ -351,7 +361,7 @@ const Video: React.FC<any> = (props: any) => {
               autoPlay
               controls={false}
               playsInline
-              id={id + streamId}
+              id={videoId}
               muted={index === 0}
               onCanPlay={onLoadCanPlay}
               onLoadStart={onLoadStart}

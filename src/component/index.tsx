@@ -4,12 +4,11 @@ import { Button, Row, message } from 'antd';
 import { IDisconnected, IParticipantCount, ILayout, IScreenInfo, IAudioTrack, ICallStatus, IAudioStatus, IRoster } from '../type/index';
 import { ENV, SERVER, ACCOUNT, THIRD } from '../utils/config';
 import xyRTC from 'xy-rtc-sdk';
-import Video from './video';
-import Audio from './audio';
+import Video from './Video';
+import Audio from './Audio';
 import Internels from './Internels';
 import store from '../utils/store';
 import Login from './Login';
-
 import '../style/index.scss';
 
 let client: any;
@@ -116,6 +115,7 @@ function Home() {
     setCallMeeting(false);
     setCallLoading(false);
     setShareContentStatus(false);
+    setDebug(false);
     setLayout([]);
     setMicLevel(0);
 
@@ -211,9 +211,7 @@ function Home() {
       }
     })
 
-    client.on('sender-status', (e: any) => {
-      console.log("senders event: ", e);
-
+    client.on('meeting-stats', (e: any) => {
       setSenderStatus(e);
     })
   }
@@ -265,6 +263,8 @@ function Home() {
           clientId,
           clientSecret
         });
+      } else {
+        return;
       }
 
       if (result.code === 10104) {
@@ -418,12 +418,12 @@ function Home() {
       .map((item: ILayout, index: number) => {
         const id = item.roster.participantId;
         const mediagroupid = item.roster.mediagroupid;
-
         const streamId = (item.stream && item.stream.video && item.stream.video.id) || "";
+        const key = id + streamId + mediagroupid;
         const isRefresh = layoutLen > 1 && layoutLen === (index + 1);
 
         return (
-          <Video model={layoutModel} item={item} key={id + streamId + mediagroupid} index={index} isRefresh={isRefresh}></Video>
+          <Video model={layoutModel} item={item} key={key} index={index} videoId={key} isRefresh={isRefresh}></Video>
         )
       })
   }
@@ -476,25 +476,29 @@ function Home() {
 
   // 分享content内容
   const shareContent = async () => {
-    const result = await stream.createContentStream();
+    try {
+      const result = await stream.createContentStream();
 
-    // 创建分享屏幕stream成功
-    if (result.code === 518) {
-      setShareContentStatus(true);
+      // 创建分享屏幕stream成功
+      if (result.code === 518) {
+        setShareContentStatus(true);
 
-      stream.on('start-share-content', () => {
-        client.publish(stream, { isShareContent: true });
-      })
+        stream.on('start-share-content', () => {
+          client.publish(stream, { isShareContent: true });
+        })
 
-      stream.on('stop-share-content', () => {
-        stopShareContent();
-      })
-    } else {
-      if (result && result.code !== 500) {
+        stream.on('stop-share-content', () => {
+          stopShareContent();
+        })
+      } else {
+        if (result && result.code !== 500) {
 
-        message.info(result.msg || '分享屏幕失败');
-        return;
+          message.info(result.msg || '分享屏幕失败');
+          return;
+        }
       }
+    } catch (err) {
+      console.log("share screen error: ", err);
     }
   }
 
@@ -520,8 +524,8 @@ function Home() {
               {
                 renderLayout()
               }
-
             </div>
+
             <div className="audio-list">
               {
                 renderAudioList()

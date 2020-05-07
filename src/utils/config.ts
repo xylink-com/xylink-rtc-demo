@@ -5,6 +5,7 @@
  * @date  2020-01-17 12:04:01
  */
 
+ // 默认第三方是prd环境
 export const ENV: 'PRE' | 'PRD' | 'TXDEV' = 'PRD';
 export const THIRD: boolean = true;
 

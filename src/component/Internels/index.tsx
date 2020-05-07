@@ -1,6 +1,27 @@
+/**
+ * XYRTC Meeting Internals Component
+ * 
+ * @authors Luo-jinghui (luojinghui424@gmail.com)
+ * @date  2020-1-07 10:34:18
+ */
+
 import React from 'react';
-import { transformTime } from '../../utils/index';
 import './index.scss';
+
+const transformTime = (timestamp: number = +new Date()) => {
+  if (timestamp) {
+    var time = new Date(timestamp);
+    var y = time.getFullYear(); //getFullYear方法以四位数字返回年份
+    var M = time.getMonth() + 1; // getMonth方法从 Date 对象返回月份 (0 ~ 11)，返回结果需要手动加一
+    var d = time.getDate(); // getDate方法从 Date 对象返回一个月中的某一天 (1 ~ 31)
+    var h = time.getHours(); // getHours方法返回 Date 对象的小时 (0 ~ 23)
+    var m = time.getMinutes(); // getMinutes方法返回 Date 对象的分钟 (0 ~ 59)
+    var s = time.getSeconds(); // getSeconds方法返回 Date 对象的秒数 (0 ~ 59)
+    return y + '-' + M + '-' + d + ' ' + h + ':' + m + ':' + s;
+  } else {
+    return '';
+  }
+};
 
 interface IProps {
   senderStatus: any;
@@ -9,9 +30,16 @@ interface IProps {
 }
 
 const Internels: React.FC<any> = ({ senderStatus, debug, switchDebug }: IProps) => {
-  const { bytesReceived, bytesSent, mimeType, sender = {}, timestamp, receiver = {} } = senderStatus;
-  const bytesReceivedSecond = senderStatus['bytesReceived/s'];
-  const bytesSentSecond = senderStatus['bytesSent/s'];
+  const {
+    bytesReceived,
+    bytesSent,
+    mimeType,
+    sender = {},
+    timestamp,
+    receiver = {},
+    bytesReceivedSecond,
+    bytesSentSecond
+  } = senderStatus;
 
   if (debug) {
     return (
@@ -19,52 +47,71 @@ const Internels: React.FC<any> = ({ senderStatus, debug, switchDebug }: IProps) 
         <div className="debug__container">
           <div className="close" onClick={switchDebug}>X</div>
 
-          <h3>Sender：</h3>
-          <div>mimeType: {mimeType}</div>
-          <div>time: {transformTime(timestamp)}</div>
-          <div className="line">
-            <span>bytesReceived: {bytesReceived}</span>
-            <span>bytesReceived/s: {bytesReceivedSecond}</span>
-          </div>
-          <div className="line">
-            <span>bytesSent: {bytesSent}</span>
-            <span>bytesSent/s: {bytesSentSecond}</span>
-          </div>
+          <h3>总览：</h3>
+          <table className="table">
+            <thead>
+              <tr className="table-title">
+                <th>Codec</th>
+                <th>Time</th>
+                <th>BytesRec/s</th>
+                <th>BytesSent/s</th>
+                <th>BytesRec</th>
+                <th>BytesSent</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>{mimeType}</td>
+                <td>{transformTime(timestamp)}</td>
+                <td>{bytesReceivedSecond}</td>
+                <td>{bytesSentSecond}</td>
+                <td>{bytesReceived}</td>
+                <td>{bytesSent}</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <br />
+          <h3>发送：</h3>
           <table className="table">
             <>
               <thead>
                 <tr className="table-title">
                   <th>Type</th>
-                  <th>Width</th>
-                  <th>Height</th>
-                  <th>FamesEncoded/s</th>
+                  <th>Res</th>
+                  <th>FamesEn/s</th>
                   <th>FramesSent/s</th>
-                  <th>FamesSent</th>
-                  <th>FramesEncoded</th>
+                  <th>BytesSent/s</th>
                   <th>BytesSent</th>
-                  <th>HugeFramesSent</th>
                   <th>PacketsSent</th>
+                  <th>keyFramesEn</th>
                 </tr>
               </thead>
               <tbody>
                 {
                   Object.keys(sender).map((key) => {
-                    const { frameWidth, frameHeight, bytesSent, hugeFramesSent, packetsSent, framesSent, framesEncoded, type } = sender[key];
-                    const framesEncodedTwo = sender[key]['framesEncoded/s'];
-                    const framesSentTwo = sender[key]['framesSent/s'];
+                    const {
+                      frameWidth,
+                      frameHeight,
+                      bytesSent,
+                      bytesSentSecond,
+                      packetsSent,
+                      framesSentSecond,
+                      framesEncodedSecond,
+                      type,
+                      keyFramesEncoded
+                    } = sender[key];
 
                     return (
                       <tr key={key}>
                         <td>{type}</td>
-                        <td>{frameWidth}</td>
-                        <td>{frameHeight}</td>
-                        <td>{framesEncodedTwo}</td>
-                        <td>{framesSentTwo}</td>
-                        <td>{framesSent}</td>
-                        <td>{framesEncoded}</td>
+                        <td>{frameWidth} * {frameHeight}</td>
+                        <td>{framesEncodedSecond}</td>
+                        <td>{framesSentSecond}</td>
+                        <td>{bytesSentSecond}</td>
                         <td>{bytesSent}</td>
-                        <td>{hugeFramesSent}</td>
                         <td>{packetsSent}</td>
+                        <td>{keyFramesEncoded}</td>
                       </tr>
                     )
                   })
@@ -74,48 +121,50 @@ const Internels: React.FC<any> = ({ senderStatus, debug, switchDebug }: IProps) 
           </table>
 
           <br />
-          <h3>Receiver：</h3>
+          <h3>与会者：</h3>
           <table className="table">
             <>
               <thead>
                 <tr className="table-title">
                   <th>Name</th>
                   <th>Type</th>
-                  <th>Width</th>
-                  <th>Height</th>
-                  <th>FramesDecoded/s</th>
-                  <th>FramesReceived/s</th>
-                  <th>FramesReceived</th>
-                  <th>FramesDecoded</th>
-                  <th>BytesReceived</th>
-                  <th>PacketsReceived</th>
+                  <th>Res</th>
+                  <th>FramesDe/s</th>
+                  <th>FramesRe/s</th>
+                  <th>BytesRe/s</th>
+                  <th>PacketsRe</th>
                   <th>NackCount</th>
-                  <th>JitterBufferDelay</th>
-                  <th>PliCount</th>
+                  <th>keyFramesDe</th>
                 </tr>
               </thead>
               <tbody>
                 {
                   Object.keys(receiver).map((key) => {
-                    const { frameWidth, frameHeight, bytesReceived, nackCount, packetsReceived, framesReceived, framesDecoded, type, name, jitterBufferDelay, pliCount } = receiver[key];
-                    const framesDecodedTwo = receiver[key]['framesDecoded/s'];
-                    const framesReceivedTwo = receiver[key]['framesReceived/s'];
+                    const {
+                      frameWidth,
+                      frameHeight,
+                      bytesReceivedSecond,
+                      nackCount,
+                      packetsReceived,
+                      framesReceivedSecond,
+                      framesDecodedSecond,
+                      type,
+                      name,
+                      isContent,
+                      keyFramesDecoded
+                    } = receiver[key];
 
                     return (
                       <tr key={key}>
                         <td>{name}</td>
-                        <td>{type}</td>
-                        <td>{frameWidth}</td>
-                        <td>{frameHeight}</td>
-                        <td>{framesDecodedTwo}</td>
-                        <td>{framesReceivedTwo}</td>
-                        <td>{framesReceived}</td>
-                        <td>{framesDecoded}</td>
-                        <td>{bytesReceived}</td>
+                        <td>{type} * {isContent ? "Con" : 'Peo'}</td>
+                        <td>{frameWidth} * {frameHeight}</td>
+                        <td>{framesDecodedSecond}</td>
+                        <td>{framesReceivedSecond}</td>
+                        <td>{bytesReceivedSecond}</td>
                         <td>{packetsReceived}</td>
                         <td>{nackCount}</td>
-                        <td>{jitterBufferDelay}</td>
-                        <td>{pliCount}</td>
+                        <td>{keyFramesDecoded}</td>
                       </tr>
                     )
                   })
