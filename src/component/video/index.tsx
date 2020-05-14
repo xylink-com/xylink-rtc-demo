@@ -349,7 +349,7 @@ const Video: React.FC<any> = (props: IProps) => {
             }
 
             {
-              !operate.isDisabled && renderVideoOperate()
+              !operate.isDisabled && !item.roster.videoTxMute && renderVideoOperate()
             }
           </div>
         </div>

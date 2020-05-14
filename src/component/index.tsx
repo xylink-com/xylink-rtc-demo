@@ -147,19 +147,17 @@ function Home() {
     })
 
     // 动态计算的显示容器信息
-    client.on("screenInfo", (e: IScreenInfo) => {
+    client.on("screen-info", (e: IScreenInfo) => {
       setScreenInfo(e);
     })
 
     // audio list数据
-    client.on("audioTrack", (e: IAudioTrack[]) => {
-      console.log("demo get audioTrack list: ", e);
-
+    client.on("audio-track", (e: IAudioTrack[]) => {
       setAudioList(e);
     })
 
     // 呼叫状态
-    client.on('callStatus', (e: ICallStatus) => {
+    client.on('call-status', (e: ICallStatus) => {
       // 10518入会成功
       // 10519正在呼叫中
       // 呼叫失败，请将detail信息作为disconnected的第二个参数
@@ -181,8 +179,6 @@ function Home() {
 
     // 麦克风状态
     client.on('audio-status', (e: IAudioStatus) => {
-      console.log("demo get audio status: ", e);
-
       const { disableMute, muteOperation } = e;
 
       if (disableMute) {
@@ -235,6 +231,7 @@ function Home() {
         httpServer,
         logServer,
         debug: false,
+        layout: 'auto',
         container: {
           offsetHeight: 92
         }
@@ -264,7 +261,8 @@ function Home() {
           clientSecret
         });
       } else {
-        return;
+        // 小鱼登录
+        result = await client.loginXYlinkAccount(user.phone, user.password);
       }
 
       if (result.code === 10104) {
@@ -581,7 +579,8 @@ function Home() {
     if (!callMeeting && !callLoading) {
       return (
         <div className="login">
-          <h1>XY RTC DEMO（{ENV}）</h1>
+          <h1 className="title">XY RTC DEMO</h1>
+          <h3 className="sub-title">环境：{ENV}</h3>
 
           <Row justify="center">
             <Login isThird={isThird} onHandleSubmit={handleSubmit} user={user} onChangeInput={onChangeInput}></Login>
