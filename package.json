@@ -28,7 +28,7 @@
     "react-scripts": "3.4.1",
     "sass": "npm:sass",
     "typescript": "~3.7.2",
-    "xy-rtc-sdk": "～1.3.0"
+    "xy-rtc-sdk": "~1.3.0"
   },
   "scripts": {
     "start": "react-app-rewired start",
