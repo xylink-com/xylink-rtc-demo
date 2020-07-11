@@ -9714,8 +9714,8 @@ websocket-driver@>=0.5.1:
     websocket-extensions ">=0.1.1"
 
 websocket-extensions@>=0.1.1:
-  version "0.1.3"
-  resolved "https://registry.npm.taobao.org/websocket-extensions/download/websocket-extensions-0.1.3.tgz#5d2ff22977003ec687a4b87073dfbbac146ccf29"
+  version "0.1.4"
+  resolved "https://registry.yarnpkg.com/websocket-extensions/-/websocket-extensions-0.1.4.tgz#7f8473bc839dfd87608adb95d7eb075211578a42"
 
 whatwg-encoding@^1.0.1, whatwg-encoding@^1.0.3, whatwg-encoding@^1.0.5:
   version "1.0.5"
@@ -9961,9 +9961,9 @@ xtend@^4.0.0, xtend@~4.0.1:
   version "4.0.2"
   resolved "https://registry.npm.taobao.org/xtend/download/xtend-4.0.2.tgz#bb72779f5fa465186b1f438f674fa347fdb5db54"
 
-xy-rtc-sdk@1.3.0:
-  version "1.3.0"
-  resolved "https://registry.npmjs.org/xy-rtc-sdk/-/xy-rtc-sdk-1.3.0.tgz#16397bb3cfb41c5520a9b1c7f7c123842bb03f47"
+xy-rtc-sdk@~1.3.0:
+  version "1.3.3"
+  resolved "https://registry.yarnpkg.com/xy-rtc-sdk/-/xy-rtc-sdk-1.3.3.tgz#3ef94340a23bfed01f174d4fc41996fa7b4185ce"
   dependencies:
     dexie "^2.0.4"
     dexie-export-import "^1.0.0-rc.1"
