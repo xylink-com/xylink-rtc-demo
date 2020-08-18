@@ -6,8 +6,9 @@
  */
 
 import React, { useLayoutEffect, useRef, useEffect, useState, useCallback } from 'react';
-import { MoreOutlined, FullscreenOutlined, BlockOutlined, FullscreenExitOutlined } from '@ant-design/icons';
+import { MoreOutlined, FullscreenOutlined, BlockOutlined, FullscreenExitOutlined, ExpandOutlined } from '@ant-design/icons';
 import { Menu, Dropdown, Button } from 'antd';
+import fullScreen from "../../utils/screen";
 import './index.scss';
 
 interface IProps {
@@ -33,9 +34,9 @@ const Video: React.FC<any> = (props: IProps) => {
   const [streamStatus, setStreamStatus] = useState('enabled');
   // safari 关闭画中画功能
   const [operate, setOperate] = useState({
-    isFullScreen: false,
     isPicture: false,
-    isDisabled: /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent)
+    isDisabled: /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent),
+    isCoverMode: true
   });
 
   const timmer = useRef<any>(0);
@@ -172,45 +173,40 @@ const Video: React.FC<any> = (props: IProps) => {
     }
   }
 
+  const switchVideoMode = () => {
+    const videoEle: any = document.getElementById(videoId);
+    if (operate.isCoverMode) {
+      videoEle.style.objectFit = "contain"
+    } else {
+      videoEle.style.objectFit = "cover"
+    }
+
+    setOperate({
+      ...operate,
+      isCoverMode: !operate.isCoverMode
+    })
+  }
+
+  const toggleFullScreen = () => {
+    fullScreen.toggleFullScreen(videoRef.current);
+  }
+
   const renderVideoMenu = useCallback(
     () => {
       return (
         <Menu>
-          <Menu.Item onClick={() => {
-            const doc = window.document;
-            const docEl = videoRef.current;
-
-            // @ts-ignore
-            const requestFullScreen = docEl.requestFullscreen || docEl.mozRequestFullScreen || docEl.webkitRequestFullScreen || docEl.msRequestFullscreen;
-            // @ts-ignore
-            const cancelFullScreen = doc.exitFullscreen || doc.mozCancelFullScreen || doc.webkitExitFullscreen || doc.msExitFullscreen;
-
-            // @ts-ignore
-            if (!doc.fullscreenElement && !doc.mozFullScreenElement && !doc.webkitFullscreenElement && !doc.msFullscreenElement) {
-              requestFullScreen.call(docEl);
-
-              setOperate({
-                ...operate,
-                isFullScreen: true
-              })
-            }
-            else {
-              cancelFullScreen.call(doc);
-
-              setOperate({
-                ...operate,
-                isFullScreen: false
-              })
-            }
-          }}>
-            {operate.isFullScreen ?
-              (
-                <><FullscreenExitOutlined />切换显示</>
-              ) :
-              (
-                <><FullscreenOutlined />切换显示</>
-              )
-            }
+          <Menu.Item onClick={toggleFullScreen}>
+            {fullScreen.getFullStatus(videoRef.current) ? (
+              <>
+                <FullscreenExitOutlined />
+              切换显示
+            </>
+            ) : (
+                <>
+                  <FullscreenOutlined />
+              切换显示
+            </>
+              )}
           </Menu.Item>
           <Menu.Item onClick={switchPictureInPicture}>
             {operate.isPicture ?
@@ -222,6 +218,22 @@ const Video: React.FC<any> = (props: IProps) => {
               )
             }
           </Menu.Item>
+          {
+            !item.roster.isContent &&
+            <Menu.Item onClick={switchVideoMode}>
+              {operate.isCoverMode ? (
+                <>
+                  <ExpandOutlined />
+                contain模式
+              </>
+              ) : (
+                  <>
+                    <ExpandOutlined />
+                cover模式
+              </>
+                )}
+            </Menu.Item>
+          }
         </Menu>
       )
     },
@@ -253,41 +265,53 @@ const Video: React.FC<any> = (props: IProps) => {
       transform: 'rotateY(180deg)'
     };
   }
+  const renderVideoName = () => {
+    return <div className="video-status">
+      <div className={item.roster.audioTxMute ? "audio-muted-status" : "audio-unmuted-status"}></div>
+      <div className="name">
+        {`${item.roster.displayName || "Local"}`}
+      </div>
+    </div>
+  }
 
   const renderVideoStatus = () => {
     if (operate.isPicture) {
       return (
         <div className="video-bg">
-          {
-            item.roster.audioTxMute && <div className="audio-muted-status"></div>
-          }
-
           <div className="center">
-            <div className="displayname">{item.roster.displayName || "Local"}</div>
+            {/* <div className="displayname">{item.roster.displayName || "Local"}</div> */}
             <div>画中画显示中...</div>
             <div>
               <Button type="link" onClick={switchPictureInPicture}>恢复</Button>
             </div>
           </div>
+          {renderVideoName()}
         </div>
       )
     }
 
     if (item.roster.isContent) {
+      if (item.roster.videoTxMute) {
+        return (
+          <div className="video-bg">
+            <div className="center">
+              <div className="displayname">{item.roster.displayName || ""}</div>
+              <div>语音通话中</div>
+            </div>
+          </div>
+        )
+      }
+
       return null;
     }
 
     if (item.roster.videoTxMute) {
       return (
         <div className="video-bg">
-          {
-            item.roster.audioTxMute && <div className="audio-muted-status"></div>
-          }
-
           <div className="center">
-            <div className="displayname">{item.roster.displayName || "Local"}</div>
             <div>视频暂停</div>
           </div>
+          {renderVideoName()}
         </div>
       )
     }
@@ -295,31 +319,15 @@ const Video: React.FC<any> = (props: IProps) => {
     if (isShowLoading) {
       return (
         <div className="video-bg">
-          {
-            item.roster.audioTxMute && <div className="audio-muted-status"></div>
-          }
-
           <div className="center">
-            <div className="displayname">{item.roster.displayName || "Local"}</div>
             <div>视频请求中...</div>
           </div>
+          {renderVideoName()}
         </div>
       )
     }
 
-    return (
-      <div>
-        <div className="name">
-          {
-            `${item.roster.displayName || "Local"}`
-          }
-        </div>
-
-        {
-          item.roster.audioTxMute && <div className="audio-muted-status"></div>
-        }
-      </div>
-    )
+    return renderVideoName()
   }
 
   const renderVideoOperate = () => {

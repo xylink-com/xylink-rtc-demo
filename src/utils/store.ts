@@ -26,9 +26,15 @@ const store: IStore = {
 		if (!key) return;
 
 		const val = this.storage.getItem(key);
-		const newVal = val || "{}";
+		let newVal = val || '';
 
-		return JSON.parse(newVal);
+		try {
+			newVal = JSON.parse(newVal);
+		} catch (err) {
+			newVal = val || '';
+		}
+
+		return newVal;
 	},
 	remove(key: string) {
 		if (!key) return;

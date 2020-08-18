@@ -53,13 +53,23 @@
 		align-items: center;
 		justify-content: center;
 
-		.name {
+		.video-status{
 			position: absolute;
-			bottom: 6px;
-			left: 6px;
+			bottom: 4px;
+			left: 4px;
 			background-color: rgba(42, 46, 51, 0.8);
-			padding: 3px 7px;
 			border-radius: 3px;
+			display: flex;
+			align-items: center;
+			max-width: 90%;
+		}
+
+		.name {
+			flex:1;
+			overflow: hidden;
+			white-space: nowrap;
+			text-overflow: ellipsis;
+			margin-right: 6px;
 		}
 
 		.video-bg {
@@ -85,17 +95,18 @@
 			margin-bottom: 5px;
 		}
 
-		.audio-muted-status {
-			position: absolute;
-			left: 6px;
-			top: 6px;
-
-			background: url('./img/mic_mute.png') center center no-repeat;
-			background-size: 70%;
+		.audio-muted-status,.audio-unmuted-status {
 			width: 26px;
-			height: 26px;
-			background-color: rgba(42, 46, 51, 0.8);
-			border-radius: 15px;
+			height: 24px;
+			margin:0 -2px;
+		}
+		.audio-muted-status{
+			background: url('./img/audio_mute.png') center center no-repeat;
+			background-size: 60%;
+		}
+		.audio-unmuted-status{
+			background: url('./img/audio_unmute.png') center center no-repeat;
+			background-size: 60%;
 		}
 	}
 }
@@ -123,8 +134,8 @@
 	opacity: 0;
 
 	color: rgb(255, 255, 255);
-	font-size: 18px;
-	background-color: rgba(42, 46, 51, 0.4);
+	font-size: 20px;
+	background-color: rgba(42, 46, 51, 0.6);
 	padding: 4px;
 	border-radius: 50%;
 

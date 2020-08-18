@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Button, Row, message } from 'antd';
+import { Button, Row, message, Dropdown, Menu } from 'antd';
+import { DownOutlined } from '@ant-design/icons';
 import { IDisconnected, IParticipantCount, ILayout, IScreenInfo, IAudioTrack, ICallStatus, IAudioStatus, IRoster } from '../type/index';
 import { ENV, SERVER, ACCOUNT, THIRD } from '../utils/config';
 import xyRTC from 'xy-rtc-sdk';
@@ -9,7 +10,9 @@ import Audio from './Audio';
 import Internels from './Internels';
 import store from '../utils/store';
 import Login from './Login';
+import { Base64 } from 'js-base64';
 import '../style/index.scss';
+
 
 let client: any;
 let stream: any;
@@ -61,6 +64,8 @@ function Home() {
   const [senderStatus, setSenderStatus] = useState<any>({ sender: {}, receiver: {} });
   // 是否是调试模式（开启则显示所有画面的呼叫数据）
   const [debug, setDebug] = useState(false);
+  // 配置环境，第三方集成不需要配置，默认是线上环境
+  const [env, setEnv] = useState(ENV);
 
   // 缓存清理声量的timmer定时器函数
   const clearTimmer = useCallback(() => {
@@ -96,7 +101,15 @@ function Home() {
       // 组件卸载时，清理定时器
       clearTimmer();
     }
-  }, [audio, callMeeting, callLoading]);
+  }, [audio, callMeeting, callLoading, clearTimmer]);
+
+  useEffect(() => {
+    const bgmAudio = document.getElementById("audio-bgm");
+    if (!callLoading && bgmAudio) {
+      // @ts-ignore
+      bgmAudio.pause();
+    }
+  }, [callLoading]);
 
   // 挂断会议
   const disconnected = (msg = "", reason?: string) => {
@@ -141,8 +154,6 @@ function Home() {
 
     // 会议layout数据
     client.on("layout", (e: ILayout[]) => {
-      console.log("demo get layout: ", e);
-
       setLayout(e);
     })
 
@@ -180,10 +191,10 @@ function Home() {
     // 麦克风状态
     client.on('audio-status', (e: IAudioStatus) => {
       const { disableMute, muteOperation } = e;
-
-      if (disableMute) {
-        setDisableAudio(disableAudio);
-      }
+      // if (disableMute) {
+      //   setDisableAudio(disableMute);
+      // }
+      setDisableAudio(disableMute);
 
       if (muteOperation) {
         setAudio(muteOperation);
@@ -220,7 +231,7 @@ function Home() {
 
     try {
       const { meeting, meetingPassword, meetingName } = user;
-      const { wssServer, httpServer, logServer } = SERVER;
+      const { wssServer, httpServer, logServer } = SERVER(env);
 
       // 这里三方可以根据环境修改sdk log等级
       // xyRTC.logger.setLogLevel("NONE");
@@ -261,7 +272,8 @@ function Home() {
           clientSecret
         });
       } else {
-        return;
+        // 小鱼登录
+        result = await client.loginXYlinkAccount(user.phone, Base64.encode(user.password));
       }
 
       if (result.code === 10104) {
@@ -278,7 +290,7 @@ function Home() {
         return;
       }
 
-      const { token } = result.data;
+      const token = result.data.token || result.data.access_token;
 
       callStatus = await client.makeCall({
         token,
@@ -342,6 +354,7 @@ function Home() {
   // 麦克风操作
   const audioOperate = () => {
     if (audio === "mute" && disableAudio) {
+      client.onHandUp();
       return;
     }
 
@@ -349,6 +362,8 @@ function Home() {
       client.muteAudio();
 
       setAudio('mute');
+
+      message.info("麦克风已静音");
     } else {
       client.unmuteAudio();
 
@@ -430,10 +445,11 @@ function Home() {
   if (audio === "unmute") {
     audioStatus = "muteAudio";
   } else if (audio === "mute" && disableAudio) {
-    audioStatus = "disabledMuteAudio";
+    audioStatus = "举手发言";
   } else if (audio === "mute" && !disableAudio) {
     audioStatus = "unmuteAudio";
   }
+
 
   const renderMeetingLoading = () => {
     if (callMeeting && callLoading) {
@@ -449,6 +465,7 @@ function Home() {
             }}>
               <img src="https://cdn.xylink.com/wechatMP/images/end.png" alt="end-call" />
             </div>
+            <audio id="audio-bgm" autoPlay loop src="https://cdn.xylink.com/wechatMP/ring.ogg"></audio>
           </div>
         </div>
       )
@@ -504,6 +521,13 @@ function Home() {
 
     setDebug(status);
     client.switchDebug(status);
+  }
+
+  const handleSwitchEnv = (e: any) => {
+    const val = e.key;
+
+    store.set('sdk-env', val);
+    setEnv(val);
   }
 
   const renderMeeting = () => {
@@ -574,12 +598,28 @@ function Home() {
     return null;
   }
 
+  const menu = (
+    <Menu onClick={handleSwitchEnv}>
+      <Menu.Item key="TXDEV"><div>TXDEV</div></Menu.Item>
+      <Menu.Item key="PRE"><div>PRE</div></Menu.Item>
+      <Menu.Item key="PRD"><div>PRD</div></Menu.Item>
+    </Menu>
+  );
+
   const renderForm = () => {
     if (!callMeeting && !callLoading) {
       return (
         <div className="login">
           <h1 className="title">XY RTC DEMO</h1>
-          <h3 className="sub-title">环境：{ENV}</h3>
+          <h3 className="sub-title">
+            <span>环境：</span>
+            <Dropdown overlay={menu}>
+              <a>
+                {env}
+                <DownOutlined />
+              </a>
+            </Dropdown>
+          </h3>
 
           <Row justify="center">
             <Login isThird={isThird} onHandleSubmit={handleSubmit} user={user} onChangeInput={onChangeInput}></Login>

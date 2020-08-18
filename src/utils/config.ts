@@ -5,8 +5,10 @@
  * @date  2020-01-17 12:04:01
  */
 
- // 默认第三方是prd环境
-export const ENV: 'PRE' | 'PRD' | 'TXDEV' = 'PRD';
+import store from './store';
+
+// 默认第三方是prd环境
+export const ENV: 'PRE' | 'PRD' | 'TXDEV' = store.get('sdk-env') || 'PRD';
 export const THIRD: boolean = true;
 
 const SERVER_MAP: any = {
@@ -57,5 +59,5 @@ const THIRD_ACCOUNT_MAP = {
 	PRD: PRODUCTION_ACCOUNT
 };
 
-export const SERVER = SERVER_MAP[ENV];
+export const SERVER = (env: 'PRE' | 'PRD' | 'TXDEV' = ENV) => SERVER_MAP[env];
 export const ACCOUNT: { extId: string; clientId: string; clientSecret: string } = THIRD_ACCOUNT_MAP[ENV];

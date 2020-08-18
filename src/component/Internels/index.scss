@@ -1,6 +1,7 @@
 .debug {
 	position: fixed;
 	top: 30px;
+  left: 0px;
 	width: 100%;
 	height: calc(100% - 90px);
 	background-color: rgba(51, 51, 51, 0.8);
@@ -11,6 +12,9 @@
 
 	&__container {
 		width: 100%;
+		height:100%;
+		overflow: auto;
+		padding-right: 90px;
 
 		.close {
 			position: fixed;
@@ -38,6 +42,7 @@
 		}
 
 		.table {
+			width: 100%;
 			border-collapse: collapse;
 			background-color: #00000063;
 
@@ -56,6 +61,19 @@
         text-overflow: ellipsis;
         white-space: nowrap; 
 			}
+		}
+
+		&::-webkit-scrollbar {
+			width:5px;
+			height: 5px;
+		}
+		&::-webkit-scrollbar-thumb {
+			border-radius: 1em;
+			background:rgba(50,50,50,.3);
+		}
+		&::-webkit-scrollbar-track {
+			border-radius: 1em;
+			background:rgba(50,50,50,.1);
 		}
 	}
 }
