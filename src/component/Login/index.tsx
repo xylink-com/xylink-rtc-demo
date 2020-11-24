@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button, Row, Col, Form, Input } from 'antd';
+import { Button, Row, Col, Form, Input, Switch } from 'antd';
 import './index.scss';
 
 interface IProps {
@@ -9,7 +9,9 @@ interface IProps {
     password: string,
     meeting: string,
     meetingPassword: string,
-    meetingName: string
+    meetingName: string,
+    muteVideo: boolean,
+    muteAudio: boolean
   },
   onChangeInput: () => any;
   isThird: boolean;
@@ -33,7 +35,7 @@ const Login: React.FC<any> = (props: any) => {
               type="phone"
               placeholder="手机号"
               onChange={(e) => {
-                onChangeInput(e, 'phone')
+                onChangeInput(e.target.value, 'phone')
               }}
             />
           </Form.Item>
@@ -45,7 +47,7 @@ const Login: React.FC<any> = (props: any) => {
               type="text"
               placeholder="登录密码"
               onChange={(e) => {
-                onChangeInput(e, 'password')
+                onChangeInput(e.target.value, 'password')
               }}
             />
           </Form.Item>
@@ -59,7 +61,7 @@ const Login: React.FC<any> = (props: any) => {
           type="text"
           placeholder="会议号"
           onChange={(e) => {
-            onChangeInput(e, 'meeting')
+            onChangeInput(e.target.value, 'meeting')
           }}
         />
       </Form.Item>
@@ -70,7 +72,7 @@ const Login: React.FC<any> = (props: any) => {
           type="text"
           placeholder="入会密码"
           onChange={(e) => {
-            onChangeInput(e, 'meetingPassword')
+            onChangeInput(e.target.value, 'meetingPassword')
           }}
         />
       </Form.Item>
@@ -83,13 +85,29 @@ const Login: React.FC<any> = (props: any) => {
           type="text"
           placeholder="入会昵称"
           onChange={(e) => {
-            onChangeInput(e, 'meetingName')
+            onChangeInput(e.target.value, 'meetingName')
           }}
         />
       </Form.Item>
 
+      <Form.Item name="muteVideo" style={{ marginBottom: '15px' }}>
+        <div style={{ textAlign: 'left' }}>
+          开启摄像头: <Switch checked={!user.muteVideo} onChange={(e) => {
+            onChangeInput(!e, 'muteVideo')
+          }} />
+        </div>
+      </Form.Item>
+
+      <Form.Item name="muteAudio">
+        <div style={{ textAlign: 'left' }}>
+          开启麦克风: <Switch checked={!user.muteAudio} onChange={(e) => {
+            onChangeInput(!e, 'muteAudio')
+          }} />
+        </div>
+      </Form.Item>
+
       <Row justify="center">
-        <Col span={24}><Button type="primary" htmlType="submit">Make Call</Button></Col>
+        <Col span={24}><Button size="large" type="primary" htmlType="submit">加入会议</Button></Col>
       </Row>
     </Form>
   )

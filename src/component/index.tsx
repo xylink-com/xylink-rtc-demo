@@ -473,16 +473,16 @@ function Home() {
   // 表单数据提交
   // 开始进行入会操作
   const handleSubmit = (values: any) => {
-    // const isSupport = xyRTC.checkSupportWebRTC();
+    const isSupport = xyRTC.checkSupportWebRTC();
 
-    // if (!isSupport) {
-    //   message.info('Not support webrtc');
+    if (!isSupport) {
+      message.info('Not support webrtc');
 
-    //   return;
-    // }
+      return;
+    }
 
-    // setUser(values);
-    // store.set('xy-user', values);
+    setUser(values);
+    store.set('xy-user', values);
 
     join();
   };

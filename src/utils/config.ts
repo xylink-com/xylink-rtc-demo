@@ -44,21 +44,21 @@ const SERVER_MAP: any = {
  * 重要提示
  */
 const PRODUCTION_ACCOUNT = {
-  extId: "",
-  clientId: "",
-  clientSecret: "",
+  extId: "ddbbb1b45ff2834056886746cb715fae5079d18c",
+  clientId: "pV2w8Qs8PJkTJDjdO9zUsk2W",
+  clientSecret: "38bmDdtinfKzNbrT1Pjer2hNXieUtjTr",
 };
 
 const THIRD_ACCOUNT_MAP = {
   TXDEV: {
-    extId: "",
-    clientId: "",
+    extId: "8bea008225dd82616e1f43dcc5c8e3bbbab0d9e5", // a8659e5d496283c5d5ed18b9b51f263bfeeebc79
+    clientId: "Dx9AiLgQEOboyidOWxGoQRSi",
     clientSecret: "",
   },
   PRE: {
-    extId: "",
-    clientId: "",
-    clientSecret: "",
+    extId: "8bea008225dd82616e1f43dcc5c8e3bbbab0d9e5",
+    clientId: "jBSENo2jINkrlsqu1hJWeaXD",
+    clientSecret: "IIhbtnReNE5pINFgV9NXYhLUlgLAx0HM",
   },
   PRD: PRODUCTION_ACCOUNT,
 };
