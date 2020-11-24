@@ -5,10 +5,11 @@
 	width: 100%;
 	height: calc(100% - 90px);
 	background-color: rgba(51, 51, 51, 0.8);
-	z-index: 12;
+	z-index: 1002;
 	padding: 20px;
 	text-align: left;
-	user-select: auto;
+  user-select: auto;
+  color:#fff;
 
 	&__container {
 		width: 100%;

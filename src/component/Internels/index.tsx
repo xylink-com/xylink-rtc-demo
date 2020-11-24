@@ -31,8 +31,6 @@ interface IProps {
 
 const Internels: React.FC<any> = ({ senderStatus, debug, switchDebug }: IProps) => {
   const {
-    bytesReceived,
-    bytesSent,
     mimeType,
     sender = {},
     timestamp,
@@ -51,12 +49,10 @@ const Internels: React.FC<any> = ({ senderStatus, debug, switchDebug }: IProps) 
           <table className="table">
             <thead>
               <tr className="table-title">
-                <th>Codec</th>
-                <th>Time</th>
-                <th>BytesRec/s</th>
-                <th>BytesSent/s</th>
-                <th>BytesRec</th>
-                <th>BytesSent</th>
+                <th>视频编码</th>
+                <th>时间</th>
+                <th>接收（kb/s）</th>
+                <th>发送（kb/s）</th>
               </tr>
             </thead>
             <tbody>
@@ -65,8 +61,6 @@ const Internels: React.FC<any> = ({ senderStatus, debug, switchDebug }: IProps) 
                 <td>{transformTime(timestamp)}</td>
                 <td>{bytesReceivedSecond}</td>
                 <td>{bytesSentSecond}</td>
-                <td>{bytesReceived}</td>
-                <td>{bytesSent}</td>
               </tr>
             </tbody>
           </table>
@@ -77,14 +71,14 @@ const Internels: React.FC<any> = ({ senderStatus, debug, switchDebug }: IProps) 
             <>
               <thead>
                 <tr className="table-title">
-                  <th>Type</th>
-                  <th>Res</th>
-                  <th>FamesEn/s</th>
-                  <th>FramesSent/s</th>
-                  <th>BytesSent/s</th>
-                  <th>BytesSent</th>
-                  <th>PacketsSent</th>
-                  <th>keyFramesEn</th>
+                  <th>类型</th>
+                  <th>分辨率</th>
+                  <th>期望发送（kb/s）</th>
+                  <th>发送（kb/s）</th>
+                  <th>编码（帧/s）</th>
+                  <th>码率（帧/s）</th>
+                  <th>关键帧</th>
+                  <th>pliCount</th>
                 </tr>
               </thead>
               <tbody>
@@ -93,25 +87,25 @@ const Internels: React.FC<any> = ({ senderStatus, debug, switchDebug }: IProps) 
                     const {
                       frameWidth,
                       frameHeight,
-                      bytesSent,
                       bytesSentSecond,
-                      packetsSent,
                       framesSentSecond,
                       framesEncodedSecond,
                       type,
-                      keyFramesEncoded
+                      keyFramesEncoded,
+                      expBandwidth,
+                      pliCount
                     } = sender[key];
 
                     return (
                       <tr key={key}>
                         <td>{type}</td>
                         <td>{frameWidth} * {frameHeight}</td>
+                        <td>{expBandwidth}</td>
+                        <td>{bytesSentSecond}</td>
                         <td>{framesEncodedSecond}</td>
                         <td>{framesSentSecond}</td>
-                        <td>{bytesSentSecond}</td>
-                        <td>{bytesSent}</td>
-                        <td>{packetsSent}</td>
                         <td>{keyFramesEncoded}</td>
+                        <td>{pliCount}</td>
                       </tr>
                     )
                   })
@@ -126,15 +120,15 @@ const Internels: React.FC<any> = ({ senderStatus, debug, switchDebug }: IProps) 
             <>
               <thead>
                 <tr className="table-title">
-                  <th>Name</th>
-                  <th>Type</th>
-                  <th>Res</th>
-                  <th>FramesDe/s</th>
-                  <th>FramesRe/s</th>
-                  <th>BytesRe/s</th>
-                  <th>PacketsRe</th>
-                  <th>NackCount</th>
-                  <th>keyFramesDe</th>
+                  <th>昵称</th>
+                  <th>类型</th>
+                  <th>实际分辨率</th>
+                  <th>期望分辨率</th>
+                  <th>解码（帧/s）</th>
+                  <th>码率（帧/s）</th>
+                  <th>接收（kb/s）</th>
+                  <th>关键帧</th>
+                  <th>pliCount</th>
                 </tr>
               </thead>
               <tbody>
@@ -144,14 +138,14 @@ const Internels: React.FC<any> = ({ senderStatus, debug, switchDebug }: IProps) 
                       frameWidth,
                       frameHeight,
                       bytesReceivedSecond,
-                      nackCount,
-                      packetsReceived,
                       framesReceivedSecond,
                       framesDecodedSecond,
                       type,
                       name,
                       isContent,
-                      keyFramesDecoded
+                      expResolution,
+                      keyFramesDecoded,
+                      pliCount
                     } = receiver[key];
 
                     return (
@@ -159,12 +153,12 @@ const Internels: React.FC<any> = ({ senderStatus, debug, switchDebug }: IProps) 
                         <td>{name}</td>
                         <td>{type} * {isContent ? "Con" : 'Peo'}</td>
                         <td>{frameWidth} * {frameHeight}</td>
+                        <td>{expResolution}</td>
                         <td>{framesDecodedSecond}</td>
                         <td>{framesReceivedSecond}</td>
                         <td>{bytesReceivedSecond}</td>
-                        <td>{packetsReceived}</td>
-                        <td>{nackCount}</td>
                         <td>{keyFramesDecoded}</td>
+                        <td>{pliCount}</td>
                       </tr>
                     )
                   })

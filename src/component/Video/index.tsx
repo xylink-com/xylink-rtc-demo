@@ -5,10 +5,10 @@
  * @date  2020-1-07 10:34:18
  */
 
-import React, { useLayoutEffect, useRef, useEffect, useState, useCallback } from 'react';
+import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react';
 import { MoreOutlined, FullscreenOutlined, BlockOutlined, FullscreenExitOutlined, ExpandOutlined } from '@ant-design/icons';
 import { Menu, Dropdown, Button } from 'antd';
-import fullScreen from "../../utils/screen";
+import { fscreen } from "../../utils/screen";
 import './index.scss';
 
 interface IProps {
@@ -28,33 +28,49 @@ const Video: React.FC<any> = (props: IProps) => {
   const { item, index, isRefresh, model, videoId } = props;
   const streamId = (item.stream && item.stream.video && item.stream.video.id) || "";
 
-  const videoRef = useRef<any>(null);
-
   const [border, setBorder] = useState({});
   const [streamStatus, setStreamStatus] = useState('enabled');
+  const [playStatus, setPlayStatus] = useState(false);
   // safari 关闭画中画功能
   const [operate, setOperate] = useState({
     isPicture: false,
     isDisabled: /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent),
     isCoverMode: true
   });
+  const [isFullScreen, setIsFullScreen] = useState(false);
 
+  const videoWrapRef = useRef<any>(null);
+  const videoRef = useRef<any>(null);
   const timmer = useRef<any>(0);
 
-  const onMute = () => {
+  useEffect(() => {
+    // 监听全屏状态change事件
+    fscreen.init(videoWrapRef.current, (e: any) => {
+      setIsFullScreen(e.isFullScreen);
+    });
+
+    return () => {
+      fscreen.clear(videoWrapRef.current);
+    }
+  }, [])
+
+  const onMute = useCallback(() => {
+    console.log(videoId + " onMute");
     clearTimeer();
 
     timmer.current = setTimeout(() => {
-      if (streamStatus !== 'enabled') {
-        setStreamStatus('comming');
-      }
+      setStreamStatus(streamStatus => {
+        return streamStatus !== 'enabled' ? 'comming' : streamStatus;
+      })
     }, 1200);
-  }
+  }, []);
 
-  const onUnmute = () => {
+  const onUnmute = useCallback(() => {
+    console.log(videoId + " onUnMute");
     setStreamStatus('enabled');
     clearTimeer();
-  }
+  }, [])
+
 
   const clearTimeer = () => {
     if (timmer.current) {
@@ -64,38 +80,38 @@ const Video: React.FC<any> = (props: IProps) => {
   }
 
   const onLoadStart = () => {
-    setStreamStatus('comming');
+    console.log(videoId + " onLoadStart");
+
+    setPlayStatus(false);
+    // setStreamStatus('comming');
   }
 
   const onLoadCanPlay = () => {
-    setStreamStatus('enabled');
+    console.log(videoId + " enabled");
+
+    setPlayStatus(true);
+    // setStreamStatus('enabled');
   }
 
-  const onLoadEnded = () => {
-    console.log(`-----${item.roster.displayName} on load ended`);
-  }
-
-  const onLoadError = () => {
-    console.log(`-----${item.roster.displayName} on load error`);
-  }
-
-  const showPictureInPicture = () => {
-    setOperate({
-      ...operate,
-      isPicture: true
+  const showPictureInPicture = useCallback(() => {
+    setOperate(operate => {
+      return {
+        ...operate,
+        isPicture: true
+      }
     })
-  }
+  }, []);
 
-  const hidePictureInPicture = () => {
-    setOperate({
-      ...operate,
-      isPicture: false
+  const hidePictureInPicture = useCallback(() => {
+    setOperate(operate => {
+      return {
+        ...operate,
+        isPicture: false
+      }
     })
-  }
+  }, []);
 
   useEffect(() => {
-    const videoEle: any = document.getElementById(videoId);
-
     if (index >= 1 && item && item.stream && item.stream.track) {
       item.stream.track.addEventListener('mute', onMute);
 
@@ -103,15 +119,6 @@ const Video: React.FC<any> = (props: IProps) => {
     }
 
     return () => {
-      if (videoEle) {
-        videoEle.pause();
-
-        // 进入画中画模式时候执行
-        videoEle.removeEventListener('enterpictureinpicture', showPictureInPicture);
-        // 退出画中画模式时候执行
-        videoEle.removeEventListener('leavepictureinpicture', hidePictureInPicture);
-      }
-
       if (index >= 1 && item && item.stream && item.stream.track) {
         item.stream.track.removeEventListener('mute', onMute);
 
@@ -120,7 +127,7 @@ const Video: React.FC<any> = (props: IProps) => {
 
       clearTimeer();
     }
-  }, []);
+  }, [index, item, onMute, onUnmute]);
 
   useEffect(() => {
     if (model === "gallery" && item.roster.isActiveSpeaker) {
@@ -134,87 +141,105 @@ const Video: React.FC<any> = (props: IProps) => {
     }
   }, [model, item.roster.isActiveSpeaker]);
 
-  useLayoutEffect(() => {
-    (async () => {
-      const videoEle: any = document.getElementById(videoId);
+  useEffect(() => {
+    const videoEle = videoRef.current;
 
+    (async () => {
       if (videoEle && !videoEle.srcObject && item.stream.video) {
         videoEle.srcObject = item.stream.video;
 
-        try {
+        if (videoEle.paused) {
           await videoEle.play();
-
-          // 进入画中画模式时候执行
-          videoEle.addEventListener('enterpictureinpicture', showPictureInPicture);
-          // 退出画中画模式时候执行
-          videoEle.addEventListener('leavepictureinpicture', hidePictureInPicture);
-        } catch (err) {
-          console.log("play video err: ", err);
         }
+
+        // 进入画中画模式时候执行
+        videoEle.addEventListener('enterpictureinpicture', showPictureInPicture);
+        // 退出画中画模式时候执行
+        videoEle.addEventListener('leavepictureinpicture', hidePictureInPicture);
       }
     })();
 
-    if (isRefresh && videoRef.current) {
-      const realWidth = parseInt(videoRef.current.style.width);
+    return () => {
+      if (videoEle) {
+        videoEle.pause();
+        videoEle.srcObject = null;
 
-      videoRef.current.style.width = `${realWidth}px`;
+        // 进入画中画模式时候执行
+        videoEle.removeEventListener('enterpictureinpicture', showPictureInPicture);
+        // 退出画中画模式时候执行
+        videoEle.removeEventListener('leavepictureinpicture', hidePictureInPicture);
+      }
     }
-  })
+  }, [item.stream.video, showPictureInPicture, hidePictureInPicture])
 
-  const switchPictureInPicture = async () => {
+  useEffect(() => {
+    if (isRefresh && videoWrapRef.current) {
+      const realWidth = parseInt(videoWrapRef.current.style.width);
+
+      videoWrapRef.current.style.width = `${realWidth}px`;
+    }
+  }, [isRefresh]);
+
+  const switchPictureInPicture = useCallback(() => {
     if (operate.isPicture) {
       // @ts-ignore
       document.exitPictureInPicture()
     } else {
-      const videoDom = document.getElementById(videoId);
+      const videoEle = videoRef.current;
 
-      // @ts-ignore
-      videoDom && videoDom.requestPictureInPicture();
+      videoEle && videoEle.requestPictureInPicture();
     }
-  }
+  }, [operate.isPicture]);
 
-  const switchVideoMode = () => {
-    const videoEle: any = document.getElementById(videoId);
+  const switchVideoMode = useCallback(() => {
+    const videoEle = videoRef.current;
+
     if (operate.isCoverMode) {
       videoEle.style.objectFit = "contain"
     } else {
       videoEle.style.objectFit = "cover"
     }
 
-    setOperate({
-      ...operate,
-      isCoverMode: !operate.isCoverMode
+    setOperate(operate => {
+      return {
+        ...operate,
+        isCoverMode: !operate.isCoverMode
+      }
     })
-  }
+  }, [operate.isCoverMode]);
 
   const toggleFullScreen = () => {
-    fullScreen.toggleFullScreen(videoRef.current);
+    if (isFullScreen) {
+      fscreen.exit(videoWrapRef.current);
+    } else {
+      fscreen.request(videoWrapRef.current);
+    }
   }
 
   const renderVideoMenu = useCallback(
     () => {
       return (
-        <Menu>
+        <Menu theme="dark">
           <Menu.Item onClick={toggleFullScreen}>
-            {fullScreen.getFullStatus(videoRef.current) ? (
+            {isFullScreen ? (
               <>
                 <FullscreenExitOutlined />
-              切换显示
+              退出全屏
             </>
             ) : (
                 <>
                   <FullscreenOutlined />
-              切换显示
+              全屏
             </>
               )}
           </Menu.Item>
           <Menu.Item onClick={switchPictureInPicture}>
             {operate.isPicture ?
               (
-                <><BlockOutlined />退出画中画</>
+                <><BlockOutlined />退出悬浮窗口</>
               ) :
               (
-                <><BlockOutlined />画中画</>
+                <><BlockOutlined />悬浮窗口</>
               )
             }
           </Menu.Item>
@@ -224,12 +249,12 @@ const Video: React.FC<any> = (props: IProps) => {
               {operate.isCoverMode ? (
                 <>
                   <ExpandOutlined />
-                contain模式
+                比例模式
               </>
               ) : (
                   <>
                     <ExpandOutlined />
-                cover模式
+                覆盖模式
               </>
                 )}
             </Menu.Item>
@@ -237,98 +262,116 @@ const Video: React.FC<any> = (props: IProps) => {
         </Menu>
       )
     },
-    [operate],
+    [operate, item.roster.isContent, switchPictureInPicture, switchVideoMode, isFullScreen],
   );
 
-  let videoStyle = {};
-  let videoSty = {};
-  const positionStyle = item.positionStyle;
-  const isShowLoading = (!item.stream.video || streamStatus === 'coming') && index >= 1;
+  const videoWrapStyle = useMemo(() => {
+    let wrapStyle = {};
+    const positionStyle = item.positionStyle;
 
-  if (positionStyle && positionStyle.width) {
-    videoStyle = positionStyle;
-  }
+    if (positionStyle && positionStyle.width) {
+      wrapStyle = positionStyle;
+    }
 
-  if (index > 0) {
-    videoSty = item.rotate;
+    return wrapStyle;
+  }, [item.positionStyle]);
 
-    if (item.roster.isContent) {
-      videoSty = {
-        ...videoSty,
-        width: 'auto',
-        objectFit: 'contain'
+  const isShowLoading = (!item.stream.video || streamStatus === 'comming' || !playStatus) && index >= 1;
+
+  const videoStyle = useMemo(() => {
+    let style = {};
+    let fullStyle = {};
+
+    if (isFullScreen) {
+      fullStyle = {
+        width: "100%",
+        height: "100%",
+        objectFit: "contain"
       };
     }
-  } else {
-    videoSty = {
-      ...item.rotate,
-      transform: 'rotateY(180deg)'
-    };
-  }
+
+    if (index > 0) {
+      style = item.rotate;
+
+      if (item.roster.isContent || isFullScreen) {
+        style = {
+          ...style,
+          ...fullStyle
+        };
+      }
+    } else {
+      style = {
+        ...item.rotate,
+        transform: 'rotateY(180deg)'
+      };
+    }
+
+    return style;
+  }, [isFullScreen, item.rotate, item.roster, index]);
+
   const renderVideoName = () => {
     return <div className="video-status">
-      <div className={item.roster.audioTxMute ? "audio-muted-status" : "audio-unmuted-status"}></div>
+      {!item.roster.isContent && <div className={item.roster.audioTxMute ? "audio-muted-status" : "audio-unmuted-status"}></div>}
       <div className="name">
         {`${item.roster.displayName || "Local"}`}
       </div>
     </div>
   }
 
-  const renderVideoStatus = () => {
+  const videoStatus = useMemo(() => {
+    let status = {
+      picture: false,
+      audioOnly: false,
+      mute: false,
+      request: false,
+      normal: false
+    };
+    const { deviceType, videoTxMute, isContent } = item.roster;
+
+    // 画中画
     if (operate.isPicture) {
-      return (
-        <div className="video-bg">
-          <div className="center">
-            {/* <div className="displayname">{item.roster.displayName || "Local"}</div> */}
-            <div>画中画显示中...</div>
-            <div>
-              <Button type="link" onClick={switchPictureInPicture}>恢复</Button>
-            </div>
-          </div>
-          {renderVideoName()}
-        </div>
-      )
-    }
-
-    if (item.roster.isContent) {
-      if (item.roster.videoTxMute) {
-        return (
-          <div className="video-bg">
-            <div className="center">
-              <div className="displayname">{item.roster.displayName || ""}</div>
-              <div>语音通话中</div>
-            </div>
-          </div>
-        )
+      status = {
+        ...status,
+        picture: true
       }
-
-      return null;
+    } else if (isContent) {
+      const request = videoTxMute ? false : isShowLoading;
+      // content共享
+      // 仅音频共享: videoTxMute === true 
+      status = {
+        ...status,
+        audioOnly: videoTxMute,
+        normal: !videoTxMute,
+        request
+      }
+    } else if (videoTxMute) {
+      // 画面暂停
+      status = {
+        ...status,
+        mute: true
+      }
+    } else if (deviceType === "tel" || deviceType === "pstngw") {
+      // pstn/tel 入会，显示语音通话中
+      status = {
+        ...status,
+        audioOnly: true
+      }
+    } else if (isShowLoading) {
+      // 请求中
+      status = {
+        ...status,
+        request: true
+      }
+    } else {
+      // 正常模式
+      status = {
+        ...status,
+        normal: true
+      }
     }
 
-    if (item.roster.videoTxMute) {
-      return (
-        <div className="video-bg">
-          <div className="center">
-            <div>视频暂停</div>
-          </div>
-          {renderVideoName()}
-        </div>
-      )
-    }
-
-    if (isShowLoading) {
-      return (
-        <div className="video-bg">
-          <div className="center">
-            <div>视频请求中...</div>
-          </div>
-          {renderVideoName()}
-        </div>
-      )
-    }
-
-    return renderVideoName()
-  }
+    return status;
+  }, [item, operate.isPicture, isShowLoading]);
 
   const renderVideoOperate = () => {
     return (
@@ -345,19 +388,58 @@ const Video: React.FC<any> = (props: IProps) => {
   }
 
   return (
-    <div className="wrap-video" style={videoStyle} ref={videoRef}>
+    <div className="wrap-video" style={videoWrapStyle} ref={videoWrapRef}>
       <div className="video">
         <div className="video-content" style={border}>
           <div className="video-model">
             <div className="status">
               <p style={{ display: 'none' }}>streamId: {item.stream && item.stream.video && item.stream.video.id}</p>
             </div>
-            {
-              renderVideoStatus()
-            }
+
+            <div className={`video-bg ${videoStatus.picture ? 'video-show' : 'video-hidden'}`}>
+              <div className="center">
+                <div>悬浮窗口显示中...</div>
+                <div>
+                  <Button type="link" onClick={switchPictureInPicture}>恢复</Button>
+                </div>
+              </div>
+              {renderVideoName()}
+            </div>
+
+            <div className={`video-bg ${videoStatus.audioOnly ? 'video-show' : 'video-hidden'}`}>
+              <div className="center">
+                <div className="displayname">{item.roster.displayName || ""}</div>
+                <div>语音通话中</div>
+              </div>
+            </div>
+
+            <div className={`video-bg ${videoStatus.mute ? 'video-show' : 'video-hidden'}`}>
+              <div className="center">
+                {
+                  index === 0 ? <div>视频暂停</div> : <div>对方忙，暂时关闭视频</div>
+                }
+              </div>
+              {renderVideoName()}
+            </div>
+
+            <div className={`video-bg ${videoStatus.request ? 'video-show' : 'video-hidden'}`}>
+              <div className="center">
+                <div>视频请求中...</div>
+              </div>
+              {renderVideoName()}
+            </div>
+
+            <div className={`video-status video-animote ${videoStatus.normal ? 'video-show' : 'video-hidden'}`}>
+              {
+                !item.roster.isContent && <div className={item.roster.audioTxMute ? "audio-muted-status" : "audio-unmuted-status"}></div>
+              }
+              <div className="name">
+                {`${item.roster.displayName || "Local"}`}
+              </div>
+            </div>
 
             {
-              !operate.isDisabled && !item.roster.videoTxMute && renderVideoOperate()
+              !operate.isDisabled && !item.roster.videoTxMute && !videoStatus.audioOnly && renderVideoOperate()
             }
           </div>
         </div>
@@ -365,7 +447,8 @@ const Video: React.FC<any> = (props: IProps) => {
         {
           item.stream.video && (
             <video
-              style={videoSty}
+              ref={videoRef}
+              style={videoStyle}
               autoPlay
               controls={false}
               playsInline
@@ -373,8 +456,16 @@ const Video: React.FC<any> = (props: IProps) => {
               muted={index === 0}
               onCanPlay={onLoadCanPlay}
               onLoadStart={onLoadStart}
-              onError={onLoadError}
-              onEnded={onLoadEnded}
+              onError={() => {
+                console.log(videoId + " onError");
+              }}
+              onEmptied={() => {
+                console.log(videoId + " onEmptied");
+              }}
+              onLoadedMetadata={() => {
+                console.log(videoId + " onLoadedMetadata");
+              }}
+
             ></video>
           )
         }
