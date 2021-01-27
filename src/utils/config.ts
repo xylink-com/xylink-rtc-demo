@@ -51,9 +51,9 @@ const PRODUCTION_ACCOUNT = {
 
 const THIRD_ACCOUNT_MAP = {
   TXDEV: {
-    extId: "",
-    clientId: "",
-    clientSecret: "",
+    extId: '8bea008225dd82616e1f43dcc5c8e3bbbab0d9e5', // a8659e5d496283c5d5ed18b9b51f263bfeeebc79
+    clientId: 'Dx9AiLgQEOboyidOWxGoQRSi',
+    clientSecret: ''
   },
   PRE: {
     extId: "",

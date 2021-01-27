@@ -1,4 +1,4 @@
-@import "../../style/var.scss";
+@import '../../style/var.scss';
 
 .xy__setting-modal {
   .ant-modal-header {
@@ -6,46 +6,48 @@
   }
 
   .ant-modal-body {
-    padding: 10px 0 20px;
+    padding: 0;
     top: 0;
   }
 
-  .ant-modal-content{
+  .ant-modal-content {
     border-radius: 10px;
   }
 
   .ant-menu-item .anticon {
-    margin-right: 4px;
+    margin-right: 12px;
   }
-
-  .settng__header {
+  .setting__container {
     position: relative;
-
+    height: 540px;
+    display: flex;
+    overflow: hidden;
     .close {
       position: absolute;
-      top: 9px;
-      right: 20px;
-      font-size: 16px;
+      top: 10px;
+      right: 10px;
+      font-size: 15px;
       color: #777;
       cursor: pointer;
+      z-index: 1001;
+    }
+  }
+  .setting__header {
+    position: relative;
+    .ant-menu {
+      height: 100%;
+      padding: 24px 0;
+      border-top-left-radius: 10px;
+      border-bottom-left-radius: 10px;
     }
   }
 
   .setting__content {
-    min-height: 200px;
-    padding: 15px;
-
-    &-device.fixed {
-      position: absolute;
-      width: calc(100% - 30px);
-      background-color: #fff;
-      z-index: 10;
-    }
-
-    &-device {
-      max-height: 500px;
-      overflow-y: auto;
-    }
+    position: relative;
+    flex-grow: 1;
+    height: 100%;
+    padding: 24px 15px;
+    overflow-y: auto;
 
     .item {
       display: flex;
@@ -65,7 +67,7 @@
 
       .key {
         margin-right: 15px;
-        width: 60px;
+        min-width: 80px;
         text-align: right;
       }
 
@@ -77,7 +79,7 @@
         position: absolute;
         background: #000;
         color: #fff;
-        width: 186px;
+        width: 248px;
         height: 140px;
         display: flex;
         align-items: center;
@@ -86,7 +88,7 @@
       }
 
       .preview-video {
-        width: 186px;
+        width: 248px;
         height: 140px;
         overflow: hidden;
         border-radius: 2px;
@@ -135,6 +137,38 @@
         padding: 0 5px;
         color: #ddd;
       }
+
+      &-column {
+        width: 100%;
+        flex-direction: column;
+        align-items: flex-start;
+        .key {
+          text-align: left;
+        }
+        .value {
+          width: 100%;
+          margin-top: 10px;
+        }
+      }
+    }
+
+    &-device {
+      &-main {
+        display: flex;
+        justify-content: space-between;
+        flex-direction: column;
+        height: 100%;
+      }
+      .fixed {
+        position: absolute;
+        width: calc(100% - 30px);
+        z-index: 10;
+      }
+      .item {
+        .key {
+          min-width: 60px;
+        }
+      }
     }
 
     .request__loading {
@@ -153,9 +187,9 @@
     }
 
     .request__iauth {
-      .guide {
+      .guide-img {
         width: 70%;
-        margin: 0 auto;
+        margin: 30px auto;
         display: block;
       }
 
@@ -175,6 +209,19 @@
   .setting__footer {
     min-height: 50px;
   }
+}
+
+.setting-tips {
+  font-size: 12px;
+  margin-left: 2px;
+  opacity: 0.6;
+}
+
+.show {
+  display: block !important;
+}
+.hide {
+  display: none !important;
 }
 
 .hidden {

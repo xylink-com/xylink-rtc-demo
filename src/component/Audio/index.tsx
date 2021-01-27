@@ -5,52 +5,41 @@
  * @date  2020-1-07 10:34:18
  */
 
-import React, { useLayoutEffect, useEffect, useRef } from 'react';
-import xyRTC from '@xylink/xy-rtc-sdk';
+import React, { useEffect, useRef } from 'react';
 import './index.scss';
 
 interface IProps {
   item: any,
   muted: boolean;
+  streamId: string;
   audioOutput?: string; // 扬声器
+  client: any;
 }
 
 const Audio: React.FC<any> = (props: IProps) => {
-  const { item, muted, audioOutput = "" } = props;
-  const status = item.status;
+  const { muted, streamId, client } = props;
   const audioRef = useRef<HTMLAudioElement>(null);
 
+  // 组件加载完成（DOM已经渲染）的回调事件
   useEffect(() => {
+    const audioEle = audioRef.current;
+    if (audioEle && client) {
+      // 设置播放器
+      client.setAudioRenderer(streamId, audioRef.current);
+    }
+
+    // react hook 组件销毁时的回调函数
     return () => {
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-      audioRef.current && audioRef.current.pause();
+      // 暂停audio组件播放
+      audioEle && audioEle.pause();
     }
-  }, []);
+  }, [client, streamId]);
 
-  useEffect(() => {
-    // 扬声器
-    if (audioOutput && status !== "local") {
-      xyRTC.setOutputAudioDevice(audioRef.current, audioOutput);
-    }
-  }, [audioOutput, status]);
-
-  useLayoutEffect(() => {
-    (async () => {
-      if (audioRef.current && !audioRef.current.srcObject) {
-        audioRef.current.srcObject = item.data.streams[0];
-
-        try {
-          await audioRef.current.play();
-        } catch (err) {
-        }
-      }
-    })();
-  })
-
+  // audio组件在页面中隐藏即可，不需要展示出来
   return (
     <div className="wrap-audio">
       <audio
-        autoPlay
+        autoPlay={true}
         ref={audioRef}
         muted={muted}
       ></audio>

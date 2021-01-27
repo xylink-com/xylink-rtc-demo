@@ -18,7 +18,7 @@ export interface IParticipantCount {
 }
 
 export interface IRoster {
-  deviceType: string;
+  deviceType: IDeviceType;
   endpointId: string;
   displayName: string;
   mediagroupid: number;
@@ -33,32 +33,46 @@ export interface IRoster {
   onHold: boolean;
   isPolling: boolean;
   isContent: boolean;
+  isActiveSpeaker?: boolean;
+  id: string;
+  isLocal?: boolean;
 }
 
+export type ILayoutState =
+  | 'MUTE'
+  | 'REQUEST'
+  | 'NORMAL'
+  | 'INVALID'
+  | 'AUDIO_TEL'
+  | 'AUDIO_ONLY'
+  | 'AUDIO_CONTENT';
+
 export interface ILayout {
-  roster: IRoster;
+  // 忽略
   position: number[];
+  // 分辨率
+  resolution: number;
+  // roster 成员数据
+  roster: IRoster;
+  // 旋转信息
+  rotate: any;
+  // 忽略
   seat: number;
-  status: string;
-  stream: {
-    video: null | MediaStream;
-    videoTrackId: null | string;
-    isExist: boolean;
-    track: MediaStreamTrack;
-  };
-  display: boolean;
-  deal: boolean;
-  positionInfo?: {
-    width: number;
-    height: number;
-  };
+  state: ILayoutState;
+  // 位置信息
   positionStyle?: {
     left: string;
     top: string;
     width: string;
     height: string;
   };
-  rotate: any;
+  // 忽略
+  positionInfo?: {
+    width: number;
+    height: number;
+  };
+  // 忽略
+  deal?: boolean;
 }
 
 export interface IScreenInfo {
@@ -85,7 +99,7 @@ export interface ICallStatus {
 
 export interface IAudioStatus {
   disableMute: boolean;
-  muteOperation: 'unmute' | 'mute' | '';
+  muteOperation: 'unmuteAudio' | 'muteAudio' | '';
 }
 
 export interface ISpeakerInfo {
@@ -131,3 +145,59 @@ export interface IChoosedSettingDevice {
   audioOutputValue: string;
   videoInValue: string;
 }
+
+export type IVideoAudioType = 'muteAudio' | 'muteVideo' | 'unmuteAudio' | 'unmuteVideo';
+
+export type IMeetingVideoStatus = {
+  status: 'muteVideo' | 'unmuteVideo';
+};
+
+export type IMeetingAudioStatus = {
+  status: 'muteAudio' | 'unmuteAudio';
+};
+
+type TDevice = {
+  deviceId: string;
+  kind: string;
+  type: string;
+  direction: 'audioinput' | 'output' | 'input';
+  label: string;
+  groupId: string;
+};
+
+export type IDeviceList = {
+  audioInputList: TDevice[];
+  audioOutputList: TDevice[];
+  videoInList: TDevice[];
+};
+
+export type TCurrentSelectedDevice = {
+  deviceId: string;
+  groupId: string;
+  label: string;
+};
+
+export type ICurrentSelectedDevice = {
+  audioInput: TCurrentSelectedDevice;
+  videoInput: TCurrentSelectedDevice;
+  audioOutput: TCurrentSelectedDevice;
+};
+
+export type IDeviceManagerChangeValue = {
+  nextDevice: ICurrentSelectedDevice;
+  detail: IDeviceList;
+};
+
+export interface INextDevice {
+  audioInput: IDeviceItem;
+  videoInput: IDeviceItem;
+  audioOutput: IDeviceItem;
+}
+export interface ISetting {
+  selectedDevice?: INextDevice;
+  deviceList?: IDevices;
+  localHide?: boolean;
+  fullScreen?: boolean;
+}
+
+export type TSettingType = 'device' | 'common';
