@@ -123,6 +123,7 @@ const Setting = (props: IProps) => {
     if (audioLevelTimmer.current) {
       clearInterval(audioLevelTimmer.current);
     }
+    setAudioLevel(0);
   }
 
   const clearStream = () => {
@@ -147,8 +148,7 @@ const Setting = (props: IProps) => {
     if (previewStream.current) {
       // 音量level clear
       if (key === "audioInputValue") {
-        clearInterval(audioLevelTimmer.current);
-        setAudioLevel(0);
+        clearAudioLevelTimmer();
       }
 
       // 1. add new track

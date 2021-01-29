@@ -9,10 +9,8 @@ import React, { useEffect, useRef } from 'react';
 import './index.scss';
 
 interface IProps {
-  item: any,
   muted: boolean;
   streamId: string;
-  audioOutput?: string; // 扬声器
   client: any;
 }
 

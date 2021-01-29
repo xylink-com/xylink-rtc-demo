@@ -154,6 +154,7 @@ function Home() {
     setShareContentStatus(false);
     setDebug(false);
     setLayout([]);
+    setSettingVisible(false);
 
     client = null;
     stream = null;
@@ -362,7 +363,7 @@ function Home() {
         return;
       }
 
-      const token = result.data.token.access_token || result.data.access_token;
+      const token = result.data.token?.access_token || result.data.access_token;
 
       callStatus = await client.makeCall({
         token,
@@ -664,6 +665,8 @@ function Home() {
         stream.on('stop-share-content', () => {
           stopShareContent();
         });
+      } else {
+        message.info("分享屏幕失败");
       }
     } catch (err) {
       if (err && err.code !== 500) {
