@@ -136,7 +136,7 @@ const Setting = (props: IProps) => {
     clearAudioLevelTimmer();
 
     if (deviceManager.current) {
-      deviceManager.current.destory();
+      deviceManager.current.destroy();
     }
 
     clearStream();

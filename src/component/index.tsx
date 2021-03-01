@@ -146,7 +146,7 @@ function Home() {
     setSubTitle({ action: 'cancel', content: '' });
 
     // sdk清理操作
-    client && client.destory();
+    client && client.destroy();
 
     // 清理组件状
     setCallMeeting(false);
@@ -294,6 +294,7 @@ function Home() {
     try {
       const { meeting, meetingPassword, meetingName, muteAudio, muteVideo } = user;
       const { wssServer, httpServer, logServer } = SERVER(env);
+      const { clientId } = ACCOUNT(env);
 
       // 这里三方可以根据环境修改sdk log等级
       // xyRTC.logger.setLogLevel("NONE");
@@ -312,7 +313,8 @@ function Home() {
         layout: LAYOUT,
         container: {
           offset: [32, 60, 0, 0] // 上 下 左 右
-        }
+        },
+        clientId
       });
 
       initEventListener(client);
@@ -329,24 +331,19 @@ function Home() {
       let result;
 
       if (isThird) {
-        const { extId, clientId, clientSecret } = ACCOUNT(env);
+        const { extId } = ACCOUNT(env);
 
         result = await client.loginExternalAccount({
           // 用户名自行填写
           displayName: 'thirdName',
-          extId,
-          clientId,
-          clientSecret
+          extId
         });
       } else {
-        const { clientId } = ACCOUNT(env);
 
         // 小鱼登录
         result = await client.loginXYlinkAccount(
           user.phone,
-          user.password,
-          clientId
-        );
+          user.password);
       }
 
       if (result.code === 10104) {
@@ -363,7 +360,7 @@ function Home() {
         return;
       }
 
-      const token = result.data.token?.access_token || result.data.access_token;
+      const token = result.detail.access_token;
 
       callStatus = await client.makeCall({
         token,
