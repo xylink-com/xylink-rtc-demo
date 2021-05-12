@@ -46,7 +46,7 @@ const Setting = (props: IProps) => {
 
   useEffect(() => {
     async function start() {
-      deviceManager.current = new DeviceManager();
+      deviceManager.current = new DeviceManager(xyRTC.logger);
 
       await deviceManager.current.init();
 

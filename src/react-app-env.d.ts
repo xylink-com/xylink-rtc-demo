@@ -1,2 +1,2 @@
 /// <reference types="react-scripts" />
-declare module '@xylink/xy-rtc-sdk'
+// declare module '@xylink/xy-rtc-sdk'

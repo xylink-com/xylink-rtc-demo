@@ -27,6 +27,22 @@ body {
   user-select: none;
 }
 
+#root {
+  width: 100vw;
+  height: 100vh;
+
+  overflow: auto;
+  box-sizing: border-box;
+}
+
+#container {
+  height: 100%;
+  width: 100%;
+  overflow: auto;
+
+  position: relative;
+}
+
 .title {
   padding-top: 10px;
   color: var(--base-dark-color);

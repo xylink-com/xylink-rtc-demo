@@ -4,6 +4,26 @@
  * @date  2020-04-01 17:46:13
  */
 
+// Stream的状态：
+// NORMAL：正常
+// DOMSTRING：无流状态，定义domStream，用来创建流通道
+// INVALID：已失效
+export type IStreamStatus = "NORMAL" | "DOMSTRING" | "INVALID";
+
+export type IStreamCurrentType = "NORMAL" | "SEND_ONLY" | "FAILED";
+
+export type IStreamObjType =
+  | "contentStream"
+  | "previewStream"
+  | "pipelineStream"
+  | "remoteStream";
+
+export type IResolutionType = 0 | 1 | 2 | 3 | 4 | 5;
+
+export type IQualityType = 0 | 1 | 2;
+
+export type IMediaQualityType = 0 | 100 | 200;
+
 export interface IDisconnected {
   code: number;
   msg: string;
@@ -38,14 +58,18 @@ export interface IRoster {
   isLocal?: boolean;
 }
 
+export type IOrderRoster = {
+  rosters: IRoster[];
+};
+
 export type ILayoutState =
-  | 'MUTE'
-  | 'REQUEST'
-  | 'NORMAL'
-  | 'INVALID'
-  | 'AUDIO_TEL'
-  | 'AUDIO_ONLY'
-  | 'AUDIO_CONTENT';
+  | "MUTE"
+  | "REQUEST"
+  | "NORMAL"
+  | "INVALID"
+  | "AUDIO_TEL"
+  | "AUDIO_ONLY"
+  | "AUDIO_CONTENT";
 
 export interface ILayout {
   // 忽略
@@ -99,7 +123,7 @@ export interface ICallStatus {
 
 export interface IAudioStatus {
   disableMute: boolean;
-  muteOperation: 'unmuteAudio' | 'muteAudio' | '';
+  muteOperation: "unmuteAudio" | "muteAudio" | "";
 }
 
 export interface ISpeakerInfo {
@@ -138,7 +162,10 @@ export interface IChoosedDevice {
   videoInValue: string;
 }
 
-export type IDeviceType = 'audioOutputValue' | 'audioInputValue' | 'videoInValue';
+export type IDeviceType =
+  | "audioOutputValue"
+  | "audioInputValue"
+  | "videoInValue";
 
 export interface IChoosedSettingDevice {
   audioInputValue: string;
@@ -146,21 +173,25 @@ export interface IChoosedSettingDevice {
   videoInValue: string;
 }
 
-export type IVideoAudioType = 'muteAudio' | 'muteVideo' | 'unmuteAudio' | 'unmuteVideo';
+export type IVideoAudioType =
+  | "muteAudio"
+  | "muteVideo"
+  | "unmuteAudio"
+  | "unmuteVideo";
 
 export type IMeetingVideoStatus = {
-  status: 'muteVideo' | 'unmuteVideo';
+  status: "muteVideo" | "unmuteVideo";
 };
 
 export type IMeetingAudioStatus = {
-  status: 'muteAudio' | 'unmuteAudio';
+  status: "muteAudio" | "unmuteAudio";
 };
 
 type TDevice = {
   deviceId: string;
   kind: string;
   type: string;
-  direction: 'audioinput' | 'output' | 'input';
+  direction: "audioinput" | "output" | "input";
   label: string;
   groupId: string;
 };
@@ -200,4 +231,42 @@ export interface ISetting {
   fullScreen?: boolean;
 }
 
-export type TSettingType = 'device' | 'common';
+export type TSettingType = "device" | "common";
+
+export interface IRotationInfoItem {
+  height: number;
+  width: number;
+  participantId: number;
+  // 数字0，1，2，3，其中：
+  // 2顺时针旋转180度、3顺时针旋转270度、其他的数值可以不需要处理
+  rotation: number;
+}
+
+export interface IRotationInfoTotalItem extends IRotationInfoItem {
+  mediagroupid: number;
+  id: string;
+}
+
+export interface IRotationInfo {
+  content: IRotationInfoItem[];
+  people: IRotationInfoItem[];
+  total: IRotationInfoTotalItem[];
+}
+
+export interface ICustomLayoutObj {
+  resolution: IResolutionType;
+  roster: IRoster;
+  rotate: any;
+  state: ILayoutState;
+  quality: 0 | 100 | 200;
+  deal?: boolean;
+  position?: number[];
+  positionStyle?: {
+    left?: string;
+    top?: string;
+    width?: string;
+    height?: string;
+  };
+  positionInfo?: { width?: number; height?: number };
+  zIndex?: number;
+}
