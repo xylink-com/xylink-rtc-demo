@@ -1973,10 +1973,10 @@
   resolved "https://registry.npm.taobao.org/@xtuc/long/download/@xtuc/long-4.2.2.tgz#d291c6a4e97989b5c61d9acf396ae4fe133a718d"
   integrity sha1-0pHGpOl5ibXGHZrPOWrk/hM6cY0=
 
-"@xylink/xy-rtc-sdk@2.0.0":
-  version "2.0.0"
-  resolved "https://registry.nlark.com/@xylink/xy-rtc-sdk/download/@xylink/xy-rtc-sdk-2.0.0.tgz#1fc7f84eeae84c6e499856408b54fa14023da2da"
-  integrity sha1-H8f4TuroTG5JmFZAi1T6FAI9oto=
+"@xylink/xy-rtc-sdk@^2.0.1":
+  version "2.0.1"
+  resolved "https://registry.npmjs.org/@xylink/xy-rtc-sdk/-/xy-rtc-sdk-2.0.1.tgz#84c70de45d8276f0b2f4fb595b1c46f88e4a833b"
+  integrity sha512-nKCtb/e7wL0M+o4FoAIOonZljWRFRuppHn856NAeILk/B+umhYp/HJ/8L+musRRXg9R4clh0co0Xk7opwgi3Zg==
   dependencies:
     crypto-js "^4.0.0"
     dexie "^2.0.4"
@@ -3574,8 +3574,8 @@ crypto-browserify@^3.11.0:
 
 crypto-js@^4.0.0:
   version "4.0.0"
-  resolved "https://registry.npm.taobao.org/crypto-js/download/crypto-js-4.0.0.tgz#2904ab2677a9d042856a2ea2ef80de92e4a36dcc"
-  integrity sha1-KQSrJnep0EKFai6i74DekuSjbcw=
+  resolved "https://registry.npmjs.org/crypto-js/-/crypto-js-4.0.0.tgz#2904ab2677a9d042856a2ea2ef80de92e4a36dcc"
+  integrity sha512-bzHZN8Pn+gS7DQA6n+iUmBfl0hO5DJq++QP3U6uTucDtk/0iGpXd/Gg7CGR0p8tJhofJyaKoWBuJI4eAO00BBg==
 
 css-blank-pseudo@^0.1.4:
   version "0.1.4"
@@ -3975,20 +3975,20 @@ detect-port-alt@1.1.6:
 
 dexie-export-import@^1.0.0-rc.1:
   version "1.0.0"
-  resolved "https://registry.npm.taobao.org/dexie-export-import/download/dexie-export-import-1.0.0.tgz#2e2cc375a416f540c89d2a39f623d297077221a4"
-  integrity sha1-LizDdaQW9UDInSo59iPSlwdyIaQ=
+  resolved "https://registry.npmjs.org/dexie-export-import/-/dexie-export-import-1.0.0.tgz#2e2cc375a416f540c89d2a39f623d297077221a4"
+  integrity sha512-mqtREaI+/tSEfpwOZeYNyX+FfCxTYt0RB4BIevX4wFGMQL1mQ0cWfIGXBpoRGEnHdiHbf3QNK2+0Ras3dNJfIQ==
   dependencies:
     dexie "^3.0.0-alpha.5 || ^2.0.4"
 
 dexie@^2.0.4:
   version "2.0.4"
-  resolved "https://registry.npm.taobao.org/dexie/download/dexie-2.0.4.tgz#6027a5e05879424e8f9979d8c14e7420f27e3a11"
-  integrity sha1-YCel4Fh5Qk6PmXnYwU50IPJ+OhE=
+  resolved "https://registry.npmjs.org/dexie/-/dexie-2.0.4.tgz#6027a5e05879424e8f9979d8c14e7420f27e3a11"
+  integrity sha512-aQ/s1U2wHxwBKRrt2Z/mwFNHMQWhESerFsMYzE+5P5OsIe5o1kgpFMWkzKTtkvkyyEni6mWr/T4HUJuY9xIHLA==
 
 "dexie@^3.0.0-alpha.5 || ^2.0.4":
   version "3.0.3"
-  resolved "https://registry.npm.taobao.org/dexie/download/dexie-3.0.3.tgz#ede63849dfe5f07e13e99bb72a040e8ac1d29dab"
-  integrity sha1-7eY4Sd/l8H4T6Zu3KgQOisHSnas=
+  resolved "https://registry.npmjs.org/dexie/-/dexie-3.0.3.tgz#ede63849dfe5f07e13e99bb72a040e8ac1d29dab"
+  integrity sha512-BSFhGpngnCl1DOr+8YNwBDobRMH0ziJs2vts69VilwetHYOtEDcLqo7d/XiIphM0tJZ2rPPyAGd31lgH2Ln3nw==
 
 diff-sequences@^24.9.0:
   version "24.9.0"
@@ -8945,8 +8945,8 @@ qs@6.7.0:
 
 qs@^6.9.4:
   version "6.10.1"
-  resolved "https://registry.npm.taobao.org/qs/download/qs-6.10.1.tgz#4931482fa8d647a5aab799c5271d2133b981fb6a"
-  integrity sha1-STFIL6jWR6Wqt5nFJx0hM7mB+2o=
+  resolved "https://registry.npmjs.org/qs/-/qs-6.10.1.tgz#4931482fa8d647a5aab799c5271d2133b981fb6a"
+  integrity sha512-M528Hph6wsSVOBiYUnGf+K/7w0hNshs/duGsNXPUCLH5XAqjEtiPGwNONLV0tBH8NoGb0mvD5JubnUTrujKDTg==
   dependencies:
     side-channel "^1.0.4"
 
@@ -11218,8 +11218,8 @@ uuid@^3.0.1, uuid@^3.3.2:
 
 uuid@^7.0.2:
   version "7.0.3"
-  resolved "https://registry.npm.taobao.org/uuid/download/uuid-7.0.3.tgz?cache=0&sync_timestamp=1607460077975&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2Fuuid%2Fdownload%2Fuuid-7.0.3.tgz#c5c9f2c8cf25dc0a372c4df1441c41f5bd0c680b"
-  integrity sha1-xcnyyM8l3Ao3LE3xRBxB9b0MaAs=
+  resolved "https://registry.npmjs.org/uuid/-/uuid-7.0.3.tgz#c5c9f2c8cf25dc0a372c4df1441c41f5bd0c680b"
+  integrity sha512-DPSke0pXhTZgoF/d+WSt2QaKMCFSfx7QegxEWT+JOuHF5aWrKEn0G+ztjuJg/gG8/ItK+rbPCD/yNv8yyih6Cg==
 
 v8-compile-cache@^2.0.3:
   version "2.3.0"
