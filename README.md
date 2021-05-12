@@ -10,7 +10,6 @@
 
 - extId
 - clientId
-- clientSecret
 
 ### 运行
 
