@@ -115,6 +115,8 @@ function Home() {
 
   const [selectedDevice, setSelectedDevice] = useState(DEFAULT_DEVICE.nextDevice);
 
+  const [version] = useState(xyRTC.version);
+
   const bgmAudioRef = useRef<HTMLAudioElement>(null);
   const rotationInfoRef = useRef<IRotationInfoTotalItem[]>([]);
   const nextLayoutListRef = useRef([]);
@@ -490,7 +492,6 @@ function Home() {
           extId
         });
       } else {
-
         // 小鱼登录
         result = await client.loginXYlinkAccount(
           user.phone,
@@ -1090,6 +1091,8 @@ function Home() {
           <div className="setting">
             <span style={{ cursor: 'pointer' }} onClick={onToggleSetting}>设置</span>
           </div>
+
+          <div className="copyright">版本：{version}</div>
         </div>
       );
     }
