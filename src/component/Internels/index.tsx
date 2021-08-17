@@ -123,7 +123,6 @@ const Internels: React.FC<any> = ({ senderStatus, debug, switchDebug }: IProps) 
                   <th>昵称</th>
                   <th>类型</th>
                   <th>实际分辨率</th>
-                  <th>期望分辨率</th>
                   <th>解码（帧/s）</th>
                   <th>码率（帧/s）</th>
                   <th>接收（kb/s）</th>
@@ -143,7 +142,6 @@ const Internels: React.FC<any> = ({ senderStatus, debug, switchDebug }: IProps) 
                       type,
                       name,
                       isContent,
-                      expResolution,
                       keyFramesDecoded,
                       pliCount
                     } = receiver[key];
@@ -153,7 +151,6 @@ const Internels: React.FC<any> = ({ senderStatus, debug, switchDebug }: IProps) 
                         <td>{name}</td>
                         <td>{type} * {isContent ? "Con" : 'Peo'}</td>
                         <td>{frameWidth} * {frameHeight}</td>
-                        <td>{expResolution}</td>
                         <td>{framesDecodedSecond}</td>
                         <td>{framesReceivedSecond}</td>
                         <td>{bytesReceivedSecond}</td>

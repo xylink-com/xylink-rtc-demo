@@ -2,7 +2,7 @@
  * 点名、字幕提示
  */
 import React, { useRef, useEffect } from "react";
-import { ISubTitleContent } from "../../type";
+import { ISubTitleContent } from "@xylink/xy-rtc-sdk";
 import "./index.scss";
 
 interface IProps {

@@ -4,7 +4,7 @@
  * @date  2020-04-28 17:26:40
  */
 
-import { ILayout, ICustomLayoutObj } from "../type";
+import { ILayout } from '@xylink/xy-rtc-sdk';
 import { TEMPLATE } from "./template";
 
 export const transformTime = (timestamp: number = +new Date()) => {
@@ -27,7 +27,7 @@ export const getErrorMsg = (err: any) => {
 };
 
 export const calculateBaseLayoutList = (
-  orderLayoutList: ICustomLayoutObj[],
+  orderLayoutList: ILayout[],
   rateWidth: number,
   rateHeight: number
 ) => {
@@ -36,7 +36,7 @@ export const calculateBaseLayoutList = (
   const positionInfo = TEMPLATE.temp[orderLayoutList.length];
 
   const layoutList = orderLayoutList.map(
-    (item: ICustomLayoutObj, index: number) => {
+    (item: ILayout, index: number) => {
       const position = positionInfo[index].position;
       const [x, y, w, h] = position;
       let layoutX = Math.round(rateWidth * x);
@@ -70,7 +70,7 @@ export const calculateBaseLayoutList = (
  * @param mediagroupid type类型，0: people画面，1: content画面
  */
 export const getLayoutIndexByRotateInfo = (
-  nextLayoutList: ICustomLayoutObj[],
+  nextLayoutList: ILayout[],
   pid: number,
   mid: number
 ) => {
@@ -121,101 +121,4 @@ export const getScreenInfo = (
   }
 
   return screenInfoObj;
-};
-
-// 将推送上来的custom layout数据进行排序处理
-export const getOrderLayoutList = (layoutList: any) => {
-  const layoutLen = layoutList.length;
-  const baseLayout: any = {
-    content: [],
-    chairmain: [],
-    activeSpeaker: [],
-    audioVideoUnmute: [],
-    audioUnmute: [],
-    videoUnmute: [],
-    audioVideoMute: [],
-  };
-  // 排序数据
-  let orderedLayoutList: ILayout[] = [];
-  let selfRoster: any;
-
-  for (let i = 0; i < layoutLen; i++) {
-    const item: ILayout = layoutList[i];
-    const {
-      isLocal,
-      isContent,
-      isForceFullScreen,
-      isActiveSpeaker,
-      audioTxMute,
-      videoTxMute,
-    } = item.roster;
-
-    if (isLocal) {
-      selfRoster = item;
-
-      continue;
-    }
-
-    // 保存content
-    if (isContent) {
-      baseLayout["content"].push(item);
-      continue;
-    }
-
-    // 保存主会场数据
-    if (isForceFullScreen) {
-      baseLayout["chairmain"].push(item);
-      continue;
-    }
-
-    // 保存asp
-    if (isActiveSpeaker) {
-      baseLayout["activeSpeaker"].push(item);
-      continue;
-    }
-
-    if (!audioTxMute && !videoTxMute) {
-      baseLayout["audioVideoUnmute"].push(item);
-      continue;
-    }
-
-    if (!audioTxMute && videoTxMute) {
-      baseLayout["audioUnmute"].push(item);
-      continue;
-    }
-
-    if (audioTxMute && !videoTxMute) {
-      baseLayout["videoUnmute"].push(item);
-      continue;
-    }
-
-    if (audioTxMute && videoTxMute) {
-      baseLayout["audioVideoMute"].push(item);
-      continue;
-    }
-  }
-
-  for (let key in baseLayout) {
-    orderedLayoutList = orderedLayoutList.concat(baseLayout[key]);
-  }
-
-  return setSelfRoster(orderedLayoutList, selfRoster);
-};
-
-export const setSelfRoster = (
-  orderRosterList: ILayout[],
-  selfRoster: ILayout
-) => {
-  // 如果会中只有自己，则将自己的画面显示出来
-  if (orderRosterList.length === 0) {
-    orderRosterList.push(selfRoster);
-
-    return orderRosterList;
-  }
-
-  // 将自己的数据放置到第二位，一般来说，第一位都是content/AS/主会场等需要上大屏的数据
-  orderRosterList.splice(1, 0, selfRoster);
-
-  // 记录下来最终排好序的roster数据
-  return orderRosterList || [];
 };

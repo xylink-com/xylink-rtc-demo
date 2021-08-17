@@ -1973,14 +1973,15 @@
   resolved "https://registry.npm.taobao.org/@xtuc/long/download/@xtuc/long-4.2.2.tgz#d291c6a4e97989b5c61d9acf396ae4fe133a718d"
   integrity sha1-0pHGpOl5ibXGHZrPOWrk/hM6cY0=
 
-"@xylink/xy-rtc-sdk@^2.0.1":
-  version "2.0.1"
-  resolved "https://registry.npmjs.org/@xylink/xy-rtc-sdk/-/xy-rtc-sdk-2.0.1.tgz#84c70de45d8276f0b2f4fb595b1c46f88e4a833b"
-  integrity sha512-nKCtb/e7wL0M+o4FoAIOonZljWRFRuppHn856NAeILk/B+umhYp/HJ/8L+musRRXg9R4clh0co0Xk7opwgi3Zg==
+"@xylink/xy-rtc-sdk@2.0.2":
+  version "2.0.2"
+  resolved "https://registry.npmjs.org/@xylink/xy-rtc-sdk/-/xy-rtc-sdk-2.0.2.tgz#da2444a5a9b8cc174b8367c08418298278c6d427"
+  integrity sha512-HXhar8mePbKdeXgEu/xaFMtPxnUl1kGoB40jkSnkYoRtC31wLnkBlcVn3AmTM8xSzU/sdE6DosjnF8lm0M2LCg==
   dependencies:
     crypto-js "^4.0.0"
     dexie "^2.0.4"
     dexie-export-import "^1.0.0-rc.1"
+    js-base64 "^3.6.1"
     qs "^6.9.4"
     uuid "^7.0.2"
 
@@ -6536,6 +6537,11 @@ js-base64@^3.4.5:
   version "3.6.0"
   resolved "https://registry.npm.taobao.org/js-base64/download/js-base64-3.6.0.tgz#773e1de628f4f298d65a7e9842c50244751f5756"
   integrity sha1-dz4d5ij08pjWWn6YQsUCRHUfV1Y=
+
+js-base64@^3.6.1:
+  version "3.6.1"
+  resolved "http://10.80.84.176:4873/js-base64/-/js-base64-3.6.1.tgz#555aae398b74694b4037af1f8a5a6209d170efbe"
+  integrity sha1-VVquOYt0aUtAN68filpiCdFw774=
 
 "js-tokens@^3.0.0 || ^4.0.0", js-tokens@^4.0.0:
   version "4.0.0"

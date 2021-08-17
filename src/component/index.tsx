@@ -2,44 +2,51 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Button, Row, message, Dropdown, Menu } from 'antd';
 import { MenuInfo } from 'rc-menu/lib/interface';
 import { DownOutlined } from '@ant-design/icons';
-import {
-  IDisconnected,
-  IParticipantCount,
+import xyRTC, {
+  Client,
+  Stream,
+  getLayoutRotateInfo,
   ILayout,
   IScreenInfo,
-  IAudioTrack,
-  ICallStatus,
-  IAudioStatus,
+  IStatus,
+  IMeetingControl,
   IRoster,
   ISubTitleContent,
-  IMeetingAudioStatus,
-  IMeetingVideoStatus,
-  ISetting,
-  IDeviceItem,
-  INextDevice,
+  ISelectedDevice,
+  IDeviceInfo,
+  ICurrentPermission,
+  IMode,
+  IReminder,
+  IConfInfo,
+  IPageInfo,
   IDeviceManagerChangeValue,
-  IOrderRoster,
+  IReqInfo,
+  IVideoAudioType
+} from '@xylink/xy-rtc-sdk';
+import {
   IRotationInfoTotalItem,
-  ICustomLayoutObj
+  IParticipantCount,
+  IAudioTrack,
+  TMeetingVideoStatus,
+  TMeetingAudioStatus,
+  ISetting
 } from '../type/index';
-import { ENV, SERVER, ACCOUNT, THIRD } from '../utils/config';
+import { SERVER, ACCOUNT, THIRD } from '../utils/config';
 import { DEFAULT_LOCAL_USER, DEFAULT_DEVICE } from "../enum/index";
 import { TEMPLATE } from '../utils/template';
-import { getLayoutIndexByRotateInfo, getScreenInfo, calculateBaseLayoutList, getOrderLayoutList } from '../utils/index';
-import xyRTC, { getLayoutRotateInfo } from '@xylink/xy-rtc-sdk';
+import { getLayoutIndexByRotateInfo, getScreenInfo, calculateBaseLayoutList } from '../utils/index';
 import Video from './Video';
 import Audio from './Audio';
 import MicLevel from "./MicLevel"
 import Internels from './Internels';
 import store from '../utils/store';
 import Login from './Login';
-import Setting from './Setting'
-import Barrage from './Barrage'
+import Setting from './Setting';
+import Barrage from './Barrage';
+import InOutReminder from './InOutReminder';
+import Hold from "./Hold";
 import cloneDeep from 'clone-deep'
 import '../style/index.scss';
-
-let client: any;
-let stream: any;
 
 // auto/custom 两种模式
 const LAYOUT: 'AUTO' | 'CUSTOM' = 'AUTO';
@@ -73,6 +80,12 @@ function Home() {
     muteAudio,
     localHide
   });
+  const [callInfo, setCallInfo] = useState({
+    avatar: '',
+    displayName: '',
+    numberType: 'CONFERENCE',
+    number: ''
+  });
   // 参会成员数据，包含stream，roster，postion等信息，最终依赖layout的数据进行画面布局、渲染、播放、状态显示
   const [layout, setLayout] = useState<any>([]);
   // screen容器信息
@@ -83,12 +96,11 @@ function Home() {
   // 所有声源列表
   const [audioList, setAudioList] = useState<any>([]);
   // 摄像头状态
-  const [video, setVideo] = useState<'muteVideo' | 'unmuteVideo'>(() => {
+  const [video, setVideo] = useState<IVideoAudioType>(() => {
     return muteVideo ? 'muteVideo' : 'unmuteVideo';
   });
-
   // 麦克风状态
-  const [audio, setAudio] = useState<'muteAudio' | 'unmuteAudio'>(() => {
+  const [audio, setAudio] = useState<IVideoAudioType>(() => {
     return muteAudio ? 'muteAudio' : 'unmuteAudio';
   });
   // 是否强制静音
@@ -97,6 +109,8 @@ function Home() {
   const [handStatus, setHandStatus] = useState(false);
   // 是否有字幕或点名
   const [subTitle, setSubTitle] = useState<ISubTitleContent>({ action: 'cancel', content: '' });
+  // current forceLayout roster id
+  const [forceLayoutId, setForceLayoutId] = useState('');
   // 桌面布局模式（语音激励模式/画廊模式）
   const [layoutModel, setLayoutModel] = useState('speaker');
   // 会议成员数量
@@ -107,47 +121,94 @@ function Home() {
   const [senderStatus, setSenderStatus] = useState<any>({ sender: {}, receiver: {} });
   // 是否是调试模式（开启则显示所有画面的呼叫数据）
   const [debug, setDebug] = useState(false);
-  // 配置环境，第三方集成不需要配置，默认是线上环境
-  const [env, setEnv] = useState(ENV);
   const [onhold, setOnhold] = useState(false);
 
   const [settingVisible, setSettingVisible] = useState(false);
 
-  const [selectedDevice, setSelectedDevice] = useState(DEFAULT_DEVICE.nextDevice);
-
+  const [selectedDevice, setSelectedDevice] = useState<ISelectedDevice>(DEFAULT_DEVICE.nextDevice);
+  const [permission, setPermission] = useState<ICurrentPermission>({
+    camera: '',
+    microphone: ''
+  });
   const [version] = useState(xyRTC.version);
 
+  const [pageStatus, setPageStatus] = useState({
+    status: true, // 是否分页
+    previous: false, // 上一页
+    next: true // 下一页
+  });
+  const [reminders, setReminders] = useState<IReminder[]>([]);
+  // 分页
+  const [pageInfo, setPageInfo] = useState<IPageInfo>({
+    pageSize: 7,
+    currentPage: 0,
+    totalPage: 0
+  });
+
+  const client = useRef<Client | null>(null);
+  const stream = useRef<Stream | null>(null);
+  const onholdRef = useRef(false);
   const bgmAudioRef = useRef<HTMLAudioElement>(null);
   const rotationInfoRef = useRef<IRotationInfoTotalItem[]>([]);
   const nextLayoutListRef = useRef([]);
+  const confChangeInfoRef = useRef<IConfInfo>();
 
   useEffect(() => {
     // 设置log server
-    const { logServer } = SERVER(env);
+    const { logServer } = SERVER;
 
     xyRTC.logger.setLogServer(logServer);
 
-  }, [env])
+  }, [])
 
   useEffect(() => {
-    if (!callLoading && bgmAudioRef.current) {
-      bgmAudioRef.current.pause();
-    }
-    if (callMeeting && callLoading) {
+    // 入会背景音
+    if (bgmAudioRef.current) {
+      if (callLoading) {
+        const devices = store.get('selectedDevice') || DEFAULT_DEVICE.nextDevice;
 
-      xyRTC.setOutputAudioDevice(bgmAudioRef.current, selectedDevice.audioOutput.deviceId || "default");
+        xyRTC.setOutputAudioDevice(
+          bgmAudioRef.current,
+          devices?.audioOutput?.deviceId || 'default'
+        );
+      } else {
+        bgmAudioRef.current && bgmAudioRef.current.pause();
+      }
     }
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [callMeeting, callLoading]);
+  }, [callLoading]);
 
   useEffect(() => {
-    if (!callLoading && callMeeting && onhold) {
-      setTimeout(() => {
-        message.info('该会议室已开启等候室，请等待主持人审核');
-      }, 1000)
-    }
-  }, [callMeeting, callLoading, onhold]);
+    // 入会成功 如果检测到权限拒绝，则自动关闭摄像头、麦克风
+    const operate = async (
+      permission: ICurrentPermission,
+      callMeeting: boolean,
+      callLoading: boolean
+    ) => {
+      const { camera, microphone } = permission;
+
+      if (callMeeting && !callLoading && client.current) {
+        const selfRoster = client.current.getSelfRoster();
+        const { videoTxMute, audioTxMute } = selfRoster || {
+          videoTxMute: false,
+          audioTxMute: false
+        };
+
+        if (camera === 'denied' && !videoTxMute) {
+          await client.current.muteVideo();
+          setVideo('muteVideo');
+          message.info('当前摄像头不可用，视频已自动暂停');
+        }
+
+        if (microphone === 'denied' && !audioTxMute) {
+          await client.current.muteAudio();
+          setAudio('muteAudio');
+          message.info('当前麦克风不可用，已自动静音');
+        }
+      }
+    };
+
+    operate(permission, callMeeting, callLoading);
+  }, [permission, callMeeting, callLoading]);
 
   // 挂断会议
   const disconnected = (msg = '') => {
@@ -165,9 +226,12 @@ function Home() {
     // 重置字幕信息
     setSubTitle({ action: 'cancel', content: '' });
 
+    // 重置onhold
+    setOnhold(false);
+
     // sdk清理操作
-    stream && stream.close();
-    client && client.destroy();
+    stream.current?.close();
+    client.current?.destroy();
 
     // 清理组件状
     setCallMeeting(false);
@@ -177,14 +241,100 @@ function Home() {
     setLayout([]);
     setSettingVisible(false);
 
-    client = null;
-    stream = null;
+    client.current = null;
+    stream.current = null;
+  };
+
+  // CUSTOM布局 计算页码信息
+  const calcPageInfo = () => {
+    const { participantCount } = confChangeInfoRef.current!;
+    let { pageSize, currentPage } = pageInfo;
+    let cacheCustomPageInfo = JSON.parse(JSON.stringify(pageInfo));
+
+    // 会议产生变动，那么就重新计算总页数
+    // participantCount + contentPartCount 代表people + content的总个数
+    let totalPage = Math.ceil((participantCount - 1) / pageSize);
+    totalPage = totalPage > 0 ? totalPage : 0;
+
+    // 如果当前的页码大于最新最大的页码，就更新到最后一页
+    if (currentPage > totalPage) {
+      currentPage = totalPage;
+    }
+
+    cacheCustomPageInfo = {
+      ...cacheCustomPageInfo,
+      totalPage,
+      currentPage
+    };
+
+    // 缓存页码信息
+    setPageInfo(cacheCustomPageInfo);
+
+    console.log('cacheCustomPageInfo: ', cacheCustomPageInfo);
+
+    return cacheCustomPageInfo;
+  };
+
+  // CUSTOM布局 请流
+  const customRequestLayout = (cacheCustomPageInfo: IPageInfo) => {
+    const { chairManUrl, contentUri, participantCount } = confChangeInfoRef.current!;
+    let reqList: IReqInfo[] = [];
+    let extReqList: IReqInfo[] = [];
+    let realLen = participantCount - 1;
+    const { pageSize, currentPage } = cacheCustomPageInfo;
+
+    if (chairManUrl) {
+      extReqList.push({
+        calluri: chairManUrl,
+        mediagroupid: 0,
+        resolution: 3,
+        quality: 2
+      });
+
+      realLen -= 1;
+    }
+
+    if (contentUri) {
+      extReqList.push({
+        calluri: contentUri,
+        mediagroupid: 1,
+        resolution: 4,
+        quality: 2
+      });
+      realLen -= 1;
+    }
+
+
+    // 如果真实请流大于每页最大数量
+    if (realLen > pageSize) {
+      if (realLen < currentPage * pageSize) {
+        realLen = realLen - (currentPage - 1) * pageSize;
+      } else {
+        realLen = pageSize;
+      }
+    }
+
+    for (let i = 0; i < realLen; i++) {
+      reqList.push({
+        calluri: '',
+        mediagroupid: 0,
+        resolution: 1,
+        quality: 1
+      });
+    }
+
+    console.log('reqlist: ', reqList);
+    console.log('extReqList: ', extReqList);
+
+    client.current?.requestNewLayout(reqList, pageSize, currentPage, extReqList, {
+      uiShowLocalWhenPageMode: false
+    });
   };
 
   // 监听client的内部事件
   const initEventListener = (client: any) => {
     // 退会消息监听，注意此消息很重要，内部的会议挂断都是通过此消息通知
-    client.on('disconnected', (e: IDisconnected) => {
+    client.on('disconnected', (e: IStatus) => {
       const showMessage = (e.detail && e.detail.message) || '呼叫异常，请稍后重试';
 
       disconnected(showMessage);
@@ -195,52 +345,20 @@ function Home() {
       setParticipantsCount(e.participantsNum);
     });
 
-    // 接收到 Roster List 数据后，需要基于此列表数据计算想要请求的参会成员和共享Content画面流
-    // client.requestLayout请求后，会回调custom-layout数据，包含有请求的视频画面数据
-    // 2.0.1+ 版本之后（不包含v2.0.1），不需要通过roster来请求 Layout 视频流，需要监听 conf—change-info 消息回调请求视频流
-    client.on('roster', (e: IOrderRoster) => {
-      console.log('demo get roster message: ', e);
+    // 从v2.0.2版本开始，需要监听conf-change-info来请求Layout数据。以前版本不兼容
+    // 接收到conf-change-info后，需要基于此列表数据计算想要请求的参会成员和共享Content画面流
+    // client.requestNewLayout请求后，会回调custom-layout数据，包含有请求的视频画面数据
+    client.on('conf-change-info', (e: IConfInfo) => {
+      console.log('demo get conf change info: ', e);
 
-      // 自动布局不需要处理此数据
-      if (templateMode === 'AUTO') {
-        return;
+      confChangeInfoRef.current = e;
+
+      // CUSTOM 模式
+      if (templateMode === 'CUSTOM') {
+        const cacheCustomPageInfo: IPageInfo = calcPageInfo();
+
+        customRequestLayout(cacheCustomPageInfo);
       }
-
-      const tempLength = TEMPLATE.length;
-      const rosters = e.rosters;
-      const reqList = [];
-      // 演讲者模式最多请8路流即可
-      // requestLayout请求最多请9路画面流（包含本地Local流）
-      // 如果请求超过9路，SDK内部会自动截断后面的数据
-      const len = rosters.length > tempLength ? 8 : rosters.length;
-
-      for (let i = 0; i < len; i++) {
-        const item = rosters[i];
-        const { endpointId, isContent } = item;
-
-        const reqObj = {
-          isContent,
-          callUri: endpointId,
-          resolution: 1,
-          quality: 1
-        };
-
-        // 3: 720P
-        // 4: 1080P
-        // 首位一般是权重最高的共享 Content 内容设备
-        // 如果是 Content 应该请720P或1080P
-        // 如果是 People 最多请720P画面
-        if (i === 0) {
-          reqObj['resolution'] = isContent ? 4 : 3;
-        }
-
-        reqList.push(reqObj);
-      }
-
-      console.log("reqList-====: ", reqList);
-
-
-      client.requestLayout(reqList);
     });
 
     // AUTO 布局回调layout数据，使用此数据直接渲染画面即可
@@ -251,10 +369,13 @@ function Home() {
       setLayout(e);
     });
 
-    // CUSTOM 布局需要处理此数据
-    // 通过 requestLayout 请求视频流之后，会通过此回调返回所有的参会者列表数据
-    // 通过处理处理此数据，展示画面
-    client.on('custom-layout', (e: ICustomLayoutObj[]) => {
+    // CUSTOM 自定义布局，通过 custom-layout 回调布局结果数据
+    // 【v2.0.0 版本之前】第一步：根据【roster】回调消息的列表数据请求对应参会人员的画面数据
+    // 【v2.0.1 版本之后】第一步：根据【conf-change-info】回调消息的列表数据请求对应参会人员的画面数据
+    // 第二步：在【custom-layout】回调消息里面，获取请求的参会人最新的布局列表数据
+    // 第三步：基于最新的布局列表数据，计算 position/size/rotate 等信息，计算完成后，直接渲染即可
+    // 备注：Auto 布局在内部做了 position/size/rotate 计算，所以如果不是特殊定制位置，使用Auto回调的【layout】数据直接渲染画面即可
+    client.on('custom-layout', (e: ILayout[]) => {
       console.log('demo get custom layout data:', e, e.length);
 
       // 此处渲染没有排序处理，需要自行将回调数据排序并展示
@@ -267,19 +388,17 @@ function Home() {
       // 设置layout container容器的大小
       setScreenInfo({ rateWidth, rateHeight });
 
-      // 按照优先级排序layout数据，便于统一通过tempalte模版来处理数据
-      const orderLayoutList = getOrderLayoutList(e);
       // 计算初始layoutList数据
       // 包含计算每个参会成员的大小、位置
       // 如果不需要做上述的getOrderLayoutList的排序操作，那么直接在calculateBaseLayoutList中的第一个参数配置e即可
       // @ts-ignore
-      nextLayoutListRef.current = calculateBaseLayoutList(orderLayoutList, rateWidth, rateHeight);
+      nextLayoutListRef.current = calculateBaseLayoutList(e, rateWidth, rateHeight);
 
       // 计算屏幕旋转信息
       nextLayoutListRef.current = calculateRotate();
 
       setLayout(nextLayoutListRef.current);
-    })
+    });
 
     // AUTO模式回调数据，推送最新的Layout容器大小信息
     // 支持响应屏幕变化后，推送最新数据
@@ -294,12 +413,8 @@ function Home() {
       setAudioList(e);
     });
 
-    client.on('onhold', (e: boolean) => {
-      setOnhold(e);
-    })
-
     // 呼叫状态
-    client.on('call-status', (e: ICallStatus) => {
+    client.on('call-status', (e: IStatus) => {
       // 10518入会成功
       // 10519正在呼叫中
       const code = e.code;
@@ -321,33 +436,37 @@ function Home() {
     });
 
     // 麦克风状态
-    client.on('meeting-control', (e: IAudioStatus) => {
+    client.on('meeting-control', (e: IMeetingControl) => {
       const { disableMute, muteOperation } = e;
+      let info = '';
 
       setDisableAudio(disableMute);
 
       if (muteOperation === 'muteAudio' && disableMute) {
-        message.info('主持人已强制静音，如需发言，请点击“举手发言”');
-
+        info = '主持人已强制静音，如需发言，请点击“举手发言”';
         setHandStatus(false);
       } else if (muteOperation === 'muteAudio' && !disableMute) {
-        message.info('您已被主持人静音');
+        info = '您已被主持人静音';
       } else if (muteOperation === 'unmuteAudio' && disableMute) {
-        message.info('主持人已允许您发言');
-
+        info = '主持人已允许您发言';
         setHandStatus(false);
       } else if (muteOperation === 'unmuteAudio' && !disableMute) {
-        message.info('您已被主持人取消静音');
+        info = '您已被主持人取消静音';
+      }
+
+      // 在等候室时，不做提示
+      if (!onholdRef.current && info) {
+        message.info(info);
       }
     });
 
     // 麦克风状态
-    client.on('audio-status', (e: IMeetingAudioStatus) => {
+    client.on('audio-status', (e: TMeetingAudioStatus) => {
       setAudio(e.status);
     });
 
     // 摄像头状态
-    client.on('video-status', (e: IMeetingVideoStatus) => {
+    client.on('video-status', (e: TMeetingVideoStatus) => {
       setVideo(e.status)
     })
 
@@ -402,6 +521,52 @@ function Home() {
         audioOutput && message.info(`音频输出设备已自动切换至 ${audioOutput.label}`);
       }, 500);
     });
+
+    // 设备权限
+    client.on('permission', async (e: ICurrentPermission) => {
+      setPermission(e);
+    });
+
+    // 被移入等候室
+    client.on('onhold', (e: boolean) => {
+      onholdRef.current = e;
+      setOnhold(e);
+    });
+
+    // AUTO布局 当前模板类型
+    client.on('template-mode', (mode: IMode) => {
+      setLayoutModel(mode);
+    });
+
+    // 出入会消息
+    client.on('in-out-reminder', (e: any) => {
+      setReminders(e);
+    });
+
+    // 分页信息
+    client.on('page-info', (pageInfo: IPageInfo) => {
+      let next = true;
+      let previous = false;
+      const { currentPage = 0, totalPage = 0 } = pageInfo;
+
+      if (currentPage !== 0) {
+        previous = true;
+      }
+
+      if (currentPage >= totalPage) {
+        next = false;
+      }
+
+      setPageStatus((pageStatus) => {
+        return {
+          ...pageStatus,
+          next,
+          previous
+        };
+      });
+
+      setPageInfo(pageInfo);
+    });
   };
 
   // 计算 layout 成员渲染
@@ -438,13 +603,20 @@ function Home() {
 
     try {
       const { meeting, meetingPassword, meetingName, muteAudio, muteVideo } = user;
-      const { wssServer, httpServer, logServer } = SERVER(env);
-      const { clientId } = ACCOUNT(env);
+      const { wssServer, httpServer, logServer } = SERVER;
+      const { clientId } = ACCOUNT;
+
+      setCallInfo({
+        avatar: '',
+        displayName: meetingName,
+        numberType: 'CONFERENCE',
+        number: meeting
+      });
 
       // 这里三方可以根据环境修改sdk log等级
       // xyRTC.logger.setLogLevel("NONE");
 
-      client = xyRTC.createClient({
+      client.current = xyRTC.createClient({
         // 注意，第三方集成时，默认是prd环境，不需要配置wss/http/log server地址；
         wssServer,
         httpServer,
@@ -470,7 +642,7 @@ function Home() {
         clientId
       });
 
-      initEventListener(client);
+      initEventListener(client.current);
 
       /**
        * 重要提示
@@ -481,19 +653,19 @@ function Home() {
        * 重要提示
        * 重要提示
        */
-      let result;
+      let result: any;
 
       if (isThird) {
-        const { extId } = ACCOUNT(env);
+        const { extId } = ACCOUNT;
 
-        result = await client.loginExternalAccount({
+        result = await client.current.loginExternalAccount({
           // 用户名自行填写
           displayName: 'thirdName',
           extId
         });
       } else {
         // 小鱼登录
-        result = await client.loginXYlinkAccount(
+        result = await client.current.loginXYlinkAccount(
           user.phone,
           user.password);
       }
@@ -516,7 +688,7 @@ function Home() {
 
       const token = result.detail.access_token;
 
-      callStatus = await client.makeCall({
+      callStatus = await client.current.makeCall({
         token,
         confNumber: meeting,
         password: meetingPassword,
@@ -524,38 +696,24 @@ function Home() {
       });
 
       if (callStatus) {
-        stream = xyRTC.createStream();
-
-        initStreamEventListener(stream);
+        stream.current = xyRTC.createStream();
 
         const { audioInput, audioOutput, videoInput } = selectedDevice;
 
-        await stream.init({
+        await stream.current.init({
           devices: {
-            audioInputValue: audioInput.deviceId || 'default',
-            audioOutputValue: audioOutput.deviceId || 'default',
-            videoInValue: videoInput.deviceId || ''
+            audioInputValue: audioInput?.deviceId || 'default',
+            audioOutputValue: audioOutput?.deviceId || 'default',
+            videoInValue: videoInput?.deviceId || ''
           }
         });
 
-        client?.publish(stream, { isSharePeople: true });
+        client.current?.publish(stream.current, { isSharePeople: true });
       }
     } catch (err) {
       disconnected(err.msg || '呼叫异常，请稍后重试');
     }
   };
-
-  const initStreamEventListener = (stream: any) => {
-    stream.on('stream-status', (e: { type: string }) => {
-      const { type } = e;
-
-      if (type === 'SEND_ONLY') {
-        setTimeout(() => {
-          message.info("当前仅接收远端画面模式", 5);
-        }, 3000);
-      }
-    })
-  }
 
   // 表单数据提交
   // 开始进行入会操作
@@ -590,49 +748,45 @@ function Home() {
   // 摄像头操作
   const videoOperate = async () => {
     try {
-      let result: 'muteVideo' | 'unmuteVideo' = 'muteVideo';
+      let result: IVideoAudioType = 'muteVideo';
 
-      if (video === 'unmuteVideo') {
-        result = await client.muteVideo();
-      } else {
-        result = await client.unmuteVideo();
+      if (client.current) {
+        if (video === 'unmuteVideo') {
+          result = await client.current?.muteVideo();
+        } else {
+          result = await client.current?.unmuteVideo();
+        }
+
+        setVideo(result);
       }
-
-      setVideo(result);
     } catch (err) {
-      const msg = err?.detail?.msg || "禁止操作";
-      const code = err?.detail?.code;
+      const msg = err?.msg || '禁止操作';
 
-      if (code === 401) {
-        message.error("当前摄像头或麦克风设备异常，请切换其他设备");
-      } else {
-        message.error("操作失败: " + msg);
-      }
+      message.error(msg);
     }
   };
 
   // 麦克风操作
   const onAudioOperate = async () => {
-    try {
-      let result: 'muteAudio' | 'unmuteAudio' = 'muteAudio';
+    if (client.current) {
+      try {
+        let result: IVideoAudioType = 'muteAudio';
 
-      if (audio === 'unmuteAudio') {
-        result = await client.muteAudio();
+        if (audio === 'unmuteAudio') {
+          result = await client.current.muteAudio();
 
-        message.info('麦克风已静音');
-      } else {
-        result = await client.unmuteAudio();
+          message.info('麦克风已静音');
+        } else {
+          result = await client.current.unmuteAudio();
+        }
+        setAudio(result);
+      } catch (err) {
+        const msg = err?.msg || '禁止操作';
+
+        message.error(msg);
       }
-      setAudio(result);
-    } catch (err) {
-      const msg = err?.detail?.msg || "禁止操作";
-      const code = err?.detail?.code;
-
-      if (code === 401) {
-        message.error("当前摄像头或麦克风设备异常，请切换其他设备");
-      } else {
-        message.error("操作失败: " + msg);
-      }
+    } else {
+      message.error('麦克风设备无法访问');
     }
   };
 
@@ -655,7 +809,8 @@ function Home() {
 
     try {
       const { func, msg } = funcMap[type];
-      const handStatus = await client[func]();
+      //@ts-ignore
+      const handStatus = await client.current[func]();
 
       setHandStatus(handStatus);
       if (msg) {
@@ -704,9 +859,34 @@ function Home() {
 
   // 切换布局
   const switchLayout = async () => {
-    const modal = await client.switchLayout();
+    await client.current?.switchLayout(templateMode);
+  };
 
-    setLayoutModel(modal.toLowerCase());
+  // 分页
+  const switchPage = (type: 'previous' | 'next' | 'home') => {
+    setForceLayoutId(''); // 退出全屏
+
+    if (templateMode === "CUSTOM") {
+      message.info("自定义布局模式不支持切换布局");
+      // TODO: 第三方自己实现
+      return;
+    }
+
+    const { currentPage, totalPage } = pageInfo;
+    let nextPage = currentPage;
+
+    if (type === 'next') {
+      nextPage += 1;
+    } else if (type === 'previous') {
+      nextPage -= 1;
+    } else if (type === 'home') {
+      nextPage = 0;
+    }
+
+    nextPage = Math.max(nextPage, 0);
+    nextPage = Math.min(nextPage, totalPage);
+
+    client.current?.setPageInfo(nextPage);
   };
 
   const layoutStyle = useMemo(() => {
@@ -724,7 +904,7 @@ function Home() {
       const streamId = item.data.streams[0].id;
       const muted = item.status === 'local';
 
-      return <Audio muted={muted} key={streamId} streamId={streamId} client={client} />;
+      return <Audio muted={muted} key={streamId} streamId={streamId} client={client.current} />;
     });
   };
 
@@ -736,11 +916,13 @@ function Home() {
 
         return (
           <Video
-            client={client}
+            client={client.current}
             model={layoutModel}
             item={item}
             key={id}
             id={id}
+            forceLayoutId={forceLayoutId}
+            setForceLayoutId={setForceLayoutId}
           ></Video>
         );
       });
@@ -795,7 +977,7 @@ function Home() {
 
   // 停止分享content
   const stopShareContent = () => {
-    client.stopShareContent();
+    client.current?.stopShareContent();
 
     setShareContentStatus(false);
   };
@@ -803,19 +985,23 @@ function Home() {
   // 分享content内容
   const shareContent = async () => {
     try {
-      const result = await stream.createContentStream();
+      if (stream.current && client.current) {
+        const result = await stream.current.createContentStream();
 
-      // 创建分享屏幕stream成功
-      if (result) {
-        setShareContentStatus(true);
+        // 创建分享屏幕stream成功
+        if (result) {
+          setShareContentStatus(true);
 
-        stream.on('start-share-content', () => {
-          client.publish(stream, { isShareContent: true });
-        });
+          stream.current.on('start-share-content', () => {
+            client.current!.publish(stream.current!, { isShareContent: true });
+          });
 
-        stream.on('stop-share-content', () => {
-          stopShareContent();
-        });
+          stream.current.on('stop-share-content', () => {
+            stopShareContent();
+          });
+        } else {
+          message.info("分享屏幕失败");
+        }
       } else {
         message.info("分享屏幕失败");
       }
@@ -830,14 +1016,7 @@ function Home() {
     const status = !debug;
 
     setDebug(status);
-    client.switchDebug(status);
-  };
-
-  const handleSwitchEnv = (e: any) => {
-    const val = e.key;
-
-    store.set('xy-sdk-env', val);
-    setEnv(val);
+    client.current?.switchDebug(status);
   };
 
   const onToggleSetting = () => {
@@ -852,12 +1031,14 @@ function Home() {
   };
 
   const toggleLocal = async () => {
-    const { status } = await client.toggleLocal();
-    const msg = status ? "已开启隐藏本地画面模式" : "已关闭隐藏本地画面模式";
-    message.info(msg);
+    if (client.current) {
+      const { status } = await client.current.toggleLocal();
+      const msg = status ? "已开启隐藏本地画面模式" : "已关闭隐藏本地画面模式";
+      message.info(msg)
+    }
   }
 
-  const switchDevice = async (key: 'audioInput' | 'audioOutput' | 'videoInput' | string, device: IDeviceItem) => {
+  const switchDevice = async (key: 'audioInput' | 'audioOutput' | 'videoInput' | string, device: IDeviceInfo) => {
     const deviceMap: any = {
       audioInput: {
         key: "audio",
@@ -876,13 +1057,13 @@ function Home() {
     const { deviceId, label } = device;
     try {
       if (key === 'audioOutput') {
-        await stream.setAudioOutput(deviceId);
+        await stream.current?.setAudioOutput(deviceId);
       } else if (
         (key === 'audioInput')
         ||
         (key === 'videoInput')
       ) {
-        await stream.switchDevice(deviceMap[key]['key'], deviceId);
+        await stream.current?.switchDevice(deviceMap[key]['key'], deviceId);
       }
       message.info(`${deviceMap[key]["zh_text"]}已自动切换至 ${label}`);
     } catch (err) {
@@ -891,20 +1072,20 @@ function Home() {
     }
   }
 
-  const onSwitchDevice = async (nextDevice: INextDevice) => {
+  const onSwitchDevice = async (nextDevice: ISelectedDevice) => {
     const { audioInput, videoInput, audioOutput } = nextDevice || DEFAULT_DEVICE.nextDevice;
 
     try {
       if (audioInput?.deviceId !== selectedDevice?.audioInput?.deviceId) {
-        await switchDevice("audioInput", audioInput);
+        await switchDevice("audioInput", audioInput!);
       }
 
       if (audioOutput?.deviceId !== selectedDevice?.audioOutput?.deviceId) {
-        await switchDevice("audioOutput", audioOutput);
+        await switchDevice("audioOutput", audioOutput!);
       }
 
       if (videoInput?.deviceId !== selectedDevice?.videoInput?.deviceId) {
-        await switchDevice("videoInput", videoInput);
+        await switchDevice("videoInput", videoInput!);
       }
     } catch (err) {
       return Promise.reject(err)
@@ -912,14 +1093,16 @@ function Home() {
   }
 
   const onSaveSetting = async (data: ISetting) => {
-    if (data['selectedDevice']) {
+    // 切换设备
+    if (data.hasOwnProperty('selectedDevice')) {
       onToggleSetting();
 
       try {
-        if (stream) {
-          await onSwitchDevice(data['selectedDevice']);
+        if (stream.current) {
+          await onSwitchDevice(data['selectedDevice']!);
         }
-        setSelectedDevice(data.selectedDevice);
+
+        setSelectedDevice(data['selectedDevice']!);
       } catch (err) { }
     }
 
@@ -934,7 +1117,7 @@ function Home() {
   }
 
   const renderMeeting = () => {
-    if (callMeeting && !callLoading) {
+    if (callMeeting && !callLoading && !onhold) {
       return (
         <>
           <div className="meeting-header">
@@ -944,13 +1127,55 @@ function Home() {
           </div>
 
           <div className="meeting-content">
+            {layout.length > 1 && pageStatus.status && pageStatus.previous && (
+              <div className="previous-box">
+                <div
+                  className="previous-button"
+                  onClick={() => {
+                    switchPage('previous');
+                  }}
+                >
+                  <span className="svg-icon previous" />
+                </div>
+                {pageInfo.currentPage > 1 && (
+                  <div
+                    className="home-button"
+                    onClick={() => {
+                      switchPage('home');
+                    }}
+                  >
+                    回首页
+                  </div>
+                )}
+              </div>
+            )}
             <div className="meeting-layout" style={layoutStyle}>
               {renderLayout()}
             </div>
 
             <div className="audio-list">{renderAudioList()}</div>
 
-            <Barrage subTitle={subTitle} />
+            {!onhold && <Barrage subTitle={subTitle} />}
+            {!onhold && <InOutReminder reminders={reminders} />}
+
+            {layout.length > 1 && pageStatus.status && pageStatus.next && (
+              <div className="next-box">
+                <div
+                  className="next-button"
+                  onClick={() => {
+                    switchPage('next');
+                  }}
+                >
+                  <span className="svg-icon next" />
+                  {pageInfo.totalPage > 1 && pageInfo.currentPage > 0 && (
+                    <div className="page-number">
+                      {pageInfo.currentPage} /
+                      {pageInfo.totalPage > 100 ? '...' : pageInfo.totalPage}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="meeting-footer">
@@ -999,7 +1224,7 @@ function Home() {
               </div>
             )}
             <div>
-              <MicLevel stream={stream} audio={audio} />
+              <MicLevel stream={stream.current} audio={audio as 'muteAudio' | 'unmuteAudio'} />
             </div>
             <div>
               <Button onClick={onToggleSetting} type="primary" size="small">
@@ -1020,23 +1245,6 @@ function Home() {
     return null;
   };
 
-  const menu = (
-    <Menu onClick={handleSwitchEnv}>
-      <Menu.Item key="TXDEV">
-        <div>TXDEV</div>
-      </Menu.Item>
-      <Menu.Item key="TXQA">
-        <div>TXQA</div>
-      </Menu.Item>
-      <Menu.Item key="PRE">
-        <div>PRE</div>
-      </Menu.Item>
-      <Menu.Item key="PRD">
-        <div>PRD</div>
-      </Menu.Item>
-    </Menu>
-  );
-
   const templateModeMenu = (
     <Menu onClick={handleSwitchTemplateMode}>
       <Menu.Item key="CUSTOM">
@@ -1054,14 +1262,6 @@ function Home() {
         <div className="login">
           <h1 className="title">XY RTC DEMO</h1>
           <div className="sub-title">
-            <span>设置环境：</span>
-            <Dropdown overlay={menu}>
-              <span style={{ marginRight: '18px' }}>
-                {env}
-                <DownOutlined />
-              </span>
-            </Dropdown>
-
             <span>布局模式：</span>
             <Dropdown overlay={templateModeMenu}>
               <span style={{ marginRight: '18px' }}>
@@ -1105,6 +1305,9 @@ function Home() {
       {renderForm()}
 
       {renderMeetingLoading()}
+
+      {/* 等候室、被设置呼叫等待 */}
+      {callMeeting && !callLoading && onhold && <Hold callInfo={callInfo} stopMeeting={stop} />}
 
       {renderMeeting()}
 
