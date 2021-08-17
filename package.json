@@ -22,7 +22,6 @@
     "babel-plugin-import": "^1.13.0",
     "clone-deep": "^4.0.1",
     "customize-cra": "^0.9.1",
-    "js-base64": "^3.4.5",
     "node-sass": "npm:sass",
     "react": "^16.13.1",
     "react-app-rewired": "^2.1.5",
