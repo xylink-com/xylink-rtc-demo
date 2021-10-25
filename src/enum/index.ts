@@ -1,26 +1,30 @@
+export const MAX_PARTICIPANT_COUNT = 500;
+export const PARTICIPANT_PAGE_SIZE = 20;
+export const MAX_PARTICIPANT_COUNT_SHOW = 9999;
+
 export const DEFAULT_LOCAL_USER = {
-  phone: '',
-  password: '',
-  meeting: '',
-  meetingPassword: '',
-  meetingName: '',
+  phone: "",
+  password: "",
+  meeting: "",
+  meetingPassword: "",
+  meetingName: "",
   muteVideo: false,
   muteAudio: false,
-  localHide: false
+  localHide: false,
 };
 const NEXT_DEVICE = {
-  deviceId: '',
-  label: ''
+  deviceId: "",
+  label: "",
 };
 export const DEFAULT_DEVICE = {
   detail: {
     audioInputList: [],
     audioOutputList: [],
-    videoInList: []
+    videoInList: [],
   },
   nextDevice: {
     audioInput: NEXT_DEVICE,
     videoInput: NEXT_DEVICE,
-    audioOutput: NEXT_DEVICE
-  }
+    audioOutput: NEXT_DEVICE,
+  },
 };

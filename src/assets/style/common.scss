@@ -1,0 +1,218 @@
+@import './var.scss';
+
+.form-input {
+  position: relative;
+  margin-bottom: 14px;
+}
+.form-input-err {
+  margin-bottom: 32px;
+}
+
+.tips {
+  position: absolute;
+  margin-top: 4px;
+  height: 19px;
+  text-align: left;
+  color: $danger-color;
+  line-height: 19px;
+  font-size: 12px;
+}
+
+@media (max-width: 767px) {
+  .tips {
+    margin-top: 4px;
+    font-size: 13px;
+  }
+}
+
+// 复写antd 样式
+:global {
+  .ant-btn {
+    border-radius: 3px;
+    border: 1px solid $primary-color;
+    background: transparent;
+    color: $primary-color;
+    &:hover {
+      background: #f8fafd;
+    }
+    &:active,
+    &:focus {
+      background: #eeeeee;
+    }
+  }
+  .ant-btn-primary {
+    color: #fff;
+    background: $primary-btn-color;
+    border: none;
+    &:hover {
+      background: $primary-btn-hover-color;
+    }
+    &:active,
+    &:focus {
+      background: $primary-btn-color;
+      border: none;
+    }
+  }
+  .ant-btn-link {
+    border: 0;
+    &:hover {
+      background: transparent;
+    }
+    &:active,
+    &:focus {
+      background: transparent;
+    }
+  }
+  .ant-input-affix-wrapper:focus,
+  .ant-input-affix-wrapper-focused {
+    box-shadow: none;
+  }
+
+  .ant-input[disabled] {
+    color: $lighter-color;
+  }
+}
+
+// model
+.model {
+  position: fixed;
+  top: 0;
+  left: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  width: 100vw;
+  height: 100vh;
+  z-index: 10;
+
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+
+  &-content {
+    background: $bg-color;
+    box-shadow: 0px 2px 20px 0px rgba(119, 119, 178, 0.2);
+    border-radius: 4px;
+    opacity: 0;
+    position: relative;
+    margin-top: 200px;
+    padding: 0 30px;
+  }
+
+  &-container {
+    position: relative;
+    padding-bottom: 24px;
+  }
+
+  &-title {
+    color: #3e454c;
+    font-size: 20px;
+    padding: 24px 0 28px;
+
+    .close {
+      position: absolute;
+      right: 14px;
+      top: 14px;
+      cursor: pointer;
+      display: flex;
+
+      img {
+        width: 22px;
+        height: 22px;
+      }
+    }
+  }
+}
+
+.slideIn {
+  animation: slideIn 0.5s ease;
+  animation-fill-mode: forwards;
+}
+
+@keyframes slideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-40px);
+  }
+
+  80% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fadeIn {
+  animation: fadeIn 0.3s ease;
+  animation-fill-mode: forwards;
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
+  }
+}
+
+.drawer {
+  .ant-drawer-header {
+    padding: 0;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-bottom: none;
+    .ant-drawer-title {
+      font-size: 14px;
+      color: $normal-color;
+    }
+    &::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 200%;
+      border-bottom: 1px solid #d8d8d8;
+      color: #d8d8d8;
+      height: 200%;
+      -webkit-transform-origin: left top;
+      transform-origin: left top;
+      -webkit-transform: scale(0.5);
+      transform: scale(0.5);
+      pointer-events: none;
+      box-sizing: border-box;
+    }
+  }
+  .ant-drawer-body {
+    padding: 0;
+  }
+
+  &-box {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+    user-select: none;
+
+    .right {
+      font-weight: normal;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  }
+}
+
+.ant-drawer-content-wrapper {
+  user-select: text;
+}
+
+.ant-drawer-mask {
+  background-color: rgba(0, 0, 0, 0);
+}

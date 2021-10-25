@@ -92,16 +92,16 @@ const Login: React.FC<any> = (props: any) => {
 
       <Form.Item name="muteVideo" style={{ marginBottom: '15px' }}>
         <div style={{ textAlign: 'left' }}>
-          开启摄像头: <Switch checked={!user.muteVideo} onChange={(e) => {
-            onChangeInput(!e, 'muteVideo')
+          入会时关闭摄像头: <Switch checked={user.muteVideo} onChange={(e) => {
+            onChangeInput(e, 'muteVideo')
           }} />
         </div>
       </Form.Item>
 
       <Form.Item name="muteAudio">
         <div style={{ textAlign: 'left' }}>
-          开启麦克风: <Switch checked={!user.muteAudio} onChange={(e) => {
-            onChangeInput(!e, 'muteAudio')
+          入会时静音: <Switch checked={user.muteAudio} onChange={(e) => {
+            onChangeInput(e, 'muteAudio')
           }} />
         </div>
       </Form.Item>

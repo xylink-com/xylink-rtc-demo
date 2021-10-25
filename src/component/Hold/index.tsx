@@ -2,11 +2,11 @@
  * 等候室、被设置onhold
  */
 import React from 'react';
-import { ICallInfo } from "../../type";
+import { IConferenceInfo } from '@xylink/xy-rtc-sdk';
 import './index.scss';
 
 interface IProps {
-  callInfo: ICallInfo;
+  callInfo: IConferenceInfo;
   stopMeeting: (isConfirm: boolean) => void;
 }
 

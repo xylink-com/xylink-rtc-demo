@@ -4,7 +4,7 @@
  * @date  2020-04-28 17:26:40
  */
 
-import { ILayout } from '@xylink/xy-rtc-sdk';
+import { ILayout } from "@xylink/xy-rtc-sdk";
 import { TEMPLATE } from "./template";
 
 export const transformTime = (timestamp: number = +new Date()) => {
@@ -35,30 +35,28 @@ export const calculateBaseLayoutList = (
   // @ts-ignore
   const positionInfo = TEMPLATE.temp[orderLayoutList.length];
 
-  const layoutList = orderLayoutList.map(
-    (item: ILayout, index: number) => {
-      const position = positionInfo[index].position;
-      const [x, y, w, h] = position;
-      let layoutX = Math.round(rateWidth * x);
-      let layoutY = Math.round(rateHeight * y);
-      let layoutWidth = Math.round(rateWidth * w);
-      let layoutHeight = Math.round(rateHeight * h);
+  const layoutList = orderLayoutList.map((item: ILayout, index: number) => {
+    const position = positionInfo[index].position;
+    const [x, y, w, h] = position;
+    let layoutX = Math.round(rateWidth * x);
+    let layoutY = Math.round(rateHeight * y);
+    let layoutWidth = Math.round(rateWidth * w);
+    let layoutHeight = Math.round(rateHeight * h);
 
-      positionStyle = {
-        left: `${layoutX}px`,
-        top: `${layoutY}px`,
-        width: `${layoutWidth}px`,
-        height: `${layoutHeight}px`,
-      };
+    positionStyle = {
+      left: `${layoutX}px`,
+      top: `${layoutY}px`,
+      width: `${layoutWidth}px`,
+      height: `${layoutHeight}px`,
+    };
 
-      const cachePositionInfo = {
-        width: layoutWidth,
-        height: layoutHeight,
-      };
+    const cachePositionInfo = {
+      width: layoutWidth,
+      height: layoutHeight,
+    };
 
-      return { ...item, positionStyle, positionInfo: cachePositionInfo };
-    }
-  );
+    return { ...item, positionStyle, positionInfo: cachePositionInfo };
+  });
 
   return layoutList;
 };
@@ -121,4 +119,38 @@ export const getScreenInfo = (
   }
 
   return screenInfoObj;
+};
+
+/**
+ * 节流函数
+ *
+ * @param fn event function
+ * @param delay 每隔多久必须触发一次
+ * @param atleast 最短间隔触发时间
+ */
+export const debounce = function (fn: any, delay: number, atleast: number) {
+  let timer: any = null;
+  let previous: any = null;
+
+  return function () {
+    const now = +new Date();
+    // @ts-ignore
+    const context: any = this;
+    const args = arguments;
+
+    clearTimeout(timer);
+    if (!previous) {
+      previous = now;
+    }
+
+    if (now - previous >= atleast) {
+      fn.apply(context, args);
+      // 重置上一次开始时间为本次结束时间
+      previous = now;
+    } else {
+      timer = setTimeout(function () {
+        fn.apply(context, args);
+      }, delay);
+    }
+  };
 };

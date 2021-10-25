@@ -1,0 +1,24 @@
+@media (max-width: 767px) {
+  :global {
+		.ant-message-notice-content {
+			padding-top: 16px;
+			padding-bottom: 17px;
+			min-width: 160px;
+			min-height: 90px;
+		}
+		.ant-message {
+			top: 297px;
+		 	.anticon {
+				margin-right: auto;
+			}
+			span {
+				display: block;
+			}
+			svg {
+				margin-bottom: 10px;;
+				width: 29px;
+				height: 29px;
+			}
+		}
+	}
+}

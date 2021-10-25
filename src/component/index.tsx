@@ -21,7 +21,8 @@ import xyRTC, {
   IPageInfo,
   IDeviceManagerChangeValue,
   IReqInfo,
-  IVideoAudioType
+  IVideoAudioType,
+  IConferenceInfo
 } from '@xylink/xy-rtc-sdk';
 import {
   IRotationInfoTotalItem,
@@ -32,7 +33,7 @@ import {
   ISetting
 } from '../type/index';
 import { SERVER, ACCOUNT, THIRD } from '../utils/config';
-import { DEFAULT_LOCAL_USER, DEFAULT_DEVICE } from "../enum/index";
+import { DEFAULT_LOCAL_USER, DEFAULT_DEVICE, MAX_PARTICIPANT_COUNT_SHOW } from "../enum/index";
 import { TEMPLATE } from '../utils/template';
 import { getLayoutIndexByRotateInfo, getScreenInfo, calculateBaseLayoutList } from '../utils/index';
 import Video from './Video';
@@ -45,12 +46,13 @@ import Setting from './Setting';
 import Barrage from './Barrage';
 import InOutReminder from './InOutReminder';
 import Hold from "./Hold";
+import Participant from "./Participant";
 import cloneDeep from 'clone-deep'
 import '../style/index.scss';
 
 // auto/custom 两种模式
 const LAYOUT: 'AUTO' | 'CUSTOM' = 'AUTO';
-const elementId = 'container';
+const elementId = 'meeting';
 
 function Home() {
   const { phone, password, meeting, meetingPassword, meetingName, muteVideo, muteAudio, localHide } =
@@ -80,14 +82,17 @@ function Home() {
     muteAudio,
     localHide
   });
-  const [callInfo, setCallInfo] = useState({
+  const [callInfo, setCallInfo] = useState<IConferenceInfo>({
     avatar: '',
     displayName: '',
     numberType: 'CONFERENCE',
-    number: ''
+    number: '',
+    callNumber: ""
   });
   // 参会成员数据，包含stream，roster，postion等信息，最终依赖layout的数据进行画面布局、渲染、播放、状态显示
   const [layout, setLayout] = useState<any>([]);
+  // 所有参会者信息
+  const [rosters, setRosters] = useState<IRoster[]>([]);
   // screen容器信息
   const [screenInfo, setScreenInfo] = useState({
     rateWidth: 0,
@@ -109,6 +114,8 @@ function Home() {
   const [handStatus, setHandStatus] = useState(false);
   // 是否有字幕或点名
   const [subTitle, setSubTitle] = useState<ISubTitleContent>({ action: 'cancel', content: '' });
+  // contentURI
+  const [contentUri, setContentUri] = useState('');
   // current forceLayout roster id
   const [forceLayoutId, setForceLayoutId] = useState('');
   // 桌面布局模式（语音激励模式/画廊模式）
@@ -117,6 +124,7 @@ function Home() {
   const [participantsCount, setParticipantsCount] = useState(0);
   // 开启content的状态
   const [shareContentStatus, setShareContentStatus] = useState(false);
+  const [participantVisible, setParticipantVisible] = useState(false);
   // 呼叫数据统计
   const [senderStatus, setSenderStatus] = useState<any>({ sender: {}, receiver: {} });
   // 是否是调试模式（开启则显示所有画面的呼叫数据）
@@ -140,8 +148,8 @@ function Home() {
   const [reminders, setReminders] = useState<IReminder[]>([]);
   // 分页
   const [pageInfo, setPageInfo] = useState<IPageInfo>({
-    pageSize: 7,
-    currentPage: 0,
+    pageSize: 3,
+    currentPage: 1,
     totalPage: 0
   });
 
@@ -333,6 +341,12 @@ function Home() {
 
   // 监听client的内部事件
   const initEventListener = (client: any) => {
+    // 会议室信息
+    client.on('conference-info', (e: IConferenceInfo) => {
+      setCallInfo(e);
+      console.log('conference info:', e)
+    });
+
     // 退会消息监听，注意此消息很重要，内部的会议挂断都是通过此消息通知
     client.on('disconnected', (e: IStatus) => {
       const showMessage = (e.detail && e.detail.message) || '呼叫异常，请稍后重试';
@@ -350,8 +364,11 @@ function Home() {
     // client.requestNewLayout请求后，会回调custom-layout数据，包含有请求的视频画面数据
     client.on('conf-change-info', (e: IConfInfo) => {
       console.log('demo get conf change info: ', e);
+      const { contentUri } = e;
 
       confChangeInfoRef.current = e;
+
+      setContentUri(contentUri);
 
       // CUSTOM 模式
       if (templateMode === 'CUSTOM') {
@@ -567,6 +584,58 @@ function Home() {
 
       setPageInfo(pageInfo);
     });
+    client.on('bulkRoster', handleBulkRoster);
+  };
+
+  // 处理参会者消息
+  // 参会者信息 是增量消息
+  // bulkRosterType: 0 - 全量roster, 1 - 增量roster
+  // addRosterInfo  新增的参会者信息  当bulkRosterType是0的时候，此参数表示全量数据
+  // changeRosterInfo  变化的参会者信息
+  // deleteRosterInfo  被删除的参会者信息
+  const handleBulkRoster = (e: any) => {
+    const {
+      bulkRosterType = 0,
+      addRosterInfo = [],
+      changeRosterInfo = [],
+      deleteRosterInfo = []
+    } = e;
+
+    if (bulkRosterType === 0) {
+      setRosters(addRosterInfo);
+    } else {
+      setRosters((rosters) => {
+        let newRosters: IRoster[] = rosters.concat(addRosterInfo);
+
+        if (deleteRosterInfo.length > 0) {
+          deleteRosterInfo.forEach((info: { participantId: number }) => {
+            const index = newRosters.findIndex((roster) => {
+              return roster.participantId === info.participantId;
+            });
+
+            if (index > -1) {
+              newRosters.splice(index, 1);
+            }
+          });
+        }
+
+        if (changeRosterInfo.length > 0) {
+          changeRosterInfo.forEach((info: IRoster) => {
+            const index = newRosters.findIndex((roster) => {
+              return roster.participantId === info.participantId;
+            });
+
+            if (index > -1) {
+              newRosters[index] = info;
+            } else {
+              newRosters.push(info);
+            }
+          });
+        }
+
+        return newRosters;
+      });
+    }
   };
 
   // 计算 layout 成员渲染
@@ -610,7 +679,8 @@ function Home() {
         avatar: '',
         displayName: meetingName,
         numberType: 'CONFERENCE',
-        number: meeting
+        number: meeting,
+        callNumber: meeting
       });
 
       // 这里三方可以根据环境修改sdk log等级
@@ -696,6 +766,9 @@ function Home() {
       });
 
       if (callStatus) {
+        // 订阅全量参会者信息
+        client.current.subscribeBulkRoster();
+
         stream.current = xyRTC.createStream();
 
         const { audioInput, audioOutput, videoInput } = selectedDevice;
@@ -710,15 +783,16 @@ function Home() {
 
         client.current?.publish(stream.current, { isSharePeople: true });
       }
-    } catch (err) {
+    } catch (err: any) {
       disconnected(err.msg || '呼叫异常，请稍后重试');
     }
   };
 
   // 表单数据提交
   // 开始进行入会操作
-  const handleSubmit = () => {
-    const isSupport = xyRTC.checkSupportWebRTC();
+  const handleSubmit = async () => {
+    const result = await xyRTC.checkSupportWebRTC();
+    const { result: isSupport } = result;
 
     if (!isSupport) {
       message.info('Not support webrtc');
@@ -759,7 +833,7 @@ function Home() {
 
         setVideo(result);
       }
-    } catch (err) {
+    } catch (err: any) {
       const msg = err?.msg || '禁止操作';
 
       message.error(msg);
@@ -780,7 +854,7 @@ function Home() {
           result = await client.current.unmuteAudio();
         }
         setAudio(result);
-      } catch (err) {
+      } catch (err: any) {
         const msg = err?.msg || '禁止操作';
 
         message.error(msg);
@@ -862,13 +936,54 @@ function Home() {
     await client.current?.switchLayout(templateMode);
   };
 
+  // 自定义布局分页
+  const customSwitchPage = (type: string) => {
+    const { currentPage, totalPage } = pageInfo;
+    let nextPage = currentPage;
+    let next = true;
+    let previous = false;
+
+    if (type === 'next') {
+      nextPage += 1;
+    } else if (type === 'previous') {
+      nextPage -= 1;
+    } else if (type === 'home') {
+      nextPage = 1;
+    }
+
+    nextPage = Math.max(nextPage, 1);
+    nextPage = Math.min(nextPage, totalPage);
+
+    const newPageInfo = {
+      ...pageInfo,
+      currentPage: nextPage
+    }
+
+    if (nextPage !== 1) {
+      previous = true;
+    }
+
+    if (nextPage >= totalPage) {
+      next = false;
+    }
+
+    setPageStatus((pageStatus) => ({
+      ...pageStatus,
+      next,
+      previous
+    }));
+
+    setPageInfo(newPageInfo);
+
+    customRequestLayout(newPageInfo);
+  }
+
   // 分页
   const switchPage = (type: 'previous' | 'next' | 'home') => {
     setForceLayoutId(''); // 退出全屏
 
     if (templateMode === "CUSTOM") {
-      message.info("自定义布局模式不支持切换布局");
-      // TODO: 第三方自己实现
+      customSwitchPage(type);
       return;
     }
 
@@ -1005,7 +1120,7 @@ function Home() {
       } else {
         message.info("分享屏幕失败");
       }
-    } catch (err) {
+    } catch (err: any) {
       if (err && err.code !== 20500) {
         message.info(err.msg || '分享屏幕失败');
       }
@@ -1028,6 +1143,14 @@ function Home() {
 
     store.set('xy-sdk-template-mode', val);
     setTemplateMode(val);
+  };
+
+  const getParticipantsMaxCount = () => {
+    const count = participantsCount;
+    if (count > MAX_PARTICIPANT_COUNT_SHOW) {
+      return `${MAX_PARTICIPANT_COUNT_SHOW}+`;
+    }
+    return count;
   };
 
   const toggleLocal = async () => {
@@ -1126,7 +1249,7 @@ function Home() {
             </span>
           </div>
 
-          <div className="meeting-content">
+          <div className="meeting-content" id="meeting">
             {layout.length > 1 && pageStatus.status && pageStatus.previous && (
               <div className="previous-box">
                 <div
@@ -1191,6 +1314,17 @@ function Home() {
               </Button>
             </div>
             <div>
+              <Button
+                onClick={() => {
+                  callInfo.numberType !== 'APP' && setParticipantVisible(true);
+                }}
+                type="primary"
+                size="small"
+                disabled={callInfo.numberType === 'APP'}>
+                参会者{getParticipantsMaxCount()}
+              </Button>
+            </div>
+            <div>
               <Button onClick={audioOperate} type="primary" size="small">
                 {audioStatus}
               </Button>
@@ -1232,6 +1366,17 @@ function Home() {
               </Button>
             </div>
           </div>
+
+          {participantVisible && (
+            <Participant
+              client={client.current!}
+              contentUri={contentUri}
+              rosters={rosters}
+              visible={participantVisible}
+              count={participantsCount}
+              setShowDrawer={setParticipantVisible}
+            />
+          )}
 
           <Internels
             debug={debug}
