@@ -9,6 +9,7 @@ import xyRTC, {
   IMediaSupportedConstraints
 } from '@xylink/xy-rtc-sdk';
 import { ISetting, IDeviceType, TSettingType } from '../../type/index';
+import { isPc } from '@/utils/browser';
 import {
   AudioOutlined,
   SettingOutlined,
@@ -719,24 +720,28 @@ const Setting = (props: IProps) => {
         >
           <CloseOutlined />
         </div>
-        <div className="setting__header">
-          <Menu
-            style={{ width: 200 }}
-            selectedKeys={[current]}
-            mode="vertical"
-            onClick={handleClick}
-          >
-            <Menu.Item key="device" icon={<VideoCameraOutlined />}>
-              音视频
-            </Menu.Item>
-            <Menu.Item key="common" icon={<SettingOutlined />}>
-              常规
-            </Menu.Item>
-            <Menu.Item key="feedback" icon={<FormOutlined />}>
-              反馈
-            </Menu.Item>
-          </Menu>
-        </div>
+        {
+          isPc &&
+          <div className="setting__header">
+            <Menu
+              style={{ width: 200 }}
+              selectedKeys={[current]}
+              mode="vertical"
+              onClick={handleClick}
+            >
+              <Menu.Item key="device" icon={<VideoCameraOutlined />}>
+                音视频
+              </Menu.Item>
+              <Menu.Item key="common" icon={<SettingOutlined />}>
+                常规
+              </Menu.Item>
+              <Menu.Item key="feedback" icon={<FormOutlined />}>
+                反馈
+              </Menu.Item>
+            </Menu>
+          </div>
+        }
+
         <div
           className={`setting__content setting__content-device  ${current === 'device' ? 'show' : 'hide'
             }`}

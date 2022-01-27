@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Button, Row, message, Dropdown, Menu } from 'antd';
+import { Button, Row, message, Dropdown, Menu, Modal } from 'antd';
 import { MenuInfo } from 'rc-menu/lib/interface';
 import { DownOutlined } from '@ant-design/icons';
 import xyRTC, {
@@ -48,11 +48,14 @@ import InOutReminder from './InOutReminder';
 import Hold from "./Hold";
 import Participant from "./Participant";
 import cloneDeep from 'clone-deep'
+import { isMobile, isPc } from "../utils/browser";
 import '../style/index.scss';
 
 // auto/custom 两种模式
 const LAYOUT: 'AUTO' | 'CUSTOM' = 'AUTO';
 const elementId = 'meeting';
+
+let restartCount = 0; // 音频播放失败count
 
 function Home() {
   const { phone, password, meeting, meetingPassword, meetingName, muteVideo, muteAudio, localHide } =
@@ -432,12 +435,12 @@ function Home() {
 
     // 呼叫状态
     client.on('call-status', (e: IStatus) => {
-      // 10518入会成功
-      // 10519正在呼叫中
+      // XYSDK:950518 入会成功
+      // XYSDK:950519 正在呼叫中
       const code = e.code;
       const msg = e.msg;
 
-      if (code === 10518) {
+      if (code === "XYSDK:950518") {
         message.success(msg);
         // 提示
         if (localHide) {
@@ -445,7 +448,7 @@ function Home() {
         }
 
         setCallLoading(false);
-      } else if (code === 10519) {
+      } else if (code === "XYSDK:950519") {
         message.info(msg);
       } else {
         disconnected(msg);
@@ -585,6 +588,40 @@ function Home() {
       setPageInfo(pageInfo);
     });
     client.on('bulkRoster', handleBulkRoster);
+
+    // video、audio play faild, 在移动端某些浏览器，audio需要手动播放
+    client.on(
+      'play-failed',
+      ({ type, key, error }: { type: 'video' | 'audio'; key: string; error: any }) => {
+        if (type === 'video') {
+          console.log('[xyRTC on]video play failed:' + key, error);
+        }
+
+        if (type === 'audio') {
+          console.log('[xyRTC on]audio play failed:' + key, error);
+
+          // 因有多个audio组件, 所以会多次收到此消息，只需第一次的时候重新播放音频即可。
+          if (isMobile) {
+            if (restartCount === 0) {
+              Modal.warning({
+                className: 'xy-modal-confirm',
+                width: 288,
+                icon: null,
+                content: '点击“一键收听”按钮收听其他参会人声音',
+                closable: true,
+                centered: isMobile,
+                okText: "一键收听",
+                onOk() {
+                  client.playAudio();
+                }
+              });
+
+              restartCount++;
+            }
+          }
+        }
+      }
+    );
   };
 
   // 处理参会者消息
@@ -742,13 +779,15 @@ function Home() {
 
       console.log("result: ", result);
 
-      if (result.code === 10104) {
+      // XYSDK:950120 成功
+      // XYSDK:950104 账号密码错误
+      if (result.code === "XYSDK:950104") {
         message.info('登录密码错误');
 
         setCallMeeting(false);
         setCallLoading(false);
         return;
-      } else if (result.code !== 200) {
+      } else if (result.code !== "XYSDK:950120") {
         message.info('登录失败');
 
         setCallMeeting(false);
@@ -791,7 +830,7 @@ function Home() {
   // 表单数据提交
   // 开始进行入会操作
   const handleSubmit = async () => {
-    const result = await xyRTC.checkSupportWebRTC();
+    const result = await (isPc ? xyRTC.checkSupportWebRTC() : xyRTC.checkSupportMobileWebRTC());
     const { result: isSupport } = result;
 
     if (!isSupport) {
@@ -1101,7 +1140,8 @@ function Home() {
   const shareContent = async () => {
     try {
       if (stream.current && client.current) {
-        const result = await stream.current.createContentStream();
+        // screenAudio 共享时，是否采集系统音频。 true: 采集； false: 不采集
+        const result = await stream.current.createContentStream({ screenAudio: true });
 
         // 创建分享屏幕stream成功
         if (result) {
@@ -1121,7 +1161,7 @@ function Home() {
         message.info("分享屏幕失败");
       }
     } catch (err: any) {
-      if (err && err.code !== 20500) {
+      if (err && err.code !== "XYSDK:950501") {
         message.info(err.msg || '分享屏幕失败');
       }
     }
@@ -1344,19 +1384,23 @@ function Home() {
                 调试：{debug ? 'Yes' : 'No'}
               </Button>
             </div>
-            {shareContentStatus ? (
-              <div>
-                <Button onClick={stopShareContent} type="primary" size="small">
-                  结束共享
-                </Button>
-              </div>
-            ) : (
-              <div>
-                <Button onClick={shareContent} type="primary" size="small">
-                  共享
-                </Button>
-              </div>
-            )}
+
+            {
+              isPc && (shareContentStatus ? (
+                <div>
+                  <Button onClick={stopShareContent} type="primary" size="small">
+                    结束共享
+                  </Button>
+                </div>
+              ) : (
+                <div>
+                  <Button onClick={shareContent} type="primary" size="small">
+                    共享
+                  </Button>
+                </div>
+              ))
+            }
+
             <div>
               <MicLevel stream={stream.current} audio={audio as 'muteAudio' | 'unmuteAudio'} />
             </div>
