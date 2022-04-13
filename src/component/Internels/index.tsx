@@ -35,6 +35,8 @@ const Internels: React.FC<IProps> = ({ senderStatus, debug, switchDebug }) => {
     sender = {},
     timestamp,
     receiver = {},
+    audioSender = {},
+    audioReceiver = {},
     bytesReceivedSecond,
     bytesSentSecond
   } = senderStatus;
@@ -113,6 +115,50 @@ const Internels: React.FC<IProps> = ({ senderStatus, debug, switchDebug }) => {
               </tbody>
             </>
           </table>
+
+          <br />
+
+          <h3>音频：</h3>
+          <table className="table">
+            <>
+              <thead>
+                <tr className="table-title">
+                  <th>通道名称</th>
+                  <th>Codec</th>
+                  <th>码率(kbps)</th>
+                  <th>音量</th>
+                </tr>
+              </thead>
+              <tbody>
+                {Object.keys(audioSender).map((key) => {
+                  let { mimeType, bytesSentSecond, audioLevel = 0 } = audioSender[key];
+
+                  return (
+                    <tr key={key}>
+                      <td>音频发送</td>
+                      <td>{mimeType}</td>
+                      <td>{bytesSentSecond}</td>
+                      <td>{audioLevel}</td>
+                    </tr>
+                  );
+                })}
+
+                {Object.keys(audioReceiver).map((key) => {
+                  const { mimeType, bytesReceivedSecond, audioLevel } = audioReceiver[key];
+
+                  return (
+                    <tr key={key}>
+                      <td>音频接收</td>
+                      <td>{mimeType}</td>
+                      <td>{bytesReceivedSecond}</td>
+                      <td>{audioLevel}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </>
+          </table>
+          <br />
 
           <br />
           <h3>与会者：</h3>

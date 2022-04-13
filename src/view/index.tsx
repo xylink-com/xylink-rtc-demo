@@ -1307,7 +1307,7 @@ function Home() {
 
               <div className='button layout' onClick={switchLayout}>
                 <SVG icon="layout" />
-                <div className="title">切换布局</div>
+                <div className="title">窗口布局</div>
               </div>
 
               {shareContentStatus ? (

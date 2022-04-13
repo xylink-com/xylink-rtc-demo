@@ -15,7 +15,7 @@ const PromptInfo = (props: IProps) => {
   const { chairman, forceLayoutId, localHide, isLocalShareContent, content } = props;
 
   return (
-    <div className={`meeting-prompt meeting-prompt-up`}>
+    <div className={`meeting-prompt`}>
       {/* <div className="meeting-prompt-box"> */}
       {forceLayoutId && (
         <div className="meeting-prompt-box">
