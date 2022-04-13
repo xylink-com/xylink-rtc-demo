@@ -1,12 +1,16 @@
 
+/**
+ * 声量组件
+ */
+import { Stream } from "@xylink/xy-rtc-sdk";
 import React, { memo, useEffect, useState, useRef, useCallback } from "react";
-import { Button } from "antd";
-// 声量组件
+import './index.scss';
 
 interface IProps {
   audio: 'muteAudio' | 'unmuteAudio';
-  stream: any;
+  stream: Stream;
 }
+
 const MicLevel = memo((props: IProps) => {
   const { audio, stream } = props;
   const [micLevel, setMicLevel] = useState(0);  // 音量等级
@@ -17,7 +21,6 @@ const MicLevel = memo((props: IProps) => {
     audioLevelTimmer?.current && clearInterval(audioLevelTimmer.current);
     audioLevelTimmer.current = null;
   }, []);
-
 
   useEffect(() => {
     if (audio === 'unmuteAudio') {
@@ -47,9 +50,12 @@ const MicLevel = memo((props: IProps) => {
     };
   }, [audio, clearTimmer, stream]);
 
-  return <Button style={{ width: '90px' }} type="primary" size="small">
-    声量：{micLevel}
-  </Button>
+  return <>
+    {audio === 'unmuteAudio' && (
+      <div className="aec">
+        <div className="aec_content" style={{ transform: `translateY(-${micLevel}%)` }} />
+      </div>
+    )}</>
 });
 
 export default MicLevel;

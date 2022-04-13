@@ -1,0 +1,77 @@
+@import "@/assets/style/var.scss";
+
+.feedback {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+
+  &__content {
+    width: 100%;
+    position: relative;
+    .item {
+      align-items: baseline !important;
+      .key {
+        min-width: 60px;
+      }
+    }
+
+    textarea {
+      width: 100%;
+      height: 132px;
+      background: #f8f9fa;
+      border-radius: 3px;
+      border: 1px solid #ebebeb;
+      padding: 12px;
+      font-size: 12px;
+      color: $text-color;
+      line-height: 18px;
+    }
+    .error {
+      position: absolute;
+      color: $danger-color;
+      font-size: 12px;
+      margin-top: 4px;
+    }
+
+    &-input.ant-input {
+      height: 32px;
+      font-size: 12px;
+      color: $text-color;
+      background: #f8f9fa;
+      border-radius: 3px;
+      border: 1px solid #ebebeb;
+    }
+  }
+  &__footer {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    margin-top: 10px;
+    padding: 0 0 5px;
+    .download {
+      color: $primary-color;
+      font-size: 13px;
+      border: none;
+      padding: 0 8px;
+      margin-right: 12px;
+      cursor: pointer;
+      &:hover {
+        color: $primary-color;
+      }
+      img {
+        width: 16px;
+        height: 16px;
+        margin-right: 9px;
+      }
+    }
+    .upload-btn {
+      font-size: 13px;
+      &[disabled] {
+        color: #fff;
+        opacity: 0.6;
+        background: linear-gradient(90deg, #69aeff, #3876ff);
+        cursor: default;
+      }
+    }
+  }
+}

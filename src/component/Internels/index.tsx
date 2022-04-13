@@ -29,7 +29,7 @@ interface IProps {
   switchDebug: () => void;
 }
 
-const Internels: React.FC<any> = ({ senderStatus, debug, switchDebug }: IProps) => {
+const Internels: React.FC<IProps> = ({ senderStatus, debug, switchDebug }) => {
   const {
     mimeType,
     sender = {},
@@ -43,7 +43,7 @@ const Internels: React.FC<any> = ({ senderStatus, debug, switchDebug }: IProps) 
     return (
       <div className="debug">
         <div className="debug__container">
-          <div className="close" onClick={switchDebug}>X</div>
+          <div className="close-icon" onClick={switchDebug} />
 
           <h3>总览：</h3>
           <table className="table">

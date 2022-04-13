@@ -1,76 +1,49 @@
-@import './var.scss';
+@import "./var.scss";
 
-.form-input {
-  position: relative;
-  margin-bottom: 14px;
-}
-.form-input-err {
-  margin-bottom: 32px;
-}
-
-.tips {
-  position: absolute;
-  margin-top: 4px;
-  height: 19px;
-  text-align: left;
-  color: $danger-color;
-  line-height: 19px;
-  font-size: 12px;
-}
-
-@media (max-width: 767px) {
-  .tips {
-    margin-top: 4px;
-    font-size: 13px;
+// !!! 复写antd 样式
+.ant-btn {
+  border-radius: 3px;
+  border: 1px solid $primary-color;
+  background: transparent;
+  color: $primary-color;
+  &:hover {
+    background: #f8fafd;
+  }
+  &:active,
+  &:focus {
+    background: #eeeeee;
   }
 }
-
-// 复写antd 样式
-:global {
-  .ant-btn {
-    border-radius: 3px;
-    border: 1px solid $primary-color;
-    background: transparent;
-    color: $primary-color;
-    &:hover {
-      background: #f8fafd;
-    }
-    &:active,
-    &:focus {
-      background: #eeeeee;
-    }
+.ant-btn-primary {
+  color: #fff;
+  background: $primary-btn-color;
+  border: none;
+  &:hover {
+    background: $primary-btn-hover-color;
   }
-  .ant-btn-primary {
-    color: #fff;
+  &:active,
+  &:focus {
     background: $primary-btn-color;
     border: none;
-    &:hover {
-      background: $primary-btn-hover-color;
-    }
-    &:active,
-    &:focus {
-      background: $primary-btn-color;
-      border: none;
-    }
   }
-  .ant-btn-link {
-    border: 0;
-    &:hover {
-      background: transparent;
-    }
-    &:active,
-    &:focus {
-      background: transparent;
-    }
+}
+.ant-btn-link {
+  border: 0;
+  &:hover {
+    background: transparent;
   }
-  .ant-input-affix-wrapper:focus,
-  .ant-input-affix-wrapper-focused {
-    box-shadow: none;
+  &:active,
+  &:focus {
+    background: transparent;
   }
+}
+.ant-input-affix-wrapper:focus,
+.ant-input-affix-wrapper-focused {
+  box-shadow: none;
+}
 
-  .ant-input[disabled] {
-    color: $lighter-color;
-  }
+.ant-input[disabled] {
+  color: $lighter-color;
 }
 
 // model
@@ -171,7 +144,7 @@
       color: $normal-color;
     }
     &::after {
-      content: '';
+      content: "";
       position: absolute;
       left: 0;
       top: 0;
@@ -215,4 +188,22 @@
 
 .ant-drawer-mask {
   background-color: rgba(0, 0, 0, 0);
+}
+
+.ant-checkbox-wrapper {
+  color: $text-color;
+}
+
+.ant-input-focused,
+.ant-input:focus {
+  border-color: $primary-color;
+}
+
+
+.close-icon {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  background: url(~@/assets/img/close.png) no-repeat;
+  background-size: 100% 100%;
 }

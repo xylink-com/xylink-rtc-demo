@@ -4,21 +4,30 @@
  * @date  2020-04-01 17:46:13
  */
 
-import { IDeviceList, ISelectedDevice } from '@xylink/xy-rtc-sdk';
+import { DEFAULT_LOCAL_USER, LAYOUT_MODE_LIST, SETTING_KEYS } from "@/enum";
+import { IDeviceList, ISelectedDevice, IMode } from "@xylink/xy-rtc-sdk";
+import { type } from "os";
 
-export type TSettingType = 'device' | 'common' | 'feedback';
+export type TSettingType = "device" | "common" | "feedback" | "about";
 
-export type IDeviceType = 'audioOutputValue' | 'audioInputValue' | 'videoInValue';
+export type IDeviceType =
+  | "audioOutputValue"
+  | "audioInputValue"
+  | "videoInValue";
 
 export type TMeetingVideoStatus = {
-  status: 'muteVideo' | 'unmuteVideo';
+  status: "muteVideo" | "unmuteVideo";
 };
 
 export type TMeetingAudioStatus = {
-  status: 'muteAudio' | 'unmuteAudio';
+  status: "muteAudio" | "unmuteAudio";
 };
 
-export type TServerEnv = 'dev' | 'txdev' | 'txqa' | 'pre' | 'prd';
+export type TServerEnv = "dev" | "txdev" | "txqa" | "pre" | "prd";
+
+export type ISettingKey = typeof SETTING_KEYS[number];
+
+export type ILayoutMode = typeof LAYOUT_MODE_LIST[number];
 
 export type IServerInfo = {
   [key in TServerEnv]: {
@@ -28,13 +37,6 @@ export type IServerInfo = {
     logServer: string;
   };
 };
-
-export interface ICallInfo {
-  displayName: string;
-  numberType: string;
-  number: string;
-  avatar: string;
-}
 
 export interface IParticipantCount {
   participantsNum: number;
@@ -51,7 +53,8 @@ export interface ISetting {
   selectedDevice?: ISelectedDevice;
   deviceList?: IDeviceList;
   localHide?: boolean;
-  fullScreen?: boolean;
+  layoutMode?: ILayoutMode;
+  isThird?: boolean;
 }
 
 export interface IRotationInfoItem {
@@ -72,4 +75,15 @@ export interface IRotationInfo {
   content: IRotationInfoItem[];
   people: IRotationInfoItem[];
   total: IRotationInfoTotalItem[];
+}
+
+export type IUser = Partial<typeof DEFAULT_LOCAL_USER>;
+export interface ILayoutItem {
+  key: IMode;
+  text: string;
+}
+export interface ILayoutModeMap {
+  normal: ILayoutItem[][];
+  content: ILayoutItem[][];
+  chairmanUri: ILayoutItem[][];
 }

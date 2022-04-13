@@ -7,6 +7,7 @@
 
 import React from 'react';
 import { render } from 'react-dom';
-import Home from './component';
+import Home from './view';
+import "@/assets/style/global.scss"
 
 render(<Home />, document.getElementById("root"));

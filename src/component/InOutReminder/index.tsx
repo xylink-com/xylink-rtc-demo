@@ -7,7 +7,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { IReminder } from '@xylink/xy-rtc-sdk';
 import './index.scss';
-import iconHide from '../../style/img/icon_hide.svg';
+import iconHide from '@/assets/img/icon/icon_hide.svg';
 
 interface IProps {
   reminders: IReminder[];
