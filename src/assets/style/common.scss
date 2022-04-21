@@ -199,11 +199,10 @@
   border-color: $primary-color;
 }
 
-
 .close-icon {
   display: inline-block;
   width: 20px;
   height: 20px;
-  background: url(~@/assets/img/close.png) no-repeat;
+  background: url('~@/assets/img/close.png') no-repeat;
   background-size: 100% 100%;
 }

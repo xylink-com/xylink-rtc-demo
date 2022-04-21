@@ -6,7 +6,6 @@
 
 import { DEFAULT_LOCAL_USER, LAYOUT_MODE_LIST, SETTING_KEYS } from "@/enum";
 import { IDeviceList, ISelectedDevice, IMode } from "@xylink/xy-rtc-sdk";
-import { type } from "os";
 
 export type TSettingType = "device" | "common" | "feedback" | "about";
 
@@ -23,20 +22,9 @@ export type TMeetingAudioStatus = {
   status: "muteAudio" | "unmuteAudio";
 };
 
-export type TServerEnv = "dev" | "txdev" | "txqa" | "pre" | "prd";
-
 export type ISettingKey = typeof SETTING_KEYS[number];
 
 export type ILayoutMode = typeof LAYOUT_MODE_LIST[number];
-
-export type IServerInfo = {
-  [key in TServerEnv]: {
-    wssServer: string;
-    httpServer: string;
-    baseServer: string;
-    logServer: string;
-  };
-};
 
 export interface IParticipantCount {
   participantsNum: number;
@@ -77,7 +65,9 @@ export interface IRotationInfo {
   total: IRotationInfoTotalItem[];
 }
 
-export type IUser = Partial<typeof DEFAULT_LOCAL_USER>;
+export type IUser = Partial<typeof DEFAULT_LOCAL_USER> & {
+  layoutMode?: ILayoutMode;
+};
 export interface ILayoutItem {
   key: IMode;
   text: string;
@@ -87,3 +77,7 @@ export interface ILayoutModeMap {
   content: ILayoutItem[][];
   chairmanUri: ILayoutItem[][];
 }
+
+export type TFontSizeType = "small" | "middle" | "big";
+
+export type TLocationType = "top" | "middle" | "bottom";

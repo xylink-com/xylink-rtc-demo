@@ -162,7 +162,6 @@ const Device = (props: IProps) => {
   const clearStream = () => {
     if (previewStream.current) {
       xyRTC.closePreviewStream(previewStream.current);
-      console.log('setting stream closed successfully:', previewStream.current);
     }
   };
 

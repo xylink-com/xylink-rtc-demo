@@ -3,17 +3,17 @@
  */
 import React, { useRef, useEffect } from "react";
 import { ISubTitleContent } from "@xylink/xy-rtc-sdk";
+import { TFontSizeType, TLocationType } from "@/type";
 import "./index.scss";
 
 interface IProps {
   subTitle: ISubTitleContent
 }
 
-const Barrage = (props: IProps) => {
-  const { subTitle } = props;
+const Barrage = ({ subTitle }: IProps) => {
   const containerWidth = window.innerWidth;
-  const subTitleRef = useRef<any>(null);
-  let intervalTimer = useRef<any>(null);;
+  const subTitleRef = useRef<HTMLElement>(null);
+  let intervalTimer = useRef<number>(0);
 
   const {
     content,
@@ -28,12 +28,12 @@ const Barrage = (props: IProps) => {
 
   const isScroll = scroll === "1";
 
-  const fontSizeMap: any = {
+  const fontSizeMap: Record<TFontSizeType, string> = {
     small: '18px',
     middle: '22px',
     big: '24px'
   };
-  const locationMap: any = {
+  const locationMap: Record<TLocationType, string> = {
     top: '0px',
     middle: '42%',
     bottom: '0px'

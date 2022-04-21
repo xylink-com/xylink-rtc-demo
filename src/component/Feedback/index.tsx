@@ -4,6 +4,7 @@ import { Button, message, Input } from 'antd';
 import { SERVER } from '@/utils/config';
 
 import './index.scss';
+import store from '@/utils/store';
 
 const { TextArea } = Input;
 
@@ -27,7 +28,9 @@ const Feedback = (props: IProps) => {
     setUploadLoading(true);
     try {
 
-      const result: any = await xyRTC.logger.uploadLog('', '', '');
+      const { meetingName = '' } = store.get('xy-user') || {};
+
+      const result: any = await xyRTC.logger.uploadLog(meetingName, contact, content);
 
       if (result) {
         message.info('提交成功');

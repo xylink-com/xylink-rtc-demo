@@ -7,8 +7,6 @@
 
 export const THIRD: boolean = true;
 
-export const LAYOUT_MODE: "AUTO" | "CUSTOM" = "AUTO";
-
 export const SERVER = {
   wssServer: "wss://cloudapi.xylink.com",
   httpServer: "https://cloudapi.xylink.com",
@@ -26,4 +24,5 @@ export const SERVER = {
 export const ACCOUNT = {
   extId: "0142901e3d83e0a1e225ef92b8663fcaebda7242",
   clientId: "BR1e5cptJgyC1aFRtiXfmdg3",
+  clientSecret: "I2aQ80XuXcrMTemfgwzm0zYvEyWpdqb0",
 };

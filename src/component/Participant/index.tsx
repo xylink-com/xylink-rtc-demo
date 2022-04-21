@@ -56,8 +56,6 @@ const Participant = memo((props: IProps) => {
     (currentPage: number) => {
       const input = nameRef.current?.value.trimStart() || '';
 
-      console.log('search name:', input);
-
       let newRosters = rosters;
 
       if (input || tabRef.current === 'unmute') {

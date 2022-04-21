@@ -1,6 +1,6 @@
 import React from 'react';
-import './index.scss';
 import { IconMap } from './icon';
+import './index.scss';
 
 interface IProps {
   icon: string;

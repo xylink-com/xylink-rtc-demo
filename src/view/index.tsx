@@ -272,8 +272,6 @@ function Home() {
     // 缓存页码信息
     setPageInfo(cacheCustomPageInfo);
 
-    console.log('cacheCustomPageInfo: ', cacheCustomPageInfo);
-
     return cacheCustomPageInfo;
   };
 
@@ -325,9 +323,6 @@ function Home() {
       });
     }
 
-    console.log('reqlist: ', reqList);
-    console.log('extReqList: ', extReqList);
-
     client.current?.requestNewLayout(reqList, pageSize, currentPage, extReqList, {
       uiShowLocalWhenPageMode: false
     });
@@ -356,7 +351,6 @@ function Home() {
     // 接收到conf-change-info后，需要基于此列表数据计算想要请求的参会成员和共享Content画面流
     // client.requestNewLayout请求后，会回调custom-layout数据，包含有请求的视频画面数据
     client.on('conf-change-info', (e: IConfInfo) => {
-      console.log('demo get conf change info: ', e);
       const { chairManUrl } = e;
 
       confChangeInfoRef.current = e;
@@ -377,8 +371,6 @@ function Home() {
     // AUTO 布局回调layout数据，使用此数据直接渲染画面即可
     // CUSTOM 布局不需要监听此数据
     client.on('layout', (e: ILayout[]) => {
-      console.log('demo get layout map: ', e);
-
       setLayout(e);
     });
 
@@ -389,7 +381,6 @@ function Home() {
     // 第三步：基于最新的布局列表数据，计算 position/size/rotate 等信息，计算完成后，直接渲染即可
     // 备注：Auto 布局在内部做了 position/size/rotate 计算，所以如果不是特殊定制位置，使用Auto回调的【layout】数据直接渲染画面即可
     client.on('custom-layout', (e: ILayout[]) => {
-      console.log('demo get custom layout data:', e, e.length);
 
       // 此处渲染没有排序处理，需要自行将回调数据排序并展示
       // 此示例程序通过配置一个一组 TEMPLATE 模版数据，来计算layout container容器大小和layout item position/size/rotate 信息
@@ -416,7 +407,6 @@ function Home() {
     // AUTO模式回调数据，推送最新的Layout容器大小信息
     // 支持响应屏幕变化后，推送最新数据
     client.on('screen-info', (e: IScreenInfo) => {
-      console.log('demo get screen info: ', e);
 
       setScreenInfo(e);
     });
@@ -522,8 +512,6 @@ function Home() {
     // 设备旋转信息
     // 自定义布局需要处理
     client.on('rotation-change', (e: any) => {
-      console.log('demo get rotation-change: ', e);
-
       // 当手机竖屏入会，或者分享的竖屏的内容时
       // 自定义布局需要手动计算视频画面的旋转信息
       if (user.layoutMode === 'CUSTOM') {
@@ -720,7 +708,7 @@ function Home() {
     try {
       const { meeting = '', meetingPassword, meetingName, muteAudio, muteVideo, layoutMode, extUserId = '' } = user;
       const { wssServer, httpServer, logServer } = SERVER;
-      const { clientId } = ACCOUNT;
+      const { clientId, clientSecret } = ACCOUNT;
 
       setCallInfo((info) => ({
         ...info,
@@ -743,7 +731,7 @@ function Home() {
         // 使用哪一种布局方式：
         // AUTO：自动布局，第三方只需要监听layout回调消息即可渲染布局和视频画面
         // CUSTOM：自定义布局，灵活性更高，但是实现较为复杂，自定义控制参会成员的位置、大小和画面质量
-        layout: layoutMode,
+        layout: layoutMode || 'AUTO',
         container: {
           // AUTO布局时，自定义指定Layout显示容器
           // CUSTOM布局时，可以使用此元素自行计算显示容器的大小和每个参会成员的位置&大小信息
@@ -754,7 +742,8 @@ function Home() {
         },
         // 隐藏 Local 画面配置项
         localHide,
-        clientId
+        clientId,
+        clientSecret
       });
 
       initEventListener(client.current);
@@ -1011,12 +1000,15 @@ function Home() {
   }
 
   // 分页
-  const switchPage = (type: 'previous' | 'next' | 'home') => {
-    setForceLayoutId(''); // 退出全屏
-
+  const switchPage = async (type: 'previous' | 'next' | 'home') => {
     if (user.layoutMode === "CUSTOM") {
       customSwitchPage(type);
       return;
+    }
+
+    if (forceLayoutId) {
+      // 退出全屏
+      await client.current?.forceFullScreen('');
     }
 
     const { currentPage, totalPage } = pageInfo;
@@ -1247,7 +1239,7 @@ function Home() {
                     switchPage('previous');
                   }}
                 >
-                  <span className="svg-icon previous" />
+                  <SVG icon="previous" />
                 </div>
                 {pageInfo.currentPage > 1 && (
                   <div
@@ -1278,7 +1270,7 @@ function Home() {
                     switchPage('next');
                   }}
                 >
-                  <span className="svg-icon next" />
+                  <SVG icon="next" />
                   {pageInfo.totalPage > 1 && pageInfo.currentPage > 0 && (
                     <div className="page-number">
                       {pageInfo.currentPage} /

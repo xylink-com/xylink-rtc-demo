@@ -20,9 +20,8 @@ const actionMap: {
   out: '离开'
 };
 
-const InOutReminder = (props: IProps) => {
-  const { reminders } = props;
-
+const InOutReminder = ({ reminders }: IProps) => {
+  
   const [newReminders, setNewReminders] = useState(reminders); // 显示的消息
   const [isHide, setIsHide] = useState(true); // 隐藏toolbar + content
   const [isHideContent, setIsHideContent] = useState(false); // 隐藏content

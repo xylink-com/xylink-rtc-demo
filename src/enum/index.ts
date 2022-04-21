@@ -1,4 +1,4 @@
-import { THIRD, LAYOUT_MODE } from "@/utils/config";
+import { THIRD } from "@/utils/config";
 
 export const MAX_PARTICIPANT_COUNT = 500;
 export const PARTICIPANT_PAGE_SIZE = 20;
@@ -22,7 +22,7 @@ export const DEFAULT_LOCAL_USER = {
   muteVideo: false,
   muteAudio: false,
   localHide: false,
-  layoutMode: LAYOUT_MODE,
+  layoutMode: 'AUTO',
   isThird: THIRD,
   extUserId: "",
 };
