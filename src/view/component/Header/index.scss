@@ -1,0 +1,121 @@
+@import "@/assets/style/var.scss";
+
+.meeting-header {
+  height: 36px;
+  width: 100%;
+  text-align: center;
+  color: #e7e7e7;
+  background: $toolbar-bg-color;
+  font-size: 13px;
+  z-index: 10;
+  position: fixed;
+  top: 0;
+  left: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .header-time {
+    position: absolute;
+    left: 20px;
+    display: flex;
+    align-items: center;
+
+    cursor: pointer;
+  }
+
+  .meeting-stats-switch {
+    width: 20px;
+    height: 20px;
+    margin-right: 10px;
+  }
+  .online {
+    fill: #86b952;
+  }
+  .offline {
+    fill: #fff;
+  }
+
+  .header-count {
+    cursor: default;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .info-icon {
+    transform: rotatez(180deg);
+    margin-left: 12px;
+  }
+}
+
+.header-displayname {
+  margin-right: 10px;
+}
+
+.meeting-popover {
+  top: 26px !important;
+  z-index: 1009;
+  .ant-popover-arrow {
+    display: none;
+  }
+  .ant-popover-inner {
+    width: 360px;
+    height: 80px;
+    background: #ffffff;
+    box-shadow: 0px 2px 8px 0px rgba(0, 0, 0, 0.26);
+    font-size: 12px;
+    .ant-popover-inner-content {
+      padding: 14px 16px;
+    }
+  }
+  .upload-icon {
+    position: absolute;
+    right: 12px;
+    top: 16px;
+    cursor: pointer;
+    .svg-icon {
+      width: 16px;
+      height: 16px;
+      fill-opacity: 0.8;
+      fill: #393946;
+    }
+    &:hover {
+      .svg-icon {
+        fill-opacity: 0.6;
+      }
+    }
+  }
+  &-name {
+    font-size: 14px;
+    color: #393946;
+    margin-bottom: 12px;
+    margin-right: 30px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  &-number {
+    display: flex;
+    align-items: center;
+    line-height: 18px;
+    color: rgba(57, 57, 70, 0.6);
+    .number {
+      color: #393946;
+    }
+    .copy {
+      display: inline-flex;
+      align-items: center;
+      color: rgba(56, 118, 255, 1);
+      margin-left: 12px;
+      cursor: pointer;
+      .svg-icon {
+        width: 16px;
+        height: 16px;
+        margin-left: 4px;
+      }
+    }
+  }
+}

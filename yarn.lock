@@ -2022,15 +2022,16 @@
   resolved "https://registry.npmjs.org/@xtuc/long/-/long-4.2.2.tgz#d291c6a4e97989b5c61d9acf396ae4fe133a718d"
   integrity sha512-NuHqBY1PB/D8xU6s/thBgOAiAP7HOYDQ32+BFZILJ8ivkUkAHQnWfn6WhL79Owj1qmUnoN/YPhktdIoucipkAQ==
 
-"@xylink/xy-rtc-sdk@^2.0.5":
-  version "2.0.5"
-  resolved "https://registry.npmjs.org/@xylink/xy-rtc-sdk/-/xy-rtc-sdk-2.0.5.tgz#aefe4e841be2eb00b30e6024f78dcf0d86aa0081"
-  integrity sha512-3XGUHWa0z5Q2qyPC0i7SY/hXq1sJa9UuJiX0hcrUMtPRqTEiQqH2pODHJq92WEneUXCd8pyVrmG/PXeUvZtSMQ==
+"@xylink/xy-rtc-sdk@2.1.0":
+  version "2.1.0"
+  resolved "https://registry.npmjs.org/@xylink/xy-rtc-sdk/-/xy-rtc-sdk-2.1.0.tgz#1597f5c9672d35b97e674698ac13a87a5043add3"
+  integrity sha512-hvlYov38Cay5zMrAfRPmq4zXW0cNN8a7fK8PTu34kQQRYuQ9XUHAlTBIbfhNYX4AMICMW+Lmj1Mvh/1sV93uQA==
   dependencies:
     crypto-browserify "^3.12.0"
     crypto-js "^4.1.1"
     dexie "^2.0.4"
     dexie-export-import "^1.0.0-rc.1"
+    encryptlong "^3.1.4"
     js-base64 "^3.6.1"
     qs "^6.9.4"
     uuid "^7.0.2"
@@ -4317,6 +4318,11 @@ encodeurl@~1.0.2:
   version "1.0.2"
   resolved "https://registry.npmjs.org/encodeurl/-/encodeurl-1.0.2.tgz#ad3ff4c86ec2d029322f5a02c3a9a606c95b3f59"
   integrity sha1-rT/0yG7C0CkyL1oCw6mmBslbP1k=
+
+encryptlong@^3.1.4:
+  version "3.1.4"
+  resolved "https://registry.npmjs.org/encryptlong/-/encryptlong-3.1.4.tgz#ef5543d8f1db91e7d05ee9122d5872e453956996"
+  integrity sha512-nx+om7MXaSBSBPBNKKPrOWMot/C0L0Ru8dy9WTyjO5k8Wo+1hsnK0d8uX1UjctkgcgEWhkKhVScniYDjXvnKgw==
 
 end-of-stream@^1.0.0, end-of-stream@^1.1.0:
   version "1.4.4"

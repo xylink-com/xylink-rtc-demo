@@ -21,11 +21,23 @@ export const DEFAULT_LOCAL_USER = {
   meetingName: "",
   muteVideo: false,
   muteAudio: false,
-  localHide: false,
-  layoutMode: 'AUTO',
-  isThird: THIRD,
   extUserId: "",
 };
+
+export const DEFAULT_SETTING = {
+  localHide: false,
+  layoutMode: "AUTO",
+  isThird: THIRD,
+};
+
+export const DEFAULT_CALL_INFO = {
+  avatar: '',
+  displayName: '',
+  numberType: 'CONFERENCE',
+  number: '',
+  callNumber: ''
+};
+
 const NEXT_DEVICE = {
   deviceId: "",
   label: "",

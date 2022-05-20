@@ -203,6 +203,20 @@
   display: inline-block;
   width: 20px;
   height: 20px;
-  background: url('~@/assets/img/close.png') no-repeat;
+  background: url("~@/assets/img/close.png") no-repeat;
   background-size: 100% 100%;
+}
+
+.xy-popover {
+  .ant-popover-inner {
+    background: rgba(35, 36, 51, 0.9);
+    border-radius: 3px;
+  }
+  & > .ant-popover-content > .ant-popover-arrow {
+    border-right-color: rgba(35, 36, 51, 0.9);
+    border-bottom-color: rgba(35, 36, 51, 0.9);
+  }
+  .ant-popover-arrow-content {
+    background: rgba(35, 36, 51, 0.9);
+  }
 }

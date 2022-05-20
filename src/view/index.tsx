@@ -32,79 +32,49 @@ import {
   IUser,
 } from '@/type/index';
 import { SERVER, ACCOUNT } from '@/utils/config';
-import { DEFAULT_LOCAL_USER, DEFAULT_DEVICE, MAX_PARTICIPANT_COUNT_SHOW } from "@/enum/index";
+import { DEFAULT_LOCAL_USER, DEFAULT_DEVICE, MAX_PARTICIPANT_COUNT_SHOW, DEFAULT_SETTING, DEFAULT_CALL_INFO } from "@/enum/index";
 import { TEMPLATE } from '@/utils/template';
 import { getLayoutIndexByRotateInfo, getScreenInfo, calculateBaseLayoutList } from '@/utils/index';
-import Video from '@/component/Video';
-import Audio from '@/component/Audio';
-import Internels from '@/component/Internels';
 import store from '@/utils/store';
-import Login from '@/component/Login';
-import Setting from '@/component/Setting';
-import Barrage from '@/component/Barrage';
-import InOutReminder from '@/component/InOutReminder';
-import Hold from "@/component/Hold";
-import Participant from "@/component/Participant";
-import MeetingLoading from '@/component/Loading';
 import SVG from '@/component/Svg';
-import More from '@/component/More';
-import EndCall from '@/component/EndCall';
-import VideoButton from '@/component/VideoButton';
-import AudioButton from '@/component/AudioButton';
-import MeetingHeader from '@/component/Header';
-import PromptInfo from '@/component/PromptInfo';
+import Video from './component/Video';
+import Audio from './component/Audio';
+import Internels from './component/Internels';
+import Login from './component/Login';
+import Setting from './component/Setting';
+import Barrage from './component/Barrage';
+import InOutReminder from './component/InOutReminder';
+import Hold from "./component/Hold";
+import Participant from "./component/Participant";
+import MeetingLoading from './component/Loading';
+import More from './component/More';
+import EndCall from './component/EndCall';
+import VideoButton from './component/VideoButton';
+import AudioButton from './component/AudioButton';
+import MeetingHeader from './component/Header';
+import PromptInfo from './component/PromptInfo';
 
 import cloneDeep from 'clone-deep'
 import { isMobile, isPc } from "@/utils/browser";
 
-import './index.scss';
+import '@/assets/style/index.scss';
 
 
-const elementId = 'meeting';
+const elementId = 'container';
 
 let restartCount = 0; // 音频播放失败count
 
-function Home() {
-  const {
-    phone,
-    password,
-    meeting,
-    meetingPassword,
-    meetingName,
-    muteVideo,
-    muteAudio,
-    localHide,
-    layoutMode,
-    isThird,
-    extUserId } =
-    store.get('xy-user') || DEFAULT_LOCAL_USER;
+const defaultUser = store.get('xy-user') || DEFAULT_LOCAL_USER;
 
+function Home() {
   // 呼叫状态
   const [callMeeting, setCallMeeting] = useState(false);
   // 是否呼叫中
   const [callLoading, setCallLoading] = useState(false);
   // 登录/呼叫数据
-  const [user, setUser] = useState<IUser>({
-    phone,
-    password,
-    meeting,
-    meetingPassword,
-    meetingName,
-    muteVideo,
-    muteAudio,
-    localHide,
-    layoutMode,
-    isThird,
-    extUserId
-  });
-
-  const [callInfo, setCallInfo] = useState<IConferenceInfo>({
-    avatar: '',
-    displayName: '',
-    numberType: 'CONFERENCE',
-    number: '',
-    callNumber: ''
-  });
+  const [user, setUser] = useState<IUser>(defaultUser);
+  // 云会议室信息
+  const [conferenceInfo, setConferenceInfo] = useState<IConferenceInfo>(DEFAULT_CALL_INFO);
   // 参会成员数据，包含stream，roster，postion等信息，最终依赖layout的数据进行画面布局、渲染、播放、状态显示
   const [layout, setLayout] = useState<any>([]);
   // 所有参会者信息
@@ -118,11 +88,11 @@ function Home() {
   const [audioList, setAudioList] = useState<any>([]);
   // 摄像头状态
   const [video, setVideo] = useState<IVideoAudioType>(() => {
-    return muteVideo ? 'muteVideo' : 'unmuteVideo';
+    return user.muteVideo ? 'muteVideo' : 'unmuteVideo';
   });
   // 麦克风状态
   const [audio, setAudio] = useState<IVideoAudioType>(() => {
-    return muteAudio ? 'muteAudio' : 'unmuteAudio';
+    return user.muteAudio ? 'muteAudio' : 'unmuteAudio';
   });
   // 是否强制静音
   const [disableAudio, setDisableAudio] = useState(false);
@@ -135,8 +105,7 @@ function Home() {
   // 主会场
   const [chairman, setChairman] = useState({
     chairmanUri: '', // 主会场是否入会
-    hasChairman: false, // 是否有设置主会场
-    isLocal: false // 主会场是否是local
+    hasChairman: false, // 是否有设置主会场(预设主会场)
   });
   // current forceLayout roster id
   const [forceLayoutId, setForceLayoutId] = useState('');
@@ -145,7 +114,8 @@ function Home() {
   // 会议成员数量
   const [participantsCount, setParticipantsCount] = useState(0);
   // 开启content的状态
-  const [shareContentStatus, setShareContentStatus] = useState(false);
+  const [isLocalShareContent, setLocalShareContent] = useState(false);
+  // 是否显示参会者列表
   const [participantVisible, setParticipantVisible] = useState(false);
   // 呼叫数据统计
   const [senderStatus, setSenderStatus] = useState<any>({ sender: {}, receiver: {} });
@@ -153,6 +123,9 @@ function Home() {
   const [debug, setDebug] = useState(false);
   const [onhold, setOnhold] = useState(false);
   const [settingVisible, setSettingVisible] = useState(false);
+  // 设置信息
+  const [setting, setSetting] = useState<ISetting>(store.get("xy-setting") || DEFAULT_SETTING);
+
   const [selectedDevice, setSelectedDevice] = useState<ISelectedDevice>(DEFAULT_DEVICE.nextDevice);
   const [permission, setPermission] = useState<ICurrentPermission>({
     camera: '',
@@ -160,7 +133,6 @@ function Home() {
   });
   const [contentIsDisabled, setContentIsDisabled] = useState(false);
   const [pageStatus, setPageStatus] = useState({
-    status: true, // 是否分页
     previous: false, // 上一页
     next: true // 下一页
   });
@@ -212,6 +184,37 @@ function Home() {
     operate(permission, callMeeting, callLoading);
   }, [permission, callMeeting, callLoading]);
 
+  useEffect(() => {
+    if (!(callMeeting && !callLoading)) {
+      return;
+    }
+
+    const { currentPage = 0, totalPage = 0 } = pageInfo;
+
+    const { participantCount = 1 } = confChangeInfoRef.current || {};
+
+    // 总页数大于当前页，则显示 "下一页"按钮
+    let next = currentPage < totalPage;
+    // 非首页，则显示”上一页“按钮
+    let previous = currentPage !== 0;
+
+    // 不显示分页按钮
+    // 1. 人数为1
+    // 2. 人数为2,且隐藏本地画面
+    // 3. 共享(本地) 
+    // 4. 主会场(非本地、且在线) 
+    if (participantCount === 1 || (participantCount === 2 && setting.localHide) || isLocalShareContent || chairman.chairmanUri) {
+      next = false;
+      previous = false;
+    }
+
+    setPageStatus({
+      next,
+      previous
+    });
+
+  }, [callMeeting, callLoading, pageInfo, setting.localHide, isLocalShareContent, chairman.chairmanUri])
+
   // 挂断会议
   const disconnected = (msg = '') => {
     message.info(msg);
@@ -222,8 +225,8 @@ function Home() {
   // 结束会议操作
   const stop = useCallback(() => {
     // 重置audio、video状态
-    setAudio(muteAudio ? 'muteAudio' : 'unmuteAudio');
-    setVideo(muteVideo ? 'muteVideo' : 'unmuteVideo');
+    setAudio(user.muteAudio ? 'muteAudio' : 'unmuteAudio');
+    setVideo(user.muteVideo ? 'muteVideo' : 'unmuteVideo');
 
     // 重置字幕信息
     setSubTitle({ action: 'cancel', content: '' });
@@ -238,14 +241,16 @@ function Home() {
     // 清理组件状
     setCallMeeting(false);
     setCallLoading(false);
-    setShareContentStatus(false);
+    setLocalShareContent(false);
     setDebug(false);
     setLayout([]);
     setSettingVisible(false);
 
+    setConferenceInfo(DEFAULT_CALL_INFO);
+
     client.current = null;
     stream.current = null;
-  }, [muteAudio, muteVideo]);
+  }, [user.muteAudio, user.muteVideo]);
 
   // CUSTOM布局 计算页码信息
   const calcPageInfo = () => {
@@ -332,7 +337,7 @@ function Home() {
   const initEventListener = (client: any) => {
     // 会议室信息
     client.on('conference-info', (e: IConferenceInfo) => {
-      setCallInfo(e);
+      setConferenceInfo(e);
     });
 
     // 退会消息监听，注意此消息很重要，内部的会议挂断都是通过此消息通知
@@ -352,7 +357,6 @@ function Home() {
     // client.requestNewLayout请求后，会回调custom-layout数据，包含有请求的视频画面数据
     client.on('conf-change-info', (e: IConfInfo) => {
       const { chairManUrl } = e;
-
       confChangeInfoRef.current = e;
 
       setChairman((chairman) => ({
@@ -361,7 +365,7 @@ function Home() {
       }));
 
       // CUSTOM 模式
-      if (user.layoutMode === 'CUSTOM') {
+      if (setting.layoutMode === 'CUSTOM') {
         const cacheCustomPageInfo: IPageInfo = calcPageInfo();
 
         customRequestLayout(cacheCustomPageInfo);
@@ -426,7 +430,7 @@ function Home() {
       if (code === "XYSDK:950518") {
         message.success(msg);
         // 提示
-        if (localHide) {
+        if (setting.localHide) {
           message.info("已开启隐藏本地画面模式", 5);
         }
 
@@ -448,8 +452,7 @@ function Home() {
 
       setChairman((chairman) => ({
         ...chairman,
-        hasChairman: !!chairmanUri,
-        isLocal: false
+        hasChairman: !!chairmanUri
       }));
 
       if (muteOperation === 'muteAudio' && disableMute) {
@@ -514,7 +517,7 @@ function Home() {
     client.on('rotation-change', (e: any) => {
       // 当手机竖屏入会，或者分享的竖屏的内容时
       // 自定义布局需要手动计算视频画面的旋转信息
-      if (user.layoutMode === 'CUSTOM') {
+      if (setting.layoutMode === 'CUSTOM') {
         rotationInfoRef.current = e;
         // 计算屏幕旋转信息
         nextLayoutListRef.current = calculateRotate();
@@ -558,28 +561,11 @@ function Home() {
 
     // 分页信息
     client.on('page-info', (pageInfo: IPageInfo) => {
-      let next = true;
-      let previous = false;
-      const { currentPage = 0, totalPage = 0 } = pageInfo;
 
-      if (currentPage !== 0) {
-        previous = true;
-      }
-
-      if (currentPage >= totalPage) {
-        next = false;
-      }
-
-      setPageStatus((pageStatus) => {
-        return {
-          ...pageStatus,
-          next,
-          previous
-        };
-      });
-
-      setPageInfo(pageInfo);
+      setPageInfo({ ...pageInfo });
     });
+
+    // 参会者信息
     client.on('bulkRoster', handleBulkRoster);
 
     // video、audio play faild, 在移动端某些浏览器，audio需要手动播放
@@ -706,11 +692,12 @@ function Home() {
     let callStatus = true;
 
     try {
-      const { meeting = '', meetingPassword, meetingName, muteAudio, muteVideo, layoutMode, extUserId = '' } = user;
+      const { meeting = '', meetingPassword, meetingName, muteAudio, muteVideo, extUserId = '' } = user;
+      const { layoutMode = 'AUTO', localHide = false, isThird = true } = setting;
       const { wssServer, httpServer, logServer } = SERVER;
       const { clientId, clientSecret } = ACCOUNT;
 
-      setCallInfo((info) => ({
+      setConferenceInfo((info) => ({
         ...info,
         number: meeting,
         callNumber: meeting
@@ -759,8 +746,10 @@ function Home() {
        */
       let result: any;
 
-      if (user.isThird) {
+      if (isThird) {
         const { extId } = ACCOUNT;
+
+        console.log('extUserId====>', extUserId);
 
         result = await client.current.loginExternalAccount({
           // 用户名自行填写
@@ -785,7 +774,9 @@ function Home() {
         setCallMeeting(false);
         setCallLoading(false);
         return;
-      } else if (result.code !== "XYSDK:950120") {
+      }
+
+      if (result.code !== "XYSDK:950120") {
         message.info('登录失败');
 
         setCallMeeting(false);
@@ -840,12 +831,12 @@ function Home() {
     join();
   };
 
-  const onChangeInput = (value: any, type: string) => {
-    const users = { ...user, [type]: value };
+  const onChangeUserInfo = (value: any, type: string) => {
+    const newUser = { ...user, [type]: value };
 
-    store.set('xy-user', users);
+    store.set('xy-user', newUser);
 
-    setUser(users);
+    setUser(newUser);
 
     if (type === "muteVideo") {
       setVideo(value ? "muteVideo" : "unmuteVideo");
@@ -961,8 +952,6 @@ function Home() {
   const customSwitchPage = (type: string) => {
     const { currentPage, totalPage } = pageInfo;
     let nextPage = currentPage;
-    let next = true;
-    let previous = false;
 
     if (type === 'next') {
       nextPage += 1;
@@ -980,35 +969,21 @@ function Home() {
       currentPage: nextPage
     }
 
-    if (nextPage !== 1) {
-      previous = true;
-    }
-
-    if (nextPage >= totalPage) {
-      next = false;
-    }
-
-    setPageStatus((pageStatus) => ({
-      ...pageStatus,
-      next,
-      previous
-    }));
-
     setPageInfo(newPageInfo);
 
     customRequestLayout(newPageInfo);
   }
 
+  // force layout
+  const forceFullScreen = async (id = '') => {
+    await client.current?.forceFullScreen(id);
+  }
+
   // 分页
   const switchPage = async (type: 'previous' | 'next' | 'home') => {
-    if (user.layoutMode === "CUSTOM") {
+    if (setting.layoutMode === "CUSTOM") {
       customSwitchPage(type);
       return;
-    }
-
-    if (forceLayoutId) {
-      // 退出全屏
-      await client.current?.forceFullScreen('');
     }
 
     const { currentPage, totalPage } = pageInfo;
@@ -1070,7 +1045,7 @@ function Home() {
   const stopShareContent = () => {
     client.current?.stopShareContent();
 
-    setShareContentStatus(false);
+    setLocalShareContent(false);
   };
 
   // 分享content内容
@@ -1082,7 +1057,7 @@ function Home() {
 
         // 创建分享屏幕stream成功
         if (result) {
-          setShareContentStatus(true);
+          setLocalShareContent(true);
 
           stream.current.on('start-share-content', () => {
             client.current!.publish(stream.current!, { isShareContent: true });
@@ -1108,12 +1083,14 @@ function Home() {
     const status = !debug;
 
     setDebug(status);
+
     client.current?.switchDebug(status);
+
   };
 
-  const onToggleSetting = () => {
-    setSettingVisible(!settingVisible);
-  }
+  const onToggleSetting = useCallback(() => {
+    setSettingVisible((visible) => !visible);
+  }, []);
 
   const getParticipantsMaxCount = () => {
     const count = participantsCount;
@@ -1208,7 +1185,11 @@ function Home() {
     const key = Object.keys(data)[0];
     const value = data[key as keyof ISetting];
 
-    onChangeInput(value, key);
+    const newSetting = { ...setting, [key]: value };
+
+    store.set('xy-setting', newSetting);
+
+    setSetting(newSetting);
   }
 
   const renderMeeting = () => {
@@ -1216,7 +1197,7 @@ function Home() {
       return (
         <>
           <MeetingHeader
-            callInfo={callInfo}
+            conferenceInfo={conferenceInfo}
             onToggleSetting={onToggleSetting}
             switchDebug={switchDebug}
             stopMeeting={stop}
@@ -1224,14 +1205,15 @@ function Home() {
 
           <PromptInfo
             forceLayoutId={forceLayoutId}
-            chairman={chairman}
+            chairman={chairman.hasChairman}
             content={content}
-            localHide={meeting.localHide}
-            isLocalShareContent={shareContentStatus}
+            localHide={setting.localHide}
+            isLocalShareContent={isLocalShareContent}
+            forceFullScreen={forceFullScreen}
           />
 
-          <div className="meeting-content" id="meeting">
-            {layout.length > 1 && pageStatus.status && pageStatus.previous && (
+          <div className="meeting-content">
+            {pageStatus.previous && (
               <div className="previous-box">
                 <div
                   className="previous-button"
@@ -1253,16 +1235,19 @@ function Home() {
                 )}
               </div>
             )}
+
             <div className="meeting-layout" style={layoutStyle}>
               {renderLayout()}
             </div>
 
             <div className="audio-list">{renderAudioList()}</div>
 
-            {!onhold && <Barrage subTitle={subTitle} />}
-            {!onhold && <InOutReminder reminders={reminders} />}
+            {!onhold && <>
+              <Barrage subTitle={subTitle} />
+              <InOutReminder reminders={reminders} />
+            </>}
 
-            {layout.length > 1 && pageStatus.status && pageStatus.next && (
+            {pageStatus.next && (
               <div className="next-box">
                 <div
                   className="next-button"
@@ -1288,9 +1273,9 @@ function Home() {
 
               <div
                 onClick={() => {
-                  callInfo.numberType !== 'APP' && setParticipantVisible(true);
+                  conferenceInfo.numberType !== 'APP' && setParticipantVisible(true);
                 }}
-                className={`button host ${callInfo.numberType === 'APP' ? 'disabled-button' : ''
+                className={`button host ${conferenceInfo.numberType === 'APP' ? 'disabled-button' : ''
                   }`}>
                 <SVG icon="meeting_host" />
                 <div className="title">参会者</div>
@@ -1302,7 +1287,7 @@ function Home() {
                 <div className="title">窗口布局</div>
               </div>
 
-              {shareContentStatus ? (
+              {isLocalShareContent ? (
                 <div onClick={stopShareContent} className="button button-warn share-stop">
                   <SVG icon="share_stop" type="danger" />
                   <div className="title">结束共享</div>
@@ -1358,17 +1343,18 @@ function Home() {
       {!callMeeting && !callLoading &&
         <Login
           user={user}
-          onChangeInput={onChangeInput}
+          isThird={setting.isThird}
+          onChangeUserInfo={onChangeUserInfo}
           onHandleSubmit={handleSubmit}
           onToggleSetting={onToggleSetting}
         ></Login>
       }
 
       {/* 正在呼叫 */}
-      {callMeeting && callLoading && <MeetingLoading callInfo={callInfo} stopMeeting={stop} />}
+      {callMeeting && callLoading && <MeetingLoading conferenceInfo={conferenceInfo} stopMeeting={stop} />}
 
       {/* 等候室、被设置呼叫等待 */}
-      {callMeeting && !callLoading && onhold && <Hold callInfo={callInfo} stopMeeting={stop} />}
+      {callMeeting && !callLoading && onhold && <Hold conferenceInfo={conferenceInfo} stopMeeting={stop} />}
 
       {renderMeeting()}
 
@@ -1376,7 +1362,7 @@ function Home() {
         settingVisible &&
         <Setting
           isInMeeting={callMeeting && !callLoading && !onhold}
-          setting={{ localHide: user.localHide, isThird: user.isThird, selectedDevice, layoutMode: user.layoutMode }}
+          setting={{ ...setting, selectedDevice }}
           visible={settingVisible}
           onCancel={onToggleSetting}
           onSetting={onSaveSetting}

@@ -65,9 +65,7 @@ export interface IRotationInfo {
   total: IRotationInfoTotalItem[];
 }
 
-export type IUser = Partial<typeof DEFAULT_LOCAL_USER> & {
-  layoutMode?: ILayoutMode;
-};
+export type IUser = Partial<typeof DEFAULT_LOCAL_USER>;
 export interface ILayoutItem {
   key: IMode;
   text: string;

@@ -35,16 +35,3 @@ p {
   padding: 0;
 }
 
-.xy-popover {
-  .ant-popover-inner {
-    background: rgba(35, 36, 51, 0.9);
-    border-radius: 3px;
-  }
-  & > .ant-popover-content > .ant-popover-arrow {
-    border-right-color: rgba(35, 36, 51, 0.9);
-    border-bottom-color: rgba(35, 36, 51, 0.9);
-  }
-  .ant-popover-arrow-content {
-    background: rgba(35, 36, 51, 0.9);
-  }
-}
