@@ -10,7 +10,6 @@ export const THIRD: boolean = true;
 export const SERVER = {
   wssServer: "wss://cloudapi.xylink.com",
   httpServer: "https://cloudapi.xylink.com",
-  baseServer: "https://cloud.xylink.com",
   logServer: "https://log.xylink.com",
 };
 
