@@ -1,19 +1,19 @@
-
 /**
  * 声量组件
  */
-import { Stream } from "@xylink/xy-rtc-sdk";
-import React, { memo, useEffect, useState, useRef, useCallback } from "react";
+import { IVideoAudioType, Stream } from '@xylink/xy-rtc-sdk';
+import React, { memo, useEffect, useState, useRef, useCallback } from 'react';
 import './index.scss';
 
 interface IProps {
-  audio: 'muteAudio' | 'unmuteAudio';
+  audio: IVideoAudioType;
   stream: Stream;
+  className?: string;
 }
 
 const MicLevel = memo((props: IProps) => {
-  const { audio, stream } = props;
-  const [micLevel, setMicLevel] = useState(0);  // 音量等级
+  const { audio, stream, className } = props;
+  const [micLevel, setMicLevel] = useState(0); // 音量等级
   const audioLevelTimmer = useRef<any>(null);
 
   // 缓存清理声量的timmer定时器函数
@@ -25,7 +25,6 @@ const MicLevel = memo((props: IProps) => {
   useEffect(() => {
     if (audio === 'unmuteAudio') {
       if (!audioLevelTimmer.current) {
-
         audioLevelTimmer.current = setInterval(async () => {
           if (stream) {
             try {
@@ -37,7 +36,6 @@ const MicLevel = memo((props: IProps) => {
             }
           }
         }, 100);
-
       }
     } else {
       clearTimmer();
@@ -50,12 +48,15 @@ const MicLevel = memo((props: IProps) => {
     };
   }, [audio, clearTimmer, stream]);
 
-  return <>
-    {audio === 'unmuteAudio' && (
-      <div className="aec">
-        <div className="aec_content" style={{ transform: `translateY(-${micLevel}%)` }} />
-      </div>
-    )}</>
+  return (
+    <>
+      {audio === 'unmuteAudio' && (
+        <div className={`aec ${className}`}>
+          <div className="aec_content" style={{ transform: `translateY(-${micLevel}%)` }} />
+        </div>
+      )}
+    </>
+  );
 });
 
 export default MicLevel;

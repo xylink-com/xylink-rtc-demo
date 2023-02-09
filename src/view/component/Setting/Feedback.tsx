@@ -1,8 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import xyRTC from '@xylink/xy-rtc-sdk';
+import React, { useState } from 'react';
 import { Button, message, Input } from 'antd';
-import { SERVER } from '@/utils/config';
-
+import xyRTC from '@xylink/xy-rtc-sdk';
 import store from '@/utils/store';
 
 const { TextArea } = Input;
@@ -15,18 +13,11 @@ const Feedback = (props: IProps) => {
   const [uploadLoading, setUploadLoading] = useState(false);
   const [content, setContent] = useState('');
   const [contact, setContact] = useState('');
-
-  useEffect(() => {
-    // 设置log server
-    const { logServer } = SERVER;
-
-    xyRTC.logger.setLogServer(logServer);
-  }, []);
+  const [loading, setLoading] = useState(false);
 
   const upload = async () => {
     setUploadLoading(true);
     try {
-
       const { meetingName = '' } = store.get('xy-user') || {};
 
       const result: any = await xyRTC.logger.uploadLog(meetingName, contact, content);
@@ -50,7 +41,13 @@ const Feedback = (props: IProps) => {
   };
 
   const download = async () => {
+    setLoading(true);
+
     await xyRTC.logger.downloadLog();
+
+    setTimeout(() => {
+      setLoading(false);
+    }, 1200);
   };
 
   return (
@@ -60,7 +57,7 @@ const Feedback = (props: IProps) => {
           <div className="key">内容描述</div>
           <div className="value">
             <TextArea
-              placeholder='请输入您的宝贵意见和建议'
+              placeholder="请输入您的宝贵意见和建议"
               value={content}
               onChange={(e) => {
                 setContent(e.target.value);
@@ -75,7 +72,7 @@ const Feedback = (props: IProps) => {
             <Input
               value={contact}
               className="feedback__content-input"
-              placeholder='请输入您的联系方式'
+              placeholder="请输入您的联系方式"
               onChange={(e) => {
                 setContact(e.target.value);
               }}
@@ -84,19 +81,24 @@ const Feedback = (props: IProps) => {
         </div>
       </div>
       <div className="feedback__footer">
-        <Button className="download" type="text" onClick={download}>
-          下载日志
-        </Button>
+        <div className="item">
+          <div className="key">日志</div>
+          <div className="value logSubmit">
+            <Button className="download" type="text" onClick={download} loading={loading}>
+              下载日志
+            </Button>
 
-        <Button
-          className="upload-btn"
-          loading={uploadLoading}
-          onClick={upload}
-          type="primary"
-          disabled={!content.trim()}
-        >
-          {uploadLoading ? '提交中' : '提交'}
-        </Button>
+            <Button
+              className="upload-btn"
+              loading={uploadLoading}
+              onClick={upload}
+              type="primary"
+              disabled={!content.trim()}
+            >
+              {uploadLoading ? '提交中' : '提交'}
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   );

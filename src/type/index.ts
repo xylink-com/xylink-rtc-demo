@@ -4,22 +4,19 @@
  * @date  2020-04-01 17:46:13
  */
 
-import { DEFAULT_LOCAL_USER, LAYOUT_MODE_LIST, SETTING_KEYS } from "@/enum";
-import { IDeviceList, ISelectedDevice, IMode } from "@xylink/xy-rtc-sdk";
+import { DEFAULT_LOCAL_USER, LAYOUT_MODE_LIST, SETTING_KEYS } from '@/enum';
+import { IDeviceList, ISelectedDevice, IMode } from '@xylink/xy-rtc-sdk';
 
-export type TSettingType = "device" | "common" | "feedback" | "about";
+export type TSettingType = 'device' | 'common' | 'feedback' | 'about';
 
-export type IDeviceType =
-  | "audioOutputValue"
-  | "audioInputValue"
-  | "videoInValue";
+export type IDeviceType = 'audioOutputValue' | 'audioInputValue' | 'videoInValue';
 
 export type TMeetingVideoStatus = {
-  status: "muteVideo" | "unmuteVideo";
+  status: 'muteVideo' | 'unmuteVideo';
 };
 
 export type TMeetingAudioStatus = {
-  status: "muteAudio" | "unmuteAudio";
+  status: 'muteAudio' | 'unmuteAudio';
 };
 
 export type ISettingKey = typeof SETTING_KEYS[number];
@@ -40,9 +37,11 @@ export interface IAudioTrack {
 export interface ISetting {
   selectedDevice?: ISelectedDevice;
   deviceList?: IDeviceList;
-  localHide?: boolean;
   layoutMode?: ILayoutMode;
   isThird?: boolean;
+  localHide?: boolean; // 是否隐藏本地画面
+  speakerName?: boolean; // 是否显示正在讲话人
+  isLowResolution?: boolean; // 是否开启低性能模式
 }
 
 export interface IRotationInfoItem {
@@ -76,6 +75,28 @@ export interface ILayoutModeMap {
   chairmanUri: ILayoutItem[][];
 }
 
-export type TFontSizeType = "small" | "middle" | "big";
+export type TFontSizeType = 'small' | 'middle' | 'big';
 
-export type TLocationType = "top" | "middle" | "bottom";
+export type TLocationType = 'top' | 'middle' | 'bottom';
+
+// 字幕显示的语言
+export type TShowLanguage = 'Chinese' | 'English' | 'ChineseAndEnglish';
+
+export interface ISubtitle {
+  isStart: boolean;
+  localLanguage: string;
+  showLanguage: TShowLanguage;
+}
+
+/**
+ * 会控操作摄像头事件
+ *
+ * @property { string } toast - 提示内容
+ * @property { boolean } isNotify - 是否通知后台更新操作结果
+ * @property { string } requestId - 请求ID
+ */
+export interface IVideoOperateData {
+  toast: string;
+  isNotify: boolean;
+  requestId: string;
+}

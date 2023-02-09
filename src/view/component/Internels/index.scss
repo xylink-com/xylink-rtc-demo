@@ -1,6 +1,6 @@
 .debug {
-  position: fixed;
-  top: 30px;
+  position: absolute;
+  top: 0;
   left: 0px;
   width: 100%;
   height: calc(100% - 112px);
@@ -10,7 +10,8 @@
   text-align: left;
   user-select: auto;
   color: #fff;
-  h3{
+
+  h3 {
     color: #fff;
   }
 
@@ -18,12 +19,11 @@
     width: 100%;
     height: 100%;
     overflow: auto;
-    padding-right: 90px;
 
     .close-icon {
-      position: fixed;
-      right: 50px;
-      top: 50px;
+      position: absolute;
+      right: 21px;
+      top: 20px;
       cursor: pointer;
     }
 
@@ -51,7 +51,6 @@
         border-collapse: collapse;
         padding: 6px;
         text-align: left;
-        min-width: 100px;
         max-width: 200px;
         overflow: hidden;
         text-overflow: ellipsis;

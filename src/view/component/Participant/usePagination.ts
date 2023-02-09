@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
-import { PARTICIPANT_PAGE_SIZE } from '@/enum';
+import { PARTICIPANT_PAGE_SIZE } from '@/enum/participant';
 
 interface IParams {
   pageSize?: number;

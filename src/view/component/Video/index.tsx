@@ -5,7 +5,7 @@
  * @date  2020-1-07 10:34:18
  */
 
-import React, { useRef, useEffect, useState, useMemo } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { Client, ILayout } from '@xylink/xy-rtc-sdk';
 import './index.scss';
 
@@ -36,8 +36,7 @@ const Video: React.FC<IProps> = (props) => {
   }, [client, id, wrapVideoId]);
 
   useEffect(() => {
-    let borderStyle =
-      model === 'GALLERY' && item.roster.isActiveSpeaker ? '2px solid #1483eb' : 'none';
+    let borderStyle = model === 'GALLERY' && item.roster.isActiveSpeaker ? '2px solid #1483eb' : 'none';
 
     setBorder({ border: borderStyle });
   }, [model, item.roster.isActiveSpeaker]);
@@ -46,62 +45,13 @@ const Video: React.FC<IProps> = (props) => {
     const forceFullScreenId = isFullScreen ? '' : item.roster.id;
 
     await client.forceFullScreen(forceFullScreenId);
-  }
-
-  const videoWrapStyle = useMemo(() => {
-    let wrapStyle = {};
-    // 全屏
-    if (isFullScreen) {
-      return (wrapStyle = {
-        position: 'fixed',
-        width: '100%',
-        height: '100%',
-        left: '0',
-        top: '0',
-        zIndex: '101'
-      });
-    }
-
-    const positionStyle = item.positionStyle;
-
-    if (positionStyle && positionStyle.width) {
-      wrapStyle = positionStyle;
-    }
-
-    return wrapStyle;
-  }, [item.positionStyle, isFullScreen]);
-
-  const videoStyle = useMemo(() => {
-    let style = {};
-    let fullStyle = {};
-
-    if (isFullScreen) {
-      fullStyle = {
-        width: '100%',
-        height: '100%',
-        objectFit: 'contain'
-      };
-    }
-
-    style = item.rotate;
-
-    if (item.roster.isContent || isFullScreen) {
-      style = {
-        ...style,
-        ...fullStyle
-      };
-    }
-
-    return style;
-  }, [isFullScreen, item.rotate, item.roster]);
+  };
 
   const renderVideoName = () => {
     return (
       <div className="video-status">
         {!item.roster.isContent && (
-          <div
-            className={item.roster.audioTxMute ? 'audio-muted-status' : 'audio-unmuted-status'}
-          ></div>
+          <div className={item.roster.audioTxMute ? 'audio-muted-status' : 'audio-unmuted-status'}></div>
         )}
         <div className="name">{`${item.roster.displayName || 'Local'}`}</div>
       </div>
@@ -111,7 +61,7 @@ const Video: React.FC<IProps> = (props) => {
   return (
     <div
       className="wrap-video"
-      style={videoWrapStyle}
+      style={item.positionStyle}
       ref={videoWrapRef}
       id={wrapVideoId}
       onDoubleClick={toggleFullScreen}
@@ -120,10 +70,11 @@ const Video: React.FC<IProps> = (props) => {
         <div className="video-content" style={border}>
           <div className="video-model">
             <div
-              className={`video-bg ${state === 'AUDIO_TEL' || state === 'AUDIO_CONTENT' || state === 'AUDIO_ONLY'
-                ? 'video-show'
-                : 'video-hidden'
-                }`}
+              className={`video-bg ${
+                state === 'AUDIO_TEL' || state === 'AUDIO_CONTENT' || state === 'AUDIO_ONLY'
+                  ? 'video-show'
+                  : 'video-hidden'
+              }`}
             >
               <div className="center">
                 <div>语音通话中</div>
@@ -131,10 +82,7 @@ const Video: React.FC<IProps> = (props) => {
               {renderVideoName()}
             </div>
 
-            <div
-              className={`video-bg ${state === 'MUTE' || state === 'INVALID' ? 'video-show' : 'video-hidden'
-                }`}
-            >
+            <div className={`video-bg ${state === 'MUTE' || state === 'INVALID' ? 'video-show' : 'video-hidden'}`}>
               <div className="center">
                 {isFullScreen && <div className="displayname">{item.roster.displayName || ''}</div>}
 
@@ -150,23 +98,16 @@ const Video: React.FC<IProps> = (props) => {
               {renderVideoName()}
             </div>
 
-            <div
-              className={`video-status video-animote ${state === 'NORMAL' ? 'video-show' : 'video-hidden'
-                }`}
-            >
+            <div className={`video-status video-animote ${state === 'NORMAL' ? 'video-show' : 'video-hidden'}`}>
               {!item.roster.isContent && (
-                <div
-                  className={
-                    item.roster.audioTxMute ? 'audio-muted-status' : 'audio-unmuted-status'
-                  }
-                ></div>
+                <div className={item.roster.audioTxMute ? 'audio-muted-status' : 'audio-unmuted-status'}></div>
               )}
               <div className="name">{item.roster.displayName}</div>
             </div>
           </div>
         </div>
 
-        <video style={videoStyle}></video>
+        <video style={item.rotate}></video>
       </div>
     </div>
   );

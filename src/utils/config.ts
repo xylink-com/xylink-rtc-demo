@@ -7,11 +7,7 @@
 
 export const THIRD: boolean = true;
 
-export const SERVER = {
-  wssServer: "wss://cloudapi.xylink.com",
-  httpServer: "https://cloudapi.xylink.com",
-  logServer: "https://log.xylink.com",
-};
+export const SERVER = 'cloudapi.xylink.com';
 
 // ************************此处配置您的开发者账号信息******************************
 // 默认提供了一组测试企业账号信息：

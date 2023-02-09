@@ -1,12 +1,37 @@
-@import "@/assets/style/common.scss";
+@import '@/assets/style/var.scss';
 
 $member-height: 48px;
+
+.participant-drawer {
+  .hide-btn {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    background: url('~@/assets/img/operate/icon_fold.png') no-repeat;
+    background-size: 100% 100%;
+    margin-right: 8px;
+
+    &:hover {
+      background: url('~@/assets/img/operate/icon_fold_hover.png') no-repeat;
+      background-size: 100% 100%;
+    }
+
+    cursor: pointer;
+
+    &.owner-hide-btn {
+      position: absolute;
+      top: 21px;
+      left: 16px;
+    }
+  }
+}
 
 .member {
   display: flex;
   flex-direction: column;
   height: 100%;
   overflow: hidden;
+
   &-header {
     display: flex;
     align-items: center;
@@ -17,24 +42,17 @@ $member-height: 48px;
     font-weight: bold;
     padding: 0 20px;
   }
-  &-hide-btn {
-    display: inline-block;
-    width: 20px;
-    height: 20px;
-    background: url('~@/assets/img/operate/icon_fold.png') no-repeat;
-    background-size: 100% 100%;
-    margin-right: 8px;
-    &:hover {
-      background: url('~@/assets/img/operate/icon_fold_hover.png') no-repeat;
-      background-size: 100% 100%;
-    }
-    cursor: pointer;
+
+  &-number {
+    font-size: 14px;
   }
+
   &-search {
     position: relative;
     width: 122px;
     height: 28px;
     margin-left: auto;
+
     &-input {
       width: 100%;
       height: 100%;
@@ -46,14 +64,17 @@ $member-height: 48px;
       color: $text-color;
       background: #f9f9f9;
       border-radius: 3px;
+
       &::placeholder {
         color: $lighter-color;
       }
+
       &:focus {
         outline: none;
         border: 1px solid $primary-color;
       }
     }
+
     &-btn {
       position: absolute;
       height: 100%;
@@ -62,6 +83,7 @@ $member-height: 48px;
       color: #d8d8d8;
       display: flex;
       align-items: center;
+
       img {
         width: 16px;
         height: 16px;
@@ -69,6 +91,7 @@ $member-height: 48px;
       }
     }
   }
+
   &-navbar {
     height: $member-height;
     border-bottom: 1px solid #e9e8e8;
@@ -77,6 +100,7 @@ $member-height: 48px;
     display: flex;
     align-items: center;
     margin-bottom: 12px;
+
     &-item {
       max-width: 120px;
       position: relative;
@@ -86,8 +110,10 @@ $member-height: 48px;
       text-align: center;
       color: $lighter-color;
       cursor: pointer;
+
       &-active {
         color: $primary-color;
+
         &::after {
           position: absolute;
           content: '';
@@ -100,10 +126,12 @@ $member-height: 48px;
       }
     }
   }
+
   &-content {
     flex: 1 1;
     overflow: auto;
     padding-bottom: 50px;
+
     .member-item {
       display: flex;
       align-items: center;
@@ -128,12 +156,15 @@ $member-height: 48px;
         cursor: default;
         display: flex;
         flex-direction: column;
+        user-select: text;
+
         &__info {
           width: 100%;
           overflow: hidden;
           white-space: nowrap;
           text-overflow: ellipsis;
         }
+
         &__status {
           font-size: 12px;
           color: $primary-color;
@@ -145,6 +176,7 @@ $member-height: 48px;
         width: 32px;
         height: 32px;
         margin-right: 12px;
+
         &__status {
           position: absolute;
           width: 12px;
@@ -155,11 +187,13 @@ $member-height: 48px;
         }
       }
     }
+
     img {
       width: 100%;
       height: auto;
     }
   }
+
   &__staus {
     display: flex;
     align-items: center;
@@ -174,22 +208,25 @@ $member-height: 48px;
       width: 20px;
     }
   }
+
   &__tips {
     text-align: center;
     font-size: 12px;
     margin-top: 28px;
   }
+
   &-pagination {
-    position: absolute;
-    bottom: 0;
-    height: 40px;
-    border-top: 1px solid #d8d8d8;
     width: 100%;
+    height: 48px;
+    border-top: 1px solid #d8d8d8;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 0 16px;
-    background: $bg-color;
+    background: $white-color;
+    position: absolute;
+    bottom: 0;
+
     .ant-pagination li {
       font-size: 12px;
       min-width: 22px;
@@ -198,13 +235,156 @@ $member-height: 48px;
       line-height: 22px;
       letter-spacing: -1px;
     }
+
     .ant-pagination-item a {
       padding: 0;
     }
+
     .ant-pagination-jump-prev,
     .ant-pagination-jump-next {
       margin-left: -4px;
       margin-right: 4px;
+    }
+  }
+}
+
+.participant-drawer {
+  .ant-drawer-header {
+    padding: 0;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-bottom: none;
+
+    .ant-drawer-title {
+      font-size: 12px;
+      color: $normal-color;
+    }
+
+    &::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 200%;
+      border-bottom: 1px solid #d8d8d8;
+      color: #d8d8d8;
+      height: 200%;
+      -webkit-transform-origin: left top;
+      transform-origin: left top;
+      -webkit-transform: scale(0.5);
+      transform: scale(0.5);
+      pointer-events: none;
+      box-sizing: border-box;
+    }
+  }
+
+  .ant-drawer-body {
+    padding: 0;
+    overflow: hidden;
+  }
+
+  &-box {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+    user-select: none;
+
+    .right {
+      font-weight: normal;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  }
+}
+
+[data-role='mobile'] {
+  .participant-drawer {
+    .ant-drawer-header {
+      .ant-drawer-title {
+        font-size: 14px;
+      }
+    }
+
+    .hide-btn {
+      display: none;
+    }
+
+    .ant-drawer-content {
+      background: #f4f5f6;
+      border-radius: 8px 8px 0px 0px;
+    }
+
+    .ant-drawer-body {
+      padding: 0 0 4px 0;
+    }
+
+    .member {
+      background: $white-color;
+
+      &-header {
+        flex-direction: column;
+        height: auto;
+        padding-bottom: 12px;
+        border: 0;
+      }
+
+      &-number {
+        margin: 20px 0 24px 0;
+        font-size: 16px;
+      }
+
+      &-search {
+        width: 100%;
+        height: 32px;
+
+        input {
+          border: 0;
+          border-radius: 54px;
+          padding-left: 16px;
+        }
+      }
+
+      &-navbar {
+        display: none;
+      }
+
+      &-item {
+        position: relative;
+
+        &::after {
+          content: '';
+          width: 200%;
+          height: 1px;
+          background: #d8d8d8;
+          transform: scale(0.5);
+          position: absolute;
+          top: 0;
+          left: -50%;
+        }
+      }
+
+      &-pagination {
+        .ant-pagination li {
+          font-size: 12px;
+          min-width: 32px;
+          width: 32px;
+          height: 32px;
+          line-height: 32px;
+          letter-spacing: -1px;
+        }
+      }
+
+      &-content {
+        .member-item {
+          font-size: 14px;
+        }
+      }
     }
   }
 }

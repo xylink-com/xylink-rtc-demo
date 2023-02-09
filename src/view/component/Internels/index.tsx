@@ -1,11 +1,12 @@
 /**
  * XYRTC Meeting Internals Component
- * 
+ *
  * @authors Luo-jinghui (luojinghui424@gmail.com)
  * @date  2020-1-07 10:34:18
  */
 
 import React from 'react';
+import { IInternels } from '@xylink/xy-rtc-sdk';
 import './index.scss';
 
 const transformTime = (timestamp: number = +new Date()) => {
@@ -24,21 +25,26 @@ const transformTime = (timestamp: number = +new Date()) => {
 };
 
 interface IProps {
-  senderStatus: any;
+  senderStatus: IInternels;
   debug: boolean;
   switchDebug: () => void;
 }
 
-const Internels: React.FC<IProps> = ({ senderStatus, debug, switchDebug }) => {
+const Internels = ({ senderStatus, debug, switchDebug }: IProps) => {
   const {
-    mimeType,
-    sender = {},
+    mimeType = 'video/H264',
     timestamp,
+    bytesReceivedSecond = 0,
+    bytesSentSecond = 0,
+    jitterSent = 0,
+    jitterReceived = 0,
+    roundTripTime = 0,
+    fractionLostSent = 0,
+    fractionLostReceived = 0,
+    sender = {},
     receiver = {},
     audioSender = {},
     audioReceiver = {},
-    bytesReceivedSecond,
-    bytesSentSecond
   } = senderStatus;
 
   if (debug) {
@@ -53,16 +59,42 @@ const Internels: React.FC<IProps> = ({ senderStatus, debug, switchDebug }) => {
               <tr className="table-title">
                 <th>视频编码</th>
                 <th>时间</th>
-                <th>接收（kb/s）</th>
-                <th>发送（kb/s）</th>
               </tr>
             </thead>
             <tbody>
               <tr>
                 <td>{mimeType}</td>
                 <td>{transformTime(timestamp)}</td>
-                <td>{bytesReceivedSecond}</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <br />
+          <h3>网络探测：</h3>
+          <table className="table">
+            <thead>
+              <tr className="table-title">
+                <th>通道</th>
+                <th>带宽(kbps)</th>
+                <th>丢包率(%)</th>
+                <th>往返延时(ms)</th>
+                <th>抖动(ms)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>发送</td>
                 <td>{bytesSentSecond}</td>
+                <td>{fractionLostSent}</td>
+                <td>{roundTripTime}</td>
+                <td>{jitterSent ?? '-'}</td>
+              </tr>
+              <tr>
+                <td>接收</td>
+                <td>{bytesReceivedSecond}</td>
+                <td>{fractionLostReceived}</td>
+                <td>{roundTripTime}</td>
+                <td>{jitterReceived ?? '-'}</td>
               </tr>
             </tbody>
           </table>
@@ -74,44 +106,53 @@ const Internels: React.FC<IProps> = ({ senderStatus, debug, switchDebug }) => {
               <thead>
                 <tr className="table-title">
                   <th>类型</th>
-                  <th>分辨率</th>
+                  <th>实际分辨率</th>
                   <th>期望发送（kb/s）</th>
                   <th>发送（kb/s）</th>
                   <th>编码（帧/s）</th>
-                  <th>码率（帧/s）</th>
+                  <th>发送的帧率（帧/s）</th>
                   <th>关键帧</th>
                   <th>pliCount</th>
+                  <th>firCount</th>
+                  <th>nackCount</th>
+                  <th>ssrc</th>
                 </tr>
               </thead>
               <tbody>
-                {
-                  Object.keys(sender).map((key) => {
-                    const {
-                      frameWidth,
-                      frameHeight,
-                      bytesSentSecond,
-                      framesSentSecond,
-                      framesEncodedSecond,
-                      type,
-                      keyFramesEncoded,
-                      expBandwidth,
-                      pliCount
-                    } = sender[key];
+                {Object.keys(sender).map((key) => {
+                  let {
+                    frameWidth,
+                    frameHeight,
+                    bytesSentSecond,
+                    framesSentSecond,
+                    framesEncodedSecond,
+                    keyFramesEncoded,
+                    expBandwidth,
+                    pliCount,
+                    firCount,
+                    nackCount,
+                    ssrc,
+                    resolution,
+                  } = sender[key];
 
-                    return (
-                      <tr key={key}>
-                        <td>{type}</td>
-                        <td>{frameWidth} * {frameHeight}</td>
-                        <td>{expBandwidth}</td>
-                        <td>{bytesSentSecond}</td>
-                        <td>{framesEncodedSecond}</td>
-                        <td>{framesSentSecond}</td>
-                        <td>{keyFramesEncoded}</td>
-                        <td>{pliCount}</td>
-                      </tr>
-                    )
-                  })
-                }
+                  return (
+                    <tr key={key}>
+                      <td>本地视频（{resolution}P）</td>
+                      <td>
+                        {frameWidth} * {frameHeight}
+                      </td>
+                      <td>{expBandwidth}</td>
+                      <td>{bytesSentSecond}</td>
+                      <td>{framesEncodedSecond}</td>
+                      <td>{framesSentSecond}</td>
+                      <td>{keyFramesEncoded}</td>
+                      <td>{pliCount}</td>
+                      <td>{firCount}</td>
+                      <td>{nackCount}</td>
+                      <td>{ssrc}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </>
           </table>
@@ -120,44 +161,47 @@ const Internels: React.FC<IProps> = ({ senderStatus, debug, switchDebug }) => {
 
           <h3>音频：</h3>
           <table className="table">
-            <thead>
-              <tr className="table-title">
-                <th>通道名称</th>
-                <th>Codec</th>
-                <th>码率(kbps)</th>
-                <th>音量</th>
-              </tr>
-            </thead>
-            <tbody>
-              {Object.keys(audioSender).map((key) => {
-                let { mimeType, bytesSentSecond, audioLevel = 0 } = audioSender[key];
+            <>
+              <thead>
+                <tr className="table-title">
+                  <th>通道名称</th>
+                  <th>Codec</th>
+                  <th>码率(kbps)</th>
+                  <th>音量</th>
+                  <th>ssrc</th>
+                </tr>
+              </thead>
+              <tbody>
+                {Object.keys(audioSender).map((key) => {
+                  let { mimeType, bytesSentSecond, audioLevel, ssrc } = audioSender[key];
 
-                return (
-                  <tr key={key}>
-                    <td>音频发送</td>
-                    <td>{mimeType}</td>
-                    <td>{bytesSentSecond}</td>
-                    <td>{audioLevel}</td>
-                  </tr>
-                );
-              })}
+                  return (
+                    <tr key={key}>
+                      <td>音频发送</td>
+                      <td>{mimeType}</td>
+                      <td>{bytesSentSecond ?? '-'}</td>
+                      <td>{audioLevel ?? '-'}</td>
+                      <td>{ssrc ?? '-'}</td>
+                    </tr>
+                  );
+                })}
 
-              {Object.keys(audioReceiver).map((key) => {
-                const { mimeType, bytesReceivedSecond, audioLevel } = audioReceiver[key];
+                {Object.keys(audioReceiver).map((key) => {
+                  const { mimeType, bytesReceivedSecond, audioLevel, ssrc } = audioReceiver[key];
 
-                return (
-                  <tr key={key}>
-                    <td>音频接收</td>
-                    <td>{mimeType}</td>
-                    <td>{bytesReceivedSecond}</td>
-                    <td>{audioLevel}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
+                  return (
+                    <tr key={key}>
+                      <td>音频接收</td>
+                      <td>{mimeType}</td>
+                      <td>{bytesReceivedSecond}</td>
+                      <td>{audioLevel ?? '-'}</td>
+                      <td>{ssrc}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </>
           </table>
-          <br />
-
           <br />
           <h3>与会者：</h3>
           <table className="table">
@@ -168,51 +212,59 @@ const Internels: React.FC<IProps> = ({ senderStatus, debug, switchDebug }) => {
                   <th>类型</th>
                   <th>实际分辨率</th>
                   <th>解码（帧/s）</th>
-                  <th>码率（帧/s）</th>
+                  <th>接受的帧率（帧/s）</th>
                   <th>接收（kb/s）</th>
                   <th>关键帧</th>
                   <th>pliCount</th>
+                  <th>nackCount</th>
+                  <th>ssrc</th>
                 </tr>
               </thead>
               <tbody>
-                {
-                  Object.keys(receiver).map((key) => {
-                    const {
-                      frameWidth,
-                      frameHeight,
-                      bytesReceivedSecond,
-                      framesReceivedSecond,
-                      framesDecodedSecond,
-                      type,
-                      name,
-                      isContent,
-                      keyFramesDecoded,
-                      pliCount
-                    } = receiver[key];
+                {Object.keys(receiver).map((key) => {
+                  const {
+                    bytesReceivedSecond,
+                    framesReceivedSecond,
+                    framesDecodedSecond,
+                    type,
+                    name,
+                    isContent,
+                    keyFramesDecoded,
+                    pliCount,
+                    nackCount,
+                    ssrc,
+                    frameWidth,
+                    frameHeight,
+                  } = receiver[key];
 
-                    return (
-                      <tr key={key}>
-                        <td>{name}</td>
-                        <td>{type} * {isContent ? "Con" : 'Peo'}</td>
-                        <td>{frameWidth} * {frameHeight}</td>
-                        <td>{framesDecodedSecond}</td>
-                        <td>{framesReceivedSecond}</td>
-                        <td>{bytesReceivedSecond}</td>
-                        <td>{keyFramesDecoded}</td>
-                        <td>{pliCount}</td>
-                      </tr>
-                    )
-                  })
-                }
+                  return (
+                    <tr key={key}>
+                      <td>{name}</td>
+                      <td>
+                        {type} * {isContent ? 'Con' : 'Peo'}
+                      </td>
+                      <td>
+                        {frameWidth} * {frameHeight}
+                      </td>
+                      <td>{framesDecodedSecond}</td>
+                      <td>{framesReceivedSecond || '-'}</td>
+                      <td>{bytesReceivedSecond}</td>
+                      <td>{keyFramesDecoded}</td>
+                      <td>{pliCount}</td>
+                      <td>{nackCount}</td>
+                      <td>{ssrc}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </>
           </table>
         </div>
       </div>
-    )
+    );
   }
 
   return null;
-}
+};
 
 export default Internels;

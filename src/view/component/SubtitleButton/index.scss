@@ -1,0 +1,10 @@
+@import '@/assets/style/var.scss';
+
+.ant-popover-inner-content {
+    .select__item {
+        ul li:last-child {
+            margin-bottom: 0px;
+            z-index: 1000;
+        }
+    }
+}

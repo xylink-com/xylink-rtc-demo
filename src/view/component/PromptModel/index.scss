@@ -1,0 +1,67 @@
+.xy-vm-model {
+  user-select: none;
+
+  .ant-modal-body {
+    padding: 0 24px 24px;
+  }
+
+  .vm-header {
+    position: relative;
+    height: 32px;
+
+    .wrap-close-icon {
+      position: absolute;
+      right: -24px;
+      top: 0px;
+
+      width: 36px;
+      height: 36px;
+
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+
+      .close-mock {
+        width: 12px;
+        height: 12px;
+        position: relative;
+
+        &::before,
+        &::after {
+          content: '';
+          position: absolute;
+          top: 0px;
+          left: 5px;
+          width: 2px;
+          height: 12px;
+          background-color: rgb(176 176 176);
+          transform: rotate(45deg) translateZ(0);
+          transition: background-color ease 0.3s;
+        }
+
+        &::after {
+          content: '';
+          transform: rotate(135deg) translateZ(0);
+        }
+      }
+
+      &:hover .close-mock:before,
+      &:hover .close-mock:after {
+        background-color: rgb(140 140 140);
+      }
+    }
+  }
+
+  .vm-footer {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 32px;
+
+    .close {
+      margin-right: 12px;
+      border: 1px solid #d8d8d8;
+      color: rgba(57, 57, 70, 0.8);
+    }
+  }
+}

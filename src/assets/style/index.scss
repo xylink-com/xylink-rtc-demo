@@ -1,4 +1,4 @@
-@import "@/assets/style/var.scss";
+@import '@/assets/style/var.scss';
 
 .meeting-content {
   width: 100%;
@@ -12,43 +12,38 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: width ease 0.2s;
+  &-mini {
+    width: calc(100% - 300px);
+  }
 }
+
 .meeting-layout {
   position: relative;
 }
 
 .meeting-footer {
-  height: 60px;
-  color: #e7e7e7;
-  background: $toolbar-bg-color;
+  color: $word-color;
   border-radius: 3px;
-  z-index: 10;
-
-  position: fixed;
+  z-index: 101;
+  position: absolute;
   bottom: 16px;
   left: 50%;
   transform: translateX(-50%);
-  padding: 0 40px;
   user-select: none;
 
   .middle {
-    height: 100%;
     display: flex;
     align-items: center;
+    height: $meeting-footer-height;
+    background: $toolbar-bg-color;
+    padding: 0 24px;
   }
 
   .disabled-button {
-    cursor: default;
-    opacity: 0.6;
-    &:hover {
-      .svg-icon {
-        fill: #fff;
-        fill-opacity: 0.8;
-      }
-      .title {
-        color: #e7e7e7;
-      }
-    }
+    cursor: not-allowed;
+    pointer-events: none;
+    opacity: 0.4;
   }
 
   .operate-fail-tip {
@@ -59,7 +54,7 @@
     color: $text-color;
     padding: 0 12px;
     border-radius: 4px;
-    background: $bg-color;
+    background: $white-color;
     height: 36px;
     display: flex;
     align-items: center;
@@ -74,40 +69,106 @@
       margin-left: 16px;
       width: 16px;
       height: 16px;
-      background: url("~@/assets/img/icon/icon_close.png") no-repeat;
+      background: url('~@/assets/img/icon/icon_close.png') no-repeat;
       background-size: 100%;
     }
   }
 
   .button {
     position: relative;
-    width: 50px;
-    height: 100%;
-    margin: 0 8px;
+    height: 50px;
+    min-width: 52px;
+    margin-right: 12px;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    padding: 8px 0;
     transition: all ease 0.2s;
     cursor: pointer;
 
-    .title {
-      margin-top: 3px;
+    &:hover {
+      border-radius: 3px;
+      background: $footer-btn-hover-color;
     }
 
-    &:hover {
-      .title {
-        color: #44b5ff;
-      }
+    .svg-icon {
+      fill: $white-icon-lighter-color;
+    }
+
+    .title {
+      margin-top: 4px;
+      line-height: 1;
+    }
+
+    .layout {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    //麦克风、摄像头无权限加！图标
+    .permission {
+      width: 10px;
+      height: 10px;
+      position: absolute;
+      top: -2px;
+      right: 20px;
+
       .svg-icon {
-        fill: #44b5ff;
-        fill-opacity: 1;
+        width: 10px;
+        height: 10px;
+        fill: none;
       }
-      .svg-icon-danger {
-        fill: #ff6666;
-        fill-opacity: 1;
+    }
+
+    .mic-icon {
+      width: 28px;
+      height: 28px;
+    }
+
+    .mic_aec {
+      .mic-icon {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        position: relative;
       }
+    }
+
+    .operate-fail-tip {
+      position: absolute;
+      top: -42px;
+      right: -52%;
+      font-size: 12px;
+      color: $text-color;
+      padding: 0 12px;
+      border-radius: 4px;
+      background: $white-color;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      white-space: nowrap;
+
+      span {
+        display: inline-block;
+        margin-left: 8px;
+        color: $primary-color;
+      }
+
+      .tip-close {
+        display: inline-block;
+        margin-left: 16px;
+        width: 16px;
+        height: 16px;
+        background: url('~@/assets/img/icon/icon_close.png') no-repeat;
+        background-size: 100%;
+      }
+    }
+
+    &:last-child {
+      margin-right: 0;
     }
   }
 
@@ -136,6 +197,7 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
+      position: relative;
     }
     svg {
       width: 36px;
@@ -263,4 +325,149 @@
 .link {
   color: #6198ff;
   cursor: pointer;
+}
+
+.button-max {
+  min-width: 66px;
+  position: relative;
+  padding-right: 14px;
+
+  .arrow {
+    width: 12px;
+    height: 28px;
+    position: absolute;
+    right: 0px;
+    top: 0;
+    transition: transform ease 0.3s;
+    border-radius: 3px;
+
+    &:hover {
+      background-color: $footer-arrow-hover-color;
+    }
+
+    .svg-icon {
+      width: 12px;
+      height: 12px;
+      position: absolute;
+      top: 8px;
+    }
+
+    &.ant-popover-open {
+      .svg-icon {
+        transform: rotateZ(180deg);
+        fill: $white-color;
+        opacity: 0.8;
+      }
+    }
+  }
+}
+
+.select-popover {
+  max-width: 250px;
+  min-width: 200px;
+  user-select: none;
+
+  .ant-popover-content {
+    .ant-popover-arrow {
+      border-right-color: $popover-arrow-color;
+      border-bottom-color: $popover-arrow-color;
+    }
+  }
+
+  .ant-popover-inner {
+    background: $popover-inner-bg-color;
+    border-radius: 3px;
+  }
+
+  .ant-popover-inner-content {
+    font-size: 12px;
+    color: $white-color;
+    padding: 12px 12px 10px;
+  }
+}
+
+.select__item {
+  position: relative;
+  padding-bottom: 10px;
+
+  &:last-child {
+    padding-bottom: 0;
+  }
+
+  .h-line {
+    position: relative;
+
+    &::after {
+      position: absolute;
+      content: '';
+      width: 200%;
+      height: 1px;
+      background: $white-color;
+      opacity: 0.3;
+      left: -50%;
+      top: 0;
+      transform: scale(0.5);
+    }
+  }
+
+  p {
+    font-weight: 500;
+    line-height: 18px;
+    margin-bottom: 6px;
+    color: $white-color;
+  }
+
+  ul {
+    li {
+      position: relative;
+      padding: 2px 0px 2px 16px;
+      cursor: pointer;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      font-weight: 400;
+      color: $white-lighter-color;
+      line-height: 18px;
+      margin-bottom: 4px;
+
+      &:hover {
+        background: $btn-hover;
+      }
+
+      &.selected {
+        &::before {
+          position: absolute;
+          content: '';
+          left: -2px;
+          width: 12px;
+          height: 12px;
+          background: url('~@/assets/img/operate/icon_tick.svg') no-repeat;
+          background-size: 100% 100%;
+          top: 50%;
+          transform: translateY(-50%);
+        }
+      }
+
+      &.unSelect_li {
+        cursor: default;
+
+        &:hover {
+          background: transparent;
+        }
+      }
+
+      &:last-child {
+        margin-bottom: 10px;
+      }
+    }
+  }
+}
+
+.select__operate {
+  padding: 2px 0 2px 16px;
+  cursor: pointer;
+
+  &:hover {
+    background: $btn-hover;
+  }
 }
