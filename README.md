@@ -1,6 +1,6 @@
 # XYLINK WEBRTC SDK
 
-小鱼易连 webrtc sdk demo 项目。
+小鱼易连 WebRTC SDK demo 项目。
 
 此项目使用到的技术栈：react+typescript+hook
 
@@ -8,8 +8,9 @@
 
 1. 注意在`src/utils/config.ts`中配置第三方登录所需的
 
-- extId
 - clientId
+- clientSecret
+- extId
 
 ## 运行
 
@@ -36,4 +37,4 @@ $ npm run start
 3. [react](https://reactjs.org/)
 
 ## 文档
-[小鱼易连WebRTC SDK 文档](http://openapi.xylink.com/api_web/api/)
+[小鱼易连WebRTC SDK 文档](https://openapi.xylink.com/common/meeting/doc/version?platform=web)
