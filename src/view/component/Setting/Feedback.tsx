@@ -14,7 +14,8 @@ const Feedback = (props: IProps) => {
   const [content, setContent] = useState('');
   const [contact, setContact] = useState('');
   const [loading, setLoading] = useState(false);
-
+  
+  // *** 需登录后，才可上传日志 ***
   const upload = async () => {
     setUploadLoading(true);
     try {

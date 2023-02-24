@@ -7,6 +7,7 @@
 
 export const THIRD: boolean = true;
 
+// 服务地址，默认使用正式环境
 export const SERVER = 'cloudapi.xylink.com';
 
 // ************************此处配置您的开发者账号信息******************************

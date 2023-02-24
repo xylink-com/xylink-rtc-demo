@@ -305,6 +305,9 @@ function Home() {
     // 重置onhold
     setOnhold(false);
 
+    // 重置
+    setForceLayoutId('');
+
     // sdk清理操作
     stream.current?.close();
     client.current?.destroy();
@@ -869,17 +872,20 @@ function Home() {
         },
         // 隐藏 Local 画面配置项
         localHide,
+        // 网关id (必填)
         clientId,
+        // 网关密钥 (必填)
         clientSecret,
       });
 
+      // SDK功能控制开关
       client.current.setFeatureConfig({
         enableMeetingOwner: true,
         enableMeetingInvite: true,
         enableCheckRecordPermission: true,
         enableAutoResizeLayout: false,
         enableSpeakerInfo: true,
-        enableLayoutAvatar: true,
+        enableLayoutAvatar: false,
         enableLowResolution: setting.isLowResolution,
       });
 

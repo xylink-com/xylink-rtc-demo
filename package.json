@@ -19,7 +19,7 @@
     "@types/react-dom": "^16.9.0",
     "@use-gesture/react": "^10.2.24",
     "@xylink/xy-rtc-sdk": "3.8.0",
-    "antd": "^4.15.2",
+    "antd": "4.15.2",
     "babel-plugin-import": "^1.13.0",
     "clone-deep": "^4.0.1",
     "customize-cra": "^1.0.0",
