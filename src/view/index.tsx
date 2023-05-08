@@ -887,6 +887,7 @@ function Home() {
         enableSpeakerInfo: true,
         enableLayoutAvatar: false,
         enableLowResolution: setting.isLowResolution,
+        enableBandwidthSetting: true,
       });
 
       initEventListener(client.current);
@@ -915,8 +916,6 @@ function Home() {
         // 小鱼登录
         result = await client.current.loginXYlinkAccount(user.phone || '', user.password || '');
       }
-
-      console.log('result: ', result);
 
       // XYSDK:950120 成功
       // XYSDK:950104 账号密码错误
