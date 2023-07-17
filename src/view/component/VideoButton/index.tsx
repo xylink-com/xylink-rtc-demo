@@ -11,7 +11,7 @@ interface IProps {
 const VideoButton = (props: IProps) => {
   const { permission, video, videoOperate } = props;
 
-  let videoClass = 'button-warn mute_camera';
+  let videoClass = 'mute_camera';
   let svgIcon = 'camera';
   let svgType: 'default' | 'danger' = 'default';
 
@@ -23,7 +23,7 @@ const VideoButton = (props: IProps) => {
     videoClass = 'camera';
     svgIcon = 'camera';
   } else {
-    videoClass = 'button-warn mute_camera';
+    videoClass = 'mute_camera';
     svgIcon = 'mute_camera';
     svgType = 'danger';
   }

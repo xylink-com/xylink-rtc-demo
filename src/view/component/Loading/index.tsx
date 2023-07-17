@@ -17,7 +17,7 @@ interface IProps {
   stopMeeting: (isConfirm: boolean) => void;
 }
 
-const MeetingLoadding = (props: IProps) => {
+const MeetingLoading = (props: IProps) => {
   const { conferenceInfo } = props;
   const bgmAudioRef = useRef<HTMLAudioElement>(null);
   
@@ -70,4 +70,4 @@ const MeetingLoadding = (props: IProps) => {
   );
 };
 
-export default memo(MeetingLoadding);
+export default memo(MeetingLoading);

@@ -9,16 +9,11 @@ import xyRTC, {
   IDeviceList,
   IDeviceManagerChangeValue,
   IMediaSupportedConstraints,
-  TPermissionType,
-  ICurrentPermission
+  PermissionType,
+  ICurrentPermission,
 } from '@xylink/xy-rtc-sdk';
 import { ISetting, IDeviceType } from '@/type/index';
-import {
-  AudioOutlined,
-  SoundOutlined,
-  LoadingOutlined,
-  ExclamationCircleOutlined
-} from '@ant-design/icons';
+import { AudioOutlined, SoundOutlined, LoadingOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 
 import ring from '@/assets/ring.ogg';
 import Guide from '../Guide';
@@ -35,11 +30,11 @@ const Device = (props: IProps) => {
   const DEFAULT_DEVICE_LABEL = '选择设备';
   const DEVICE_ABNORMAL_MAP = {
     DENIED: '未授权限',
-    NONE: '未发现设备'
+    NONE: '未发现设备',
   };
   const { current, setting, onSetting } = props;
   const { selectedDevice } = setting || {
-    selectedDevice: { audioInput: null, audioOutput: null, videoInput: null }
+    selectedDevice: { audioInput: null, audioOutput: null, videoInput: null },
   };
   const stream = useRef<any>();
 
@@ -50,14 +45,14 @@ const Device = (props: IProps) => {
   const [select, setSelect] = useState({
     audioInputValue: selectedDevice?.audioInput?.deviceId || 'default',
     audioOutputValue: selectedDevice?.audioOutput?.deviceId || 'default',
-    videoInValue: selectedDevice?.videoInput?.deviceId || ''
+    videoInValue: selectedDevice?.videoInput?.deviceId || '',
   });
 
   const [testAudioStatus, setTestAudioStatus] = useState(false);
   const [iauth, setIauth] = useState('pending');
   const [permission, setPermission] = useState<ICurrentPermission>({
-    camera: '',
-    microphone: ''
+    camera: PermissionType.UNKNOWN,
+    microphone: PermissionType.UNKNOWN,
   });
   const [videoStatusVisible, setVideoStatusVisible] = useState(false);
   const [guideVisible, setGuideVisible] = useState(false);
@@ -73,7 +68,7 @@ const Device = (props: IProps) => {
       const devices = await deviceManager.current.getDevices();
 
       setDevices(devices);
-    } catch (error) { }
+    } catch (error) {}
   }, []);
 
   useEffect(() => {
@@ -211,21 +206,17 @@ const Device = (props: IProps) => {
 
         if (key === 'videoInValue') {
           params.video = {
-            deviceId: deviceId ? { exact: deviceId || select.videoInValue } : undefined
+            deviceId: deviceId ? { exact: deviceId || select.videoInValue } : undefined,
           };
         }
 
         if (key === 'audioInputValue') {
           params.audio = {
-            deviceId: deviceId ? { exact: deviceId || select.audioInputValue } : undefined
+            deviceId: deviceId ? { exact: deviceId || select.audioInputValue } : undefined,
           };
         }
 
-        const newConstraintsStream = await stream.current.getPreviewStream(
-          !!params.video,
-          !!params.audio,
-          params
-        );
+        const newConstraintsStream = await stream.current.getPreviewStream(!!params.video, !!params.audio, params);
         const newTrack =
           key === 'audioInputValue'
             ? newConstraintsStream.getAudioTracks()[0]
@@ -280,13 +271,13 @@ const Device = (props: IProps) => {
       selectedDevice: {
         audioInput: findDeviceById(audioInputValue, audioInputList),
         audioOutput: findDeviceById(audioOutputValue, audioOutputList),
-        videoInput: findDeviceById(videoInValue, videoInList)
+        videoInput: findDeviceById(videoInValue, videoInList),
       },
       deviceList: {
         audioInputList,
         audioOutputList,
-        videoInList
-      }
+        videoInList,
+      },
     });
   };
 
@@ -321,27 +312,28 @@ const Device = (props: IProps) => {
         track.stop();
       });
 
+      const { FAILED, GRANTED, DENIED} = PermissionType;
+
       if (isVideo) {
-        let cameraPermission: TPermissionType = 'failed';
+        let cameraPermission: PermissionType = FAILED;
 
         if (selectedDevice?.videoInput?.deviceId) {
           params['video'] = {
-            deviceId: { exact: selectedDevice.videoInput.deviceId }
+            deviceId: { exact: selectedDevice.videoInput.deviceId },
           };
         }
 
         try {
           previewStream.current = await stream.current.getPreviewStream(isVideo, false, {
-            video: params['video']
+            video: params['video'],
           });
 
-          cameraPermission = 'granted';
-
+          cameraPermission = GRANTED;
         } catch (err: any) {
           console.log('video err:', err);
 
-          if (err?.code === "XYSDK:950404") {
-            cameraPermission = 'denied';
+          if (err?.code === 'XYSDK:950404') {
+            cameraPermission = DENIED;
           }
 
           isVideo = false;
@@ -349,22 +341,22 @@ const Device = (props: IProps) => {
 
         setPermission((permission) => ({
           ...permission,
-          camera: cameraPermission
+          camera: cameraPermission,
         }));
       }
 
       if (isAudio) {
-        let microphonePermission: TPermissionType = 'failed';
+        let microphonePermission = FAILED;
 
         if (selectedDevice?.audioInput?.deviceId) {
           params['audio'] = {
-            deviceId: { exact: selectedDevice.audioInput.deviceId }
+            deviceId: { exact: selectedDevice.audioInput.deviceId },
           };
         }
 
         try {
           const audioTempStream = await stream.current.getPreviewStream(false, isAudio, {
-            audio: params['audio']
+            audio: params['audio'],
           });
           if (isVideo) {
             const audioTrack = audioTempStream.getAudioTracks()[0];
@@ -373,12 +365,12 @@ const Device = (props: IProps) => {
             previewStream.current = audioTempStream;
           }
 
-          microphonePermission = 'granted';
+          microphonePermission = GRANTED
         } catch (err: any) {
           console.log('audio err:', err);
 
-          if (err?.code === "XYSDK:950404") {
-            microphonePermission = 'denied';
+          if (err?.code === 'XYSDK:950404') {
+            microphonePermission = DENIED
           }
 
           isAudio = false;
@@ -386,7 +378,7 @@ const Device = (props: IProps) => {
 
         setPermission((permission) => ({
           ...permission,
-          microphone: microphonePermission
+          microphone: microphonePermission,
         }));
       }
 
@@ -403,7 +395,7 @@ const Device = (props: IProps) => {
           return {
             ...select,
             videoInValue: videoInput,
-            audioInputValue: audioInput
+            audioInputValue: audioInput,
           };
         });
 
@@ -432,7 +424,7 @@ const Device = (props: IProps) => {
           }, 100);
         }
       }
-    } catch (err) { }
+    } catch (err) {}
 
     setIauth('granted');
   };
@@ -458,7 +450,7 @@ const Device = (props: IProps) => {
     setSelect((select) => {
       return {
         ...select,
-        [key]: e
+        [key]: e,
       };
     });
   };
@@ -476,7 +468,7 @@ const Device = (props: IProps) => {
   };
 
   const renderDeviceSettingLoading = () => {
-    // 'granted' | 'denied' | 'prompt' | 'pending' 
+    // 'granted' | 'denied' | 'prompt' | 'pending'
 
     if (iauth === 'prompt') {
       return (
@@ -516,10 +508,7 @@ const Device = (props: IProps) => {
   const renderFailTips = () => {
     const { camera, microphone } = permission;
     const isShowStreamFailTips =
-      camera === 'denied' ||
-      camera === 'failed' ||
-      microphone === 'denied' ||
-      microphone === 'failed';
+      camera === 'denied' || camera === 'failed' || microphone === 'denied' || microphone === 'failed';
 
     if (isShowStreamFailTips) {
       return (
@@ -562,7 +551,7 @@ const Device = (props: IProps) => {
           <div className="item">
             <div className="key">
               <Tooltip
-                title='进行设备检测及音视频设备设置，此设置仅对当前会议有效'
+                title="进行设备检测及音视频设备设置，此设置仅对当前会议有效"
                 placement="rightBottom"
                 overlayStyle={{ fontSize: '12px' }}
               >
@@ -591,9 +580,7 @@ const Device = (props: IProps) => {
           <div className="item">
             <div className="key"></div>
             <div className="value video-value">
-              <div className={`preview-video-bg ${videoStatusVisible ? 'visible' : 'hidden'}`}>
-                预览不可用
-              </div>
+              <div className={`preview-video-bg ${videoStatusVisible ? 'visible' : 'hidden'}`}>预览不可用</div>
               <div className="preview-video-box">
                 <video
                   className="preview-video"
@@ -612,9 +599,7 @@ const Device = (props: IProps) => {
             <div className="value">
               {permission.microphone !== 'granted' || audioInputList.length === 0 ? (
                 <div className="setting__select-disabled">
-                  {permission.microphone !== 'granted'
-                    ? DEVICE_ABNORMAL_MAP.DENIED
-                    : DEVICE_ABNORMAL_MAP.NONE}
+                  {permission.microphone !== 'granted' ? DEVICE_ABNORMAL_MAP.DENIED : DEVICE_ABNORMAL_MAP.NONE}
                 </div>
               ) : (
                 <Select
@@ -640,10 +625,7 @@ const Device = (props: IProps) => {
             <div className="value">
               <AudioOutlined style={{ marginRight: '5px' }} />
               <div className="level-process">
-                <div
-                  className="level-value"
-                  style={{ transform: `translateX(${audioLevel}%)` }}
-                ></div>
+                <div className="level-value" style={{ transform: `translateX(${audioLevel}%)` }}></div>
               </div>
             </div>
           </div>
@@ -675,7 +657,7 @@ const Device = (props: IProps) => {
                 <div className="value">
                   <SoundOutlined style={{ marginRight: '5px' }} />
                   <span className="play-audio" onClick={play}>
-                    {testAudioStatus ? "停止扬声器" : "测试扬声器"}
+                    {testAudioStatus ? '停止扬声器' : '测试扬声器'}
                   </span>
                   {testAudioStatus && <span className="play-audio-status">正在播放...</span>}
                   <audio className="preview-audio" ref={audioRef} loop={true} src={ring}></audio>
@@ -687,11 +669,7 @@ const Device = (props: IProps) => {
           <div className="item">
             <div className="key">详细检测</div>
             <div className="value">
-              <a
-                href='https://cdn.xylink.com/webrtc/web/index.html#/detect'
-                rel="noopener noreferrer"
-                target="_blank"
-              >
+              <a href="https://cdn.xylink.com/webrtc/web/index.html#/detect" rel="noopener noreferrer" target="_blank">
                 开始检测
               </a>
             </div>

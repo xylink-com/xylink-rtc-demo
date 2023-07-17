@@ -6,7 +6,9 @@
  */
 
 import React, { useRef, useEffect, useState } from 'react';
-import { Client, ILayout } from '@xylink/xy-rtc-sdk';
+import { Client, ILayout, NetworkQualityLevel } from '@xylink/xy-rtc-sdk';
+import { Tooltip } from 'antd';
+import SVG from '@/component/Svg';
 import './index.scss';
 
 interface IProps {
@@ -18,10 +20,11 @@ interface IProps {
   id: string;
   client: Client;
   forceLayoutId: string;
+  networkLevel?: number;
 }
 
 const Video: React.FC<IProps> = (props) => {
-  const { item, model, id, client, forceLayoutId } = props;
+  const { item, model, id, client, forceLayoutId, networkLevel = NetworkQualityLevel.Excellent } = props;
   const state = item.state;
   const wrapVideoId = 'wrap-' + id;
 
@@ -53,6 +56,13 @@ const Video: React.FC<IProps> = (props) => {
         {!item.roster.isContent && (
           <div className={item.roster.audioTxMute ? 'audio-muted-status' : 'audio-unmuted-status'}></div>
         )}
+        {networkLevel < NetworkQualityLevel.Good && (
+          <Tooltip overlayClassName="signal-tip" title="网络质量不佳" placement="topLeft" align={{ offset: [-10, 0] }}>
+            <div className="video-signal">
+              <SVG icon={`signal_${networkLevel}`}></SVG>
+            </div>
+          </Tooltip>
+        )}
         <div className="name">{`${item.roster.displayName || 'Local'}`}</div>
       </div>
     );
@@ -79,7 +89,6 @@ const Video: React.FC<IProps> = (props) => {
               <div className="center">
                 <div>语音通话中</div>
               </div>
-              {renderVideoName()}
             </div>
 
             <div className={`video-bg ${state === 'MUTE' || state === 'INVALID' ? 'video-show' : 'video-hidden'}`}>
@@ -88,22 +97,16 @@ const Video: React.FC<IProps> = (props) => {
 
                 <div>{item.roster.isLocal ? '视频暂停' : '对方忙，暂时关闭视频'}</div>
               </div>
-              {renderVideoName()}
             </div>
 
             <div className={`video-bg ${state === 'REQUEST' ? 'video-show' : 'video-hidden'}`}>
               <div className="center">
                 <div>视频请求中...</div>
               </div>
-              {renderVideoName()}
             </div>
 
-            <div className={`video-status video-animote ${state === 'NORMAL' ? 'video-show' : 'video-hidden'}`}>
-              {!item.roster.isContent && (
-                <div className={item.roster.audioTxMute ? 'audio-muted-status' : 'audio-unmuted-status'}></div>
-              )}
-              <div className="name">{item.roster.displayName}</div>
-            </div>
+            {/* 左下角：终端名称 */}
+            {renderVideoName()}
           </div>
         </div>
 

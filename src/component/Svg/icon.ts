@@ -36,6 +36,10 @@ import { ReactComponent as SubtitleStop } from '@/assets/img/svg/subtitle_stop.s
 import { ReactComponent as NoPermission } from '@/assets/img/svg/no_permission.svg';
 import { ReactComponent as Invite } from '@/assets/img/svg/invite.svg';
 import { ReactComponent as Close } from '@/assets/img/svg/icon-close-general.svg';
+import { ReactComponent as signal_4 } from '@/assets/img/signal/signal_4.svg';
+import { ReactComponent as signal_3 } from '@/assets/img/signal/signal_3.svg';
+import { ReactComponent as signal_2 } from '@/assets/img/signal/signal_2.svg';
+import { ReactComponent as signal_1 } from '@/assets/img/signal/signal_1.svg';
 
 const IconMap: { [key: string]: any } = {
   signal: Signal,
@@ -76,6 +80,10 @@ const IconMap: { [key: string]: any } = {
   no_permission: NoPermission,
   invite: Invite,
   close: Close,
+  signal_4,
+  signal_3,
+  signal_2,
+  signal_1,
 };
 
 export { IconMap };

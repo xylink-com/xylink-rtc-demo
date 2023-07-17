@@ -34,6 +34,9 @@ import xyRTC, {
   SpeakersInfo,
   SpeakersInfoObj,
   ICloudRoomConfig,
+  PermissionType,
+  NetworkQualityLevel,
+  INetworkParameter,
 } from '@xylink/xy-rtc-sdk';
 import {
   IRotationInfoTotalItem,
@@ -77,6 +80,7 @@ import { isMobile, isPc } from '@/utils/browser';
 import { WindowResize } from '@/utils/resize';
 
 import '@/assets/style/index.scss';
+import Invite from './component/Invite';
 
 let restartCount = 0; // 音频播放失败count
 
@@ -145,8 +149,8 @@ function Home() {
 
   const [selectedDevice, setSelectedDevice] = useState<ISelectedDevice>(DEFAULT_DEVICE.nextDevice);
   const [permission, setPermission] = useState<ICurrentPermission>({
-    camera: '',
-    microphone: '',
+    camera: PermissionType.UNKNOWN,
+    microphone: PermissionType.UNKNOWN,
   });
   const [contentIsDisabled, setContentIsDisabled] = useState(false);
   const [pageStatus, setPageStatus] = useState({
@@ -182,6 +186,9 @@ function Home() {
   const [speakersInfo, setSpeakersInfo] = useState<SpeakersInfoObj[]>([]);
   //会议室Owner
   const [isOwner, setIsOwner] = useState(false);
+  // 网络信号等级
+  const [localNetworkLevel, setLocalNetworkLevel] = useState(NetworkQualityLevel.Excellent);
+  const [remoteNetworkLevel, setRemoteNetworkLevel] = useState<any>({});
 
   const client = useRef<Client | null>(null);
   const stream = useRef<Stream | null>(null);
@@ -757,6 +764,20 @@ function Home() {
         }
       }
     });
+
+    //  本地网络信号等级
+    client.on('networkLevel', (data: number) => {
+      setLocalNetworkLevel(data);
+    });
+
+    // 参会者网络信号等级
+    client.on('networkParameter', (data: INetworkParameter) => {
+      setRemoteNetworkLevel((obj: any) => {
+        if (obj[data.fromCallUri]?.networkLevel === data.networkLevel) return obj;
+
+        return { ...obj, [data.fromCallUri]: data };
+      });
+    });
   };
 
   // 处理参会者消息
@@ -1261,6 +1282,14 @@ function Home() {
       .map((item: ILayout) => {
         const id = item.roster.id;
 
+        let networkLevel = 4;
+
+        if (!item.roster.videoTxMute) {
+          networkLevel = item.roster.isLocal
+            ? localNetworkLevel
+            : remoteNetworkLevel[item.roster.endpointId]?.networkLevel || 4;
+        }
+
         return (
           <Video
             client={client.current!}
@@ -1269,6 +1298,7 @@ function Home() {
             key={id}
             id={id}
             forceLayoutId={forceLayoutId}
+            networkLevel={networkLevel}
           ></Video>
         );
       });
@@ -1533,6 +1563,9 @@ function Home() {
                 <SVG icon="setting" />
                 <div className="title">设置</div>
               </div>
+
+              {/* 邀请 */}
+              {<Invite inviteInfo={conferenceInfo?.inviteInfo} participantVisible={participantVisible} />}
 
               <div
                 onClick={() => {

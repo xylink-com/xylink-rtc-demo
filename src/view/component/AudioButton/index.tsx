@@ -16,7 +16,7 @@ interface IProps {
 const AudioButton = (props: IProps) => {
   const { stream, permission, audio, disableAudio, handStatus, audioOperate } = props;
 
-  let audioClass = 'button-warn mute_mic';
+  let audioClass = 'mute_mic';
   let audioStatus = '取消静音';
   let svgIcon = 'mic_null';
   let svgType: 'default' | 'danger' = 'default';
@@ -26,7 +26,7 @@ const AudioButton = (props: IProps) => {
     svgIcon = 'mute_mic_error';
   } else {
     if (audio === 'muteAudio' && !disableAudio) {
-      audioClass = 'button-warn mute_mic';
+      audioClass = 'mute_mic';
       svgIcon = 'cancel_mic_mute';
       svgType = 'danger';
     }

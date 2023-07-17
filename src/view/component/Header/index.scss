@@ -28,15 +28,17 @@
   .meeting-stats-switch {
     width: 20px;
     height: 20px;
-    margin-right: 10px;
+    margin-right: 6px;
+    cursor: pointer;
+    svg {
+      width: 100%;
+      height: 100%;
+    }
+    &:hover {
+      background: rgba(215, 228, 255, 0.12);
+    }
   }
-  .online {
-    fill: #86b952;
-  }
-  .offline {
-    fill: #fff;
-  }
-
+  
   .header-count {
     cursor: default;
 
@@ -117,5 +119,19 @@
         margin-left: 4px;
       }
     }
+  }
+}
+
+
+.signal-tip {
+  .ant-tooltip-arrow-content {
+    background: $white-color;
+  }
+  .ant-tooltip-inner {
+    background: $white-color;
+    color: rgba(57, 57, 70, 0.8);
+    font-size: 11px;
+    padding: 4px 8px;
+    min-height: auto;
   }
 }

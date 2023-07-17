@@ -152,14 +152,12 @@ const Participant = memo((props: IProps) => {
       ) : (
         <div className="member">
           <div className="member-header">
-            {!isOwner && (
-              <span
-                className="member-hide-btn"
-                onClick={() => {
-                  setShowDrawer(false);
-                }}
-              ></span>
-            )}
+            <span
+              className="hide-btn"
+              onClick={() => {
+                setShowDrawer(false);
+              }}
+            ></span>
             <div className="member-number">参会者 ({count})</div>
 
             <div className="member-search">
