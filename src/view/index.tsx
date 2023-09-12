@@ -53,7 +53,7 @@ import { SERVER, ACCOUNT } from '@/utils/config';
 import { DEFAULT_LOCAL_USER, DEFAULT_DEVICE, DEFAULT_SETTING, DEFAULT_CALL_INFO, ELEMENT_ID } from '@/enum/index';
 import { MAX_PARTICIPANT_COUNT_SHOW } from '@/enum/participant';
 import { TEMPLATE } from '@/utils/template';
-import { getLayoutIndexByRotateInfo, getScreenInfo, calculateBaseLayoutList } from '@/utils/index';
+import { getLayoutIndexByRotateInfo, getScreenInfo, calculateBaseLayoutList, getOrderLayoutList } from '@/utils/index';
 import store from '@/utils/store';
 import SVG from '@/component/Svg';
 import Video from './component/Video';
@@ -477,11 +477,14 @@ function Home() {
       // 设置layout container容器的大小
       setScreenInfo({ rateWidth, rateHeight });
 
+      // const orderLayoutList = getOrderLayoutList(e);
+      const orderLayoutList = e;
+
       // 计算初始layoutList数据
       // 包含计算每个参会成员的大小、位置
       // 如果不需要做上述的getOrderLayoutList的排序操作，那么直接在calculateBaseLayoutList中的第一个参数配置e即可
       // @ts-ignore
-      nextLayoutListRef.current = calculateBaseLayoutList(e, rateWidth, rateHeight);
+      nextLayoutListRef.current = calculateBaseLayoutList(orderLayoutList, rateWidth, rateHeight);
 
       // 计算屏幕旋转信息
       nextLayoutListRef.current = calculateRotate();
