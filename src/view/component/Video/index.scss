@@ -71,13 +71,14 @@
 
     .video-status {
       position: absolute;
+      height: 21px;
       bottom: 0px;
       left: 0px;
       background: rgba(20, 20, 20, 0.6);
       border-radius: 0px 2px 0px 0px;
       display: flex;
       align-items: center;
-      max-width: 50%;
+      max-width: 90%;
       z-index: 12;
       opacity: 1;
 
@@ -116,7 +117,7 @@
 
         .text {
           margin-top: 15px;
-          color: $white-color;;
+          color: $white-color;
         }
       }
     }
@@ -238,4 +239,9 @@
   &:hover {
     background-color: rgba(42, 46, 51, 0.8);
   }
+}
+
+.video-small {
+  border: 1px solid #fff;
+  box-sizing: content-box;
 }

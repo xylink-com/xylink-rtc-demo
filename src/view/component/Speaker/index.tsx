@@ -244,6 +244,7 @@ const Speaker = memo((props: IProps) => {
       >
         {renderAudio()}
         {renderVideo()}
+
         <div className="speakers">
           <div className="title">正在讲话： </div>
           <div className="name" id="name">

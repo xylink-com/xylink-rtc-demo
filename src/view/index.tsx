@@ -37,6 +37,7 @@ import xyRTC, {
   PermissionType,
   NetworkQualityLevel,
   INetworkParameter,
+  LayoutOrientationType,
 } from '@xylink/xy-rtc-sdk';
 import {
   IRotationInfoTotalItem,
@@ -208,9 +209,16 @@ function Home() {
   }, [recordPermission, recordStatus]);
 
   useEffect(() => {
-    const onResize = () => {
+    const onResize = ({ isHorizontal }: { isHorizontal: boolean }) => {
       if (client.current) {
-        client.current.updateLayoutSize();
+        // 移动端切换横竖屏布局
+        if (isMobile) {
+          const { MOBILE_HORIZONTAL, MOBILE_VERTICAL } = LayoutOrientationType;
+          const orientation = isHorizontal ? MOBILE_HORIZONTAL : MOBILE_VERTICAL;
+          client.current.setLayoutOrientation(orientation);
+        }
+
+        client.current?.updateLayoutSize();
       }
     };
 
@@ -1474,7 +1482,7 @@ function Home() {
           />
 
           {/* 正在讲话人名称 */}
-          {speakerName && (
+          {isPc && speakerName && (
             <Speaker
               audio={audio}
               video={video}
@@ -1565,7 +1573,7 @@ function Home() {
               </div>
 
               {/* 邀请 */}
-              {<Invite inviteInfo={conferenceInfo?.inviteInfo} participantVisible={participantVisible} />}
+              {isPc && <Invite inviteInfo={conferenceInfo?.inviteInfo} participantVisible={participantVisible} />}
 
               <div
                 onClick={() => {
@@ -1582,22 +1590,31 @@ function Home() {
                 <div className="tag">{getParticipantsMaxCount()}</div>
               </div>
 
-              <div className="button layout" onClick={switchLayout}>
-                <SVG icon="layout" />
-                <div className="title">窗口布局</div>
-              </div>
-
-              {isLocalShareContent ? (
-                <div onClick={stopShareContent} className="button button-warn share-stop">
-                  <SVG icon="share_stop" type="danger" />
-                  <div className="title">结束共享</div>
-                </div>
-              ) : (
-                <div onClick={shareContent} className={`button share ${contentIsDisabled ? 'disabled-button' : ''}`}>
-                  <SVG icon="share" />
-                  <div className="title">共享</div>
+              {isPc && (
+                <div className="button layout" onClick={switchLayout}>
+                  <SVG icon="layout" />
+                  <div className="title">窗口布局</div>
                 </div>
               )}
+              {isPc && (
+                <>
+                  {isLocalShareContent ? (
+                    <div onClick={stopShareContent} className="button button-warn share-stop">
+                      <SVG icon="share_stop" type="danger" />
+                      <div className="title">结束共享</div>
+                    </div>
+                  ) : (
+                    <div
+                      onClick={shareContent}
+                      className={`button share ${contentIsDisabled ? 'disabled-button' : ''}`}
+                    >
+                      <SVG icon="share" />
+                      <div className="title">共享</div>
+                    </div>
+                  )}
+                </>
+              )}
+
               {/* 会议录制 */}
               {isPc && (
                 <div onClick={toggleRecord} className={`button ${disableRecord ? 'disabled-button' : ''}`}>
