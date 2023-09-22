@@ -1,7 +1,9 @@
+export type XYFunction = (...args: any[]) => any;
+
 export default class Resize {
   private eleId: string;
   private element: HTMLElement | null;
-  private onResize: () => void;
+  private onResize: XYFunction;
   private resizeObserver: ResizeObserver | null;
 
   constructor() {
@@ -11,12 +13,14 @@ export default class Resize {
     this.onResize = () => {};
   }
 
-  init(eleId: string, onResize: () => void) {
+  init(eleId: string, onResize: XYFunction) {
     this.eleId = eleId;
     this.onResize = onResize;
 
     this.resizeObserver = new ResizeObserver((entries) => {
-      this.onResize();
+      const isHorizontal = window.innerWidth > window.innerHeight;
+
+      this.onResize({ isHorizontal });
     });
 
     this.element = document.getElementById(this.eleId);

@@ -10,6 +10,7 @@ import { Client, ILayout, NetworkQualityLevel } from '@xylink/xy-rtc-sdk';
 import { Tooltip } from 'antd';
 import SVG from '@/component/Svg';
 import './index.scss';
+import useDoubleClick from '@/hook/useDoubleClick';
 
 interface IProps {
   // roster数据
@@ -24,38 +25,40 @@ interface IProps {
 }
 
 const Video: React.FC<IProps> = (props) => {
-  const { item, model, id, client, forceLayoutId, networkLevel = NetworkQualityLevel.Excellent } = props;
-  const state = item.state;
+  const { item, model, client, forceLayoutId, networkLevel = NetworkQualityLevel.Excellent } = props;
+  const { state, roster, templateConfig } = item || {};
+  const {
+    id,
+    isActiveSpeaker,
+    displayName = '',
+    audioTxMute = false,
+    isContent = false,
+    isLocal = false,
+  } = roster || {};
+
+  const { isPIP = false } = templateConfig || {};
   const wrapVideoId = 'wrap-' + id;
 
   const [border, setBorder] = useState({});
 
   const videoWrapRef = useRef<any>(null);
 
-  const isFullScreen = forceLayoutId === item.roster.id;
+  const isFullScreen = forceLayoutId === id;
 
   useEffect(() => {
     client.setVideoRenderer(id, wrapVideoId);
   }, [client, id, wrapVideoId]);
 
   useEffect(() => {
-    let borderStyle = model === 'GALLERY' && item.roster.isActiveSpeaker ? '2px solid #1483eb' : 'none';
+    let borderStyle = model === 'GALLERY' && isActiveSpeaker ? '2px solid #1483eb' : 'none';
 
     setBorder({ border: borderStyle });
-  }, [model, item.roster.isActiveSpeaker]);
-
-  const toggleFullScreen = async () => {
-    const forceFullScreenId = isFullScreen ? '' : item.roster.id;
-
-    await client.forceFullScreen(forceFullScreenId);
-  };
+  }, [model, isActiveSpeaker]);
 
   const renderVideoName = () => {
     return (
       <div className="video-status">
-        {!item.roster.isContent && (
-          <div className={item.roster.audioTxMute ? 'audio-muted-status' : 'audio-unmuted-status'}></div>
-        )}
+        {!isContent && <div className={audioTxMute ? 'audio-muted-status' : 'audio-unmuted-status'}></div>}
         {networkLevel < NetworkQualityLevel.Good && (
           <Tooltip overlayClassName="signal-tip" title="网络质量不佳" placement="topLeft" align={{ offset: [-10, 0] }}>
             <div className="video-signal">
@@ -63,18 +66,34 @@ const Video: React.FC<IProps> = (props) => {
             </div>
           </Tooltip>
         )}
-        <div className="name">{`${item.roster.displayName || 'Local'}`}</div>
+        <div className="name">{`${displayName || 'Local'}`}</div>
       </div>
     );
   };
 
+  // 点击视频，双击：forceLayout; 点击：切换主画面
+  const handleDoubleClick = useDoubleClick(async () => {
+    const forceFullScreenId = isFullScreen ? '' : id;
+
+    await client.forceFullScreen(forceFullScreenId);
+  });
+
+  const onClickVideo = (e: React.MouseEvent<HTMLDivElement | HTMLButtonElement>) => {
+    if (isPIP) {
+      e.stopPropagation();
+      e.nativeEvent.stopImmediatePropagation();
+    }
+
+    handleDoubleClick();
+  };
+
   return (
     <div
-      className="wrap-video"
+      className={`wrap-video ${isPIP ? 'video-small' : ''}`}
       style={item.positionStyle}
       ref={videoWrapRef}
       id={wrapVideoId}
-      onDoubleClick={toggleFullScreen}
+      onClick={onClickVideo}
     >
       <div className="video">
         <div className="video-content" style={border}>
@@ -93,9 +112,9 @@ const Video: React.FC<IProps> = (props) => {
 
             <div className={`video-bg ${state === 'MUTE' || state === 'INVALID' ? 'video-show' : 'video-hidden'}`}>
               <div className="center">
-                {isFullScreen && <div className="displayname">{item.roster.displayName || ''}</div>}
+                {isFullScreen && <div className="displayname">{displayName || ''}</div>}
 
-                <div>{item.roster.isLocal ? '视频暂停' : '对方忙，暂时关闭视频'}</div>
+                <div>{isLocal ? '视频暂停' : '对方忙，暂时关闭视频'}</div>
               </div>
             </div>
 
