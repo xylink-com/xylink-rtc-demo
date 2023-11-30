@@ -38,6 +38,7 @@ import xyRTC, {
   NetworkQualityLevel,
   INetworkParameter,
   LayoutOrientationType,
+  ConferenceMode,
 } from '@xylink/xy-rtc-sdk';
 import {
   IRotationInfoTotalItem,
@@ -54,7 +55,7 @@ import { SERVER, ACCOUNT } from '@/utils/config';
 import { DEFAULT_LOCAL_USER, DEFAULT_DEVICE, DEFAULT_SETTING, DEFAULT_CALL_INFO, ELEMENT_ID } from '@/enum/index';
 import { MAX_PARTICIPANT_COUNT_SHOW } from '@/enum/participant';
 import { TEMPLATE } from '@/utils/template';
-import { getLayoutIndexByRotateInfo, getScreenInfo, calculateBaseLayoutList, getOrderLayoutList } from '@/utils/index';
+import { getLayoutIndexByRotateInfo, getScreenInfo, calculateBaseLayoutList } from '@/utils/index';
 import store from '@/utils/store';
 import SVG from '@/component/Svg';
 import Video from './component/Video';
@@ -199,6 +200,7 @@ function Home() {
   const confChangeInfoRef = useRef<IConfInfo>();
   // 会控开启/关闭摄像头数据缓存
   const mcVideoDataRef = useRef<IMCVideoEvent | null>();
+  const meetingControlRef = useRef<IMeetingControl>();
 
   //  录制权限
   const disableRecord = useMemo(() => {
@@ -531,7 +533,17 @@ function Home() {
 
     // 麦克风状态
     client.on('meeting-control', (e: IMeetingControl) => {
-      const { disableMute, muteOperation, contentIsDisabled, chairmanUri, recordIsDisabled, isMuteSpeaker } = e;
+      const {
+        disableMute,
+        muteOperation,
+        contentIsDisabled,
+        chairmanUri,
+        recordIsDisabled,
+        isMuteSpeaker,
+        conferenceMode,
+      } = e;
+      const { conferenceMode: preConferenceMode } = meetingControlRef.current || {};
+
       let info = '';
 
       setDisableAudio(disableMute);
@@ -563,6 +575,13 @@ function Home() {
         info = '您已被主持人允许收听';
         setMuteSpeaker(false);
       }
+
+      // 对话模式提示
+      if (preConferenceMode !== conferenceMode && conferenceMode === ConferenceMode.DIALOG) {
+        message.info('已进入对话模式', 5);
+      }
+
+      meetingControlRef.current = e;
 
       // 在等候室时，不做提示
       if (!onholdRef.current && info) {
@@ -1210,7 +1229,12 @@ function Home() {
 
   // 切换布局
   const switchLayout = async () => {
-    await client.current?.switchLayout();
+    try {
+      await client.current?.switchLayout();
+    } catch (err: any) {
+      const { msg } = err;
+      message.warn(msg || '切换布局失败');
+    }
   };
 
   // 自定义布局分页
@@ -1265,7 +1289,12 @@ function Home() {
     nextPage = Math.max(nextPage, 0);
     nextPage = Math.min(nextPage, totalPage);
 
-    client.current?.setPageInfo(nextPage);
+    try {
+      await client.current?.setPageInfo(nextPage);
+    } catch (err: any) {
+      const { msg } = err;
+      message.warn(msg || '切换分页失败');
+    }
   };
 
   const layoutStyle = useMemo(() => {
