@@ -81,6 +81,7 @@
       max-width: 90%;
       z-index: 12;
       opacity: 1;
+      padding-right: 4px;
 
       &.mobileWidth {
         max-width: 90%;
@@ -244,4 +245,24 @@
 .video-small {
   border: 1px solid #fff;
   box-sizing: content-box;
+}
+
+
+.focus-icon {
+  width: 16px;
+  height: 16px;
+  border-radius: 2px;
+}
+
+.signal-tip {
+  .ant-tooltip-arrow-content {
+    background: #fff;
+  }
+  .ant-tooltip-inner {
+    background: #fff;
+    color: rgba(57, 57, 70, 0.8);
+    font-size: 11px;
+    padding: 4px 8px;
+    min-height: auto;
+  }
 }

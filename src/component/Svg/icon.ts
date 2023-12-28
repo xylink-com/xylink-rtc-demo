@@ -40,6 +40,7 @@ import { ReactComponent as signal_4 } from '@/assets/img/signal/signal_4.svg';
 import { ReactComponent as signal_3 } from '@/assets/img/signal/signal_3.svg';
 import { ReactComponent as signal_2 } from '@/assets/img/signal/signal_2.svg';
 import { ReactComponent as signal_1 } from '@/assets/img/signal/signal_1.svg';
+import { ReactComponent as focus } from '@/assets/img/svg/focus.svg';
 
 const IconMap: { [key: string]: any } = {
   signal: Signal,
@@ -84,6 +85,7 @@ const IconMap: { [key: string]: any } = {
   signal_3,
   signal_2,
   signal_1,
+  focus
 };
 
 export { IconMap };

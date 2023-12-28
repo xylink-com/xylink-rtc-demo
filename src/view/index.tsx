@@ -202,6 +202,11 @@ function Home() {
   const mcVideoDataRef = useRef<IMCVideoEvent | null>();
   const meetingControlRef = useRef<IMeetingControl>();
 
+  // 会议模式
+  const [conferenceMode, setConferenceMode] = useState(ConferenceMode.NORMAL);
+  // 布局是否支持切换
+  const [layoutIsDisabled, setLayoutIsDisabled] = useState(false);
+
   //  录制权限
   const disableRecord = useMemo(() => {
     const { meeting, control } = recordPermission;
@@ -282,11 +287,13 @@ function Home() {
     // 2. 人数为2,且隐藏本地画面
     // 3. 共享(本地)
     // 4. 主会场(非本地、且在线)
+    // 5. 对话模式
     if (
       participantCount === 1 ||
       (participantCount === 2 && setting.localHide) ||
       isLocalShareContent ||
-      chairman.chairmanUri
+      chairman.hasChairman ||
+      layoutIsDisabled
     ) {
       next = false;
       previous = false;
@@ -296,12 +303,24 @@ function Home() {
       next,
       previous,
     });
-  }, [callMeeting, callLoading, pageInfo, setting.localHide, isLocalShareContent, chairman.chairmanUri]);
+  }, [
+    callMeeting,
+    callLoading,
+    layoutIsDisabled,
+    pageInfo,
+    setting.localHide,
+    isLocalShareContent,
+    chairman.hasChairman,
+  ]);
 
   //是否为会议室Owner
   useEffect(() => {
     setIsOwner(cloudRoomMessage?.meetingNumber === conferenceInfo.number);
   }, [cloudRoomMessage, setIsOwner, conferenceInfo.number]);
+
+  useEffect(() => {
+    setLayoutIsDisabled(isLocalShareContent || (conferenceMode === ConferenceMode.DIALOG && !content?.endpointId));
+  }, [isLocalShareContent, content, conferenceMode]);
 
   // 挂断会议
   const disconnected = (msg = '') => {
@@ -548,6 +567,7 @@ function Home() {
 
       setDisableAudio(disableMute);
       setContentIsDisabled(contentIsDisabled);
+      setConferenceMode(conferenceMode);
 
       setChairman((chairman) => ({
         ...chairman,
@@ -807,6 +827,16 @@ function Home() {
 
         return { ...obj, [data.fromCallUri]: data };
       });
+    });
+
+    // 焦点画面
+    client.on('focus-view', (data: IRoster) => {
+      const { isLocal = false, displayName = '' } = data || {};
+
+      if (data) {
+        const name = isLocal ? '您' : displayName;
+        message.info(name + '已被设为焦点画面');
+      }
     });
   };
 
@@ -1623,7 +1653,7 @@ function Home() {
               </div>
 
               {isPc && (
-                <div className="button layout" onClick={switchLayout}>
+                <div className={`button layout ${layoutIsDisabled ? 'disabled-button' : ''}`} onClick={switchLayout}>
                   <SVG icon="layout" />
                   <div className="title">窗口布局</div>
                 </div>

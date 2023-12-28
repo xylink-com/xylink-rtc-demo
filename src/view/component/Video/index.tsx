@@ -34,6 +34,7 @@ const Video: React.FC<IProps> = (props) => {
     audioTxMute = false,
     isContent = false,
     isLocal = false,
+    isFocusScreen = false,
   } = roster || {};
 
   const { isPIP = false } = templateConfig || {};
@@ -67,6 +68,12 @@ const Video: React.FC<IProps> = (props) => {
           </Tooltip>
         )}
         <div className="name">{`${displayName || 'Local'}`}</div>
+
+        {isFocusScreen && (
+          <Tooltip overlayClassName="signal-tip" title="焦点画面模式" placement="topLeft" align={{ offset: [-10, 0] }}>
+            <SVG icon="focus" className="focus-icon"></SVG>
+          </Tooltip>
+        )}
       </div>
     );
   };
