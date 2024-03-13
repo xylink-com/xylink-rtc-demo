@@ -69,7 +69,7 @@ export const getLayoutIndexByRotateInfo = (nextLayoutList: ILayout[], pid: numbe
 
   for (let i = 0; i < listLen; i++) {
     const item = nextLayoutList[i];
-    const { isContent, participantId } = item.roster;
+    const { isContent, participantId } = item.roster || {};
     // 是不是同一个人
     const isSamePid = participantId === pid;
     // mediagroupid： content/people设备标示，为0代表是people数据，为1代表是content数据
@@ -127,7 +127,7 @@ export const getOrderLayoutList = (layoutList: ILayout[]) => {
 
   for (let i = 0; i < layoutLen; i++) {
     const item: ILayout = layoutList[i];
-    const { isLocal, isContent, isForceFullScreen, isActiveSpeaker, audioTxMute, videoTxMute } = item.roster;
+    const { isLocal, isContent, isForceFullScreen, isActiveSpeaker, audioTxMute, videoTxMute } = item.roster || {};
 
     if (isLocal) {
       selfRoster = item;

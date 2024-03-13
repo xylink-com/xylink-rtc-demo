@@ -2214,10 +2214,10 @@
   resolved "https://registry.npmjs.org/@xtuc/long/-/long-4.2.2.tgz#d291c6a4e97989b5c61d9acf396ae4fe133a718d"
   integrity sha512-NuHqBY1PB/D8xU6s/thBgOAiAP7HOYDQ32+BFZILJ8ivkUkAHQnWfn6WhL79Owj1qmUnoN/YPhktdIoucipkAQ==
 
-"@xylink/xy-rtc-sdk@3.9.6":
-  version "3.9.6"
-  resolved "https://registry.npmjs.org/@xylink/xy-rtc-sdk/-/xy-rtc-sdk-3.9.6.tgz#61446715ab34ed7bdce99044a2c8a9dd6db063fc"
-  integrity sha512-vW3oYxMIGWLVlKj2GRXYwZr/55s4zPJjUfqT7Imcp3m/WGGm/rHOEr0kxEVTf8+UH/QZQDaETAueyw9aXwHhyQ==
+"@xylink/xy-rtc-sdk@3.9.8":
+  version "3.9.8"
+  resolved "https://registry.yarnpkg.com/@xylink/xy-rtc-sdk/-/xy-rtc-sdk-3.9.8.tgz#38ccf79c4c860f2c5f273147005317956d841e70"
+  integrity sha512-YR8iHRvJwI2vHzZbGAWr6slNy50FcIf4PF/Sb67BGOg2iLpdLJPXy9kont6TvwfDBu+UobmQFn2T00l3trDb0A==
 
 abab@^2.0.0:
   version "2.0.6"

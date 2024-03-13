@@ -83,6 +83,7 @@ import { WindowResize } from '@/utils/resize';
 
 import '@/assets/style/index.scss';
 import Invite from './component/Invite';
+import { log } from 'console';
 
 let restartCount = 0; // 音频播放失败count
 
@@ -1347,31 +1348,30 @@ function Home() {
   };
 
   const renderLayout = () => {
-    return layout
-      .filter((item: ILayout) => item.roster.participantId)
-      .map((item: ILayout) => {
-        const id = item.roster.id;
+    return layout.map((item: ILayout) => {
+      const { roster, pollingId = '' } = item;
+      const id = roster?.id ? roster.id : pollingId;
+      const { videoTxMute, isLocal, endpointId = '' } = item.roster || {};
+      let networkLevel = NetworkQualityLevel.Good;
 
-        let networkLevel = 4;
+      if (!videoTxMute) {
+        networkLevel = isLocal
+          ? localNetworkLevel
+          : remoteNetworkLevel[endpointId]?.networkLevel || NetworkQualityLevel.Good;
+      }
 
-        if (!item.roster.videoTxMute) {
-          networkLevel = item.roster.isLocal
-            ? localNetworkLevel
-            : remoteNetworkLevel[item.roster.endpointId]?.networkLevel || 4;
-        }
-
-        return (
-          <Video
-            client={client.current!}
-            model={templateMode}
-            item={item}
-            key={id}
-            id={id}
-            forceLayoutId={forceLayoutId}
-            networkLevel={networkLevel}
-          ></Video>
-        );
-      });
+      return (
+        <Video
+          client={client.current!}
+          model={templateMode}
+          item={item}
+          key={id}
+          id={id}
+          forceLayoutId={forceLayoutId}
+          networkLevel={networkLevel}
+        ></Video>
+      );
+    });
   };
 
   // 停止分享content

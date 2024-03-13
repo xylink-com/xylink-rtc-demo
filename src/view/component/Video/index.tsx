@@ -5,8 +5,8 @@
  * @date  2020-1-07 10:34:18
  */
 
-import React, { useRef, useEffect, useState } from 'react';
-import { Client, ILayout, NetworkQualityLevel } from '@xylink/xy-rtc-sdk';
+import React, { useRef, useEffect, useState, useMemo } from 'react';
+import { AutoState, Client, ILayout, NetworkQualityLevel } from '@xylink/xy-rtc-sdk';
 import { Tooltip } from 'antd';
 import SVG from '@/component/Svg';
 import './index.scss';
@@ -26,9 +26,9 @@ interface IProps {
 
 const Video: React.FC<IProps> = (props) => {
   const { item, model, client, forceLayoutId, networkLevel = NetworkQualityLevel.Excellent } = props;
-  const { state, roster, templateConfig } = item || {};
+  const { state, roster, templateConfig, pollingState = '', pollingName } = item || {};
   const {
-    id,
+    id = '',
     isActiveSpeaker,
     displayName = '',
     audioTxMute = false,
@@ -94,52 +94,75 @@ const Video: React.FC<IProps> = (props) => {
     handleDoubleClick();
   };
 
-  return (
-    <div
-      className={`wrap-video ${isPIP ? 'video-small' : ''}`}
-      style={item.positionStyle}
-      ref={videoWrapRef}
-      id={wrapVideoId}
-      onClick={onClickVideo}
-    >
-      <div className="video">
-        <div className="video-content" style={border}>
-          <div className="video-model">
-            <div
-              className={`video-bg ${
-                state === 'AUDIO_TEL' || state === 'AUDIO_CONTENT' || state === 'AUDIO_ONLY'
-                  ? 'video-show'
-                  : 'video-hidden'
-              }`}
-            >
-              <div className="center">
-                <div>语音通话中</div>
+  const pollingStateText = useMemo(() => {
+    const { NOT_FOUND, NO_JOINED } = AutoState;
+    const stateMapText: any = {
+      [NOT_FOUND]: '未发现可用终端',
+      [NO_JOINED]: `${pollingName} 未入会`,
+    };
+    let stateText = '';
+
+    if (pollingState) {
+      stateText = stateMapText[pollingState] || '';
+    }
+
+    return stateText;
+  }, [pollingState]);
+
+  const render = () => {
+    if (pollingState === AutoState.NULL) {
+      return null;
+    }
+
+    return (
+      <div
+        className={`wrap-video ${isPIP ? 'video-small' : ''}`}
+        style={item.positionStyle}
+        ref={videoWrapRef}
+        id={wrapVideoId}
+        onClick={onClickVideo}
+      >
+        <div className="video">
+          <div className="video-content" style={border}>
+            <div className="video-model">
+              <div
+                className={`video-bg ${
+                  state === 'AUDIO_TEL' || state === 'AUDIO_CONTENT' || state === 'AUDIO_ONLY'
+                    ? 'video-show'
+                    : 'video-hidden'
+                }`}
+              >
+                <div className="center">
+                  <div>语音通话中</div>
+                </div>
               </div>
-            </div>
 
-            <div className={`video-bg ${state === 'MUTE' || state === 'INVALID' ? 'video-show' : 'video-hidden'}`}>
-              <div className="center">
-                {isFullScreen && <div className="displayname">{displayName || ''}</div>}
+              <div className={`video-bg ${state === 'MUTE' || state === 'INVALID' ? 'video-show' : 'video-hidden'}`}>
+                <div className="center">
+                  {isFullScreen && <div className="displayname">{displayName || ''}</div>}
 
-                <div>{isLocal ? '视频暂停' : '对方忙，暂时关闭视频'}</div>
+                  <div>{isLocal ? '视频暂停' : '对方忙，暂时关闭视频'}</div>
+                </div>
               </div>
-            </div>
 
-            <div className={`video-bg ${state === 'REQUEST' ? 'video-show' : 'video-hidden'}`}>
-              <div className="center">
-                <div>视频请求中...</div>
+              <div className={`video-bg ${state === 'REQUEST' || pollingStateText ? 'video-show' : 'video-hidden'}`}>
+                <div className="center">
+                  <div>{pollingStateText ? pollingStateText : '视频请求中...'}</div>
+                </div>
               </div>
-            </div>
 
-            {/* 左下角：终端名称 */}
-            {renderVideoName()}
+              {/* 左下角：终端名称 */}
+              {!pollingStateText && renderVideoName()}
+            </div>
           </div>
-        </div>
 
-        <video style={item.rotate}></video>
+          <video style={item.rotate}></video>
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
+
+  return <>{render()}</>;
 };
 
 export default Video;
