@@ -5,6 +5,7 @@ import './index.scss';
 interface IProps {
   open: boolean;
   content: ReactNode | string;
+  title?: string;
   type?: string;
   okText?: string;
   closeText?: string;
@@ -14,7 +15,7 @@ interface IProps {
 }
 
 const PromptModel = (props: IProps) => {
-  const { open, content, closeText = '', okText = '', timer = 0, onCancel, onOK } = props;
+  const { open, content, title = '', closeText = '', okText = '', timer = 0, onCancel, onOK } = props;
 
   const [countDown, setCountDown] = useState(timer);
   const timerRef = useRef<NodeJS.Timeout | null>();
@@ -73,6 +74,8 @@ const PromptModel = (props: IProps) => {
           <div className="close-mock" />
         </div>
       </div>
+
+      {title && <div className="vm-title"> {title}</div>}
 
       <div className="vm-content">{content}</div>
 

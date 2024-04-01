@@ -39,6 +39,8 @@ import xyRTC, {
   INetworkParameter,
   LayoutOrientationType,
   ConferenceMode,
+  Notification,
+  EnableRename,
 } from '@xylink/xy-rtc-sdk';
 import {
   IRotationInfoTotalItem,
@@ -80,10 +82,9 @@ import Subtitles from './component/Subtitles';
 import PromptModel from './component/PromptModel';
 import { isMobile, isPc } from '@/utils/browser';
 import { WindowResize } from '@/utils/resize';
+import Invite from './component/Invite';
 
 import '@/assets/style/index.scss';
-import Invite from './component/Invite';
-import { log } from 'console';
 
 let restartCount = 0; // 音频播放失败count
 
@@ -207,6 +208,9 @@ function Home() {
   const [conferenceMode, setConferenceMode] = useState(ConferenceMode.NORMAL);
   // 布局是否支持切换
   const [layoutIsDisabled, setLayoutIsDisabled] = useState(false);
+
+  // 改名权限
+  const [enableRename, setEnableRename] = useState(false);
 
   //  录制权限
   const disableRecord = useMemo(() => {
@@ -837,6 +841,16 @@ function Home() {
       if (data) {
         const name = isLocal ? '您' : displayName;
         message.info(name + '已被设为焦点画面');
+      }
+    });
+
+    // 改名权限、联席主持人等;
+    client.on('notification', (data: Notification) => {
+      const { content } = data;
+      const { enableRename } = content || {};
+
+      if (enableRename) {
+        setEnableRename(enableRename === EnableRename.ON);
       }
     });
   };
@@ -1717,6 +1731,7 @@ function Home() {
               visible={participantVisible}
               count={participantsCount}
               isOwner={isOwner}
+              enableRename = {enableRename}
               setShowDrawer={setParticipantVisible}
             />
           )}

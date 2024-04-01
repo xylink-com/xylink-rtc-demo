@@ -2,7 +2,7 @@
  * 参会者
  * 支持翻页
  */
-import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
+import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Drawer, Pagination } from 'antd';
 import { IRoster, Client } from '@xylink/xy-rtc-sdk';
 import { MAX_PARTICIPANT_COUNT, PARTICIPANT_PAGE_SIZE } from '@/enum/participant';
@@ -19,6 +19,7 @@ import local from '@/assets/img/operate/icon_me.svg';
 import search from '@/assets/img/operate/icon_search.svg';
 import usePagination from './usePagination';
 import { debounce } from '@/utils';
+import UpdateName from '../UpdateName';
 
 interface IProps {
   visible: boolean;
@@ -27,11 +28,12 @@ interface IProps {
   count: number;
   client: Client;
   isOwner: boolean;
+  enableRename?: boolean;
   setShowDrawer: (visible: boolean) => void;
 }
 
 const Participant = memo((props: IProps) => {
-  let { visible, contentUri, rosters, count, setShowDrawer, client, isOwner } = props;
+  let { visible, contentUri, rosters, count, setShowDrawer, client, isOwner, enableRename = false } = props;
   const [unmuteCount, setUnmuteCount] = useState(0);
   const [selfRoster, setSelfRoster] = useState<any>(null);
   const [url, setUrl] = useState('');
@@ -196,64 +198,17 @@ const Participant = memo((props: IProps) => {
 
           <div className="member-content">
             {data.map((item: IRoster) => {
-              const {
-                participantId,
-                endpointId,
-                mediagroupid,
-                displayName,
-                videoTxMute,
-                videoRxMute,
-                audioTxMute,
-                audioRxMute,
+              const { endpointId, mediagroupid } = item;
+              const isLocal = endpointId === selfRoster?.endpointId && mediagroupid === 0;
+              const isContent = contentUri === endpointId;
+
+              item = {
+                ...item,
+                isLocal,
                 isContent,
-                isActiveSpeaker,
-              } = item;
-              const key = participantId + mediagroupid;
-              const audioImg = audioTxMute ? muteActive : unmuteActive;
-              const videoImg = videoTxMute ? muteCamera : unmuteCamera;
-              const isContentOnly = videoTxMute && videoRxMute && audioRxMute && audioTxMute;
+              };
 
-              let memberStatusImg = '';
-
-              if (isContent) {
-                return null;
-              }
-
-              if (endpointId === selfRoster?.endpointId) {
-                memberStatusImg = local;
-              } else {
-                if (isActiveSpeaker && !audioTxMute) {
-                  memberStatusImg = speaker;
-                }
-              }
-
-              return (
-                <div className="member-item" key={key}>
-                  <div className="info">
-                    <div className="avatar">
-                      <img src={confernece} alt="avatar" />
-                      {memberStatusImg && <img className="avatar__status" src={memberStatusImg} alt="" />}
-                    </div>
-                    <div className="name" title={displayName}>
-                      <span className="name__info">
-                        {displayName}
-                        {isContentOnly && <>(仅桌面共享)</>}
-                      </span>
-                      {contentUri === endpointId && !isContentOnly && <span className="name__status">正在共享...</span>}
-                    </div>
-                  </div>
-                  {!isContent && (
-                    <div className="member__staus">
-                      <div className="member__staus-audio">
-                        <img src={audioImg} alt="unmute" />
-                      </div>
-                      <div className="member__staus-video">
-                        <img src={videoImg} alt="mute" />
-                      </div>
-                    </div>
-                  )}
-                </div>
-              );
+              return <ParticipantItem client={client} item={item} enableRename={enableRename} />;
             })}
 
             {data.length === 0 && <div className="member__tips">未找到符合条件的结果</div>}
@@ -278,5 +233,80 @@ const Participant = memo((props: IProps) => {
     </Drawer>
   );
 });
+
+const ParticipantItem = ({ client, item, enableRename }: { client: Client; item: IRoster; enableRename: boolean }) => {
+  const {
+    participantId,
+    mediagroupid,
+    displayName,
+    videoTxMute,
+    videoRxMute,
+    audioTxMute,
+    audioRxMute,
+    isContent,
+    isActiveSpeaker,
+    isLocal,
+  } = item;
+  const key = participantId + mediagroupid;
+  const audioImg = audioTxMute ? muteActive : unmuteActive;
+  const videoImg = videoTxMute ? muteCamera : unmuteCamera;
+  const isContentOnly = videoTxMute && videoRxMute && audioRxMute && audioTxMute;
+  const memberStatusImg = useMemo(() => {
+    if (isLocal) return local;
+    if (isActiveSpeaker) return speaker;
+    return null;
+  }, [isLocal, isActiveSpeaker]);
+
+  const [updateNameVisible, setUpdateNameVisible] = useState(false);
+
+  useEffect(() => {
+    if (!enableRename && isLocal) {
+      setUpdateNameVisible(false);
+    }
+  }, [enableRename, isLocal]);
+
+  return (
+    <div className="member-item" key={key}>
+      <div className="info">
+        <div className="avatar">
+          <img src={confernece} alt="avatar" />
+          {memberStatusImg && <img className="avatar__status" src={memberStatusImg} alt="" />}
+        </div>
+        <div className="name" title={displayName}>
+          <span className="name__info">
+            {displayName}
+            {isContentOnly && <>(仅桌面共享)</>}
+          </span>
+          {isContent && !isContentOnly && <span className="name__status">正在共享...</span>}
+        </div>
+      </div>
+
+      {!isContent && (
+        <div className="member__status">
+          {isLocal && enableRename && (
+            <div
+              className="member__status-item  member__status-rename"
+              onClick={() => {
+                setUpdateNameVisible(true);
+              }}
+            >
+              改名
+            </div>
+          )}
+          {updateNameVisible && (
+            <UpdateName client={client} visible={updateNameVisible} setVisible={setUpdateNameVisible} />
+          )}
+
+          <div className="member__status-audio">
+            <img src={audioImg} alt="unmute" />
+          </div>
+          <div className="member__status-video">
+            <img src={videoImg} alt="mute" />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 export default Participant;

@@ -194,7 +194,7 @@ $member-height: 48px;
     }
   }
 
-  &__staus {
+  &__status {
     display: flex;
     align-items: center;
     justify-content: space-around;
@@ -206,6 +206,14 @@ $member-height: 48px;
 
     &-video {
       width: 20px;
+    }
+
+    &-rename {
+      width: auto;
+      padding: 0 12px;
+      color: $primary-color;
+      display: flex;
+      cursor: pointer;
     }
   }
 
