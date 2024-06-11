@@ -1066,7 +1066,7 @@ function Home() {
   // 表单数据提交
   // 开始进行入会操作
   const handleSubmit = async () => {
-    const result = await (isPc ? xyRTC.checkSupportWebRTC() : xyRTC.checkSupportMobileWebRTC());
+    const result = await xyRTC.checkSupportWebRTC();
     const { result: isSupport } = result;
 
     if (!isSupport) {
@@ -1363,8 +1363,7 @@ function Home() {
 
   const renderLayout = () => {
     return layout.map((item: ILayout) => {
-      const { roster, pollingId = '' } = item;
-      const id = roster?.id ? roster.id : pollingId;
+      const { id } = item;
       const { videoTxMute, isLocal, endpointId = '' } = item.roster || {};
       let networkLevel = NetworkQualityLevel.Good;
 
@@ -1731,7 +1730,7 @@ function Home() {
               visible={participantVisible}
               count={participantsCount}
               isOwner={isOwner}
-              enableRename = {enableRename}
+              enableRename={enableRename}
               setShowDrawer={setParticipantVisible}
             />
           )}

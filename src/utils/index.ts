@@ -32,6 +32,7 @@ export const calculateBaseLayoutList = (orderLayoutList: ILayout[], rateWidth: n
   const positionInfo = TEMPLATE.temp[orderLayoutList.length];
 
   const layoutList = orderLayoutList.map((item: ILayout, index: number) => {
+    if (!positionInfo[index]) return { ...item };
     const position = positionInfo[index].position;
     const [x, y, w, h] = position;
     let layoutX = Math.round(rateWidth * x);

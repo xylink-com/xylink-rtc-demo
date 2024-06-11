@@ -26,9 +26,8 @@ interface IProps {
 
 const Video: React.FC<IProps> = (props) => {
   const { item, model, client, forceLayoutId, networkLevel = NetworkQualityLevel.Excellent } = props;
-  const { state, roster, templateConfig, pollingState = '', pollingName } = item || {};
+  const { state, roster, templateConfig, pollingState = '', pollingName, id } = item || {};
   const {
-    id = '',
     isActiveSpeaker,
     displayName = '',
     audioTxMute = false,
@@ -107,7 +106,7 @@ const Video: React.FC<IProps> = (props) => {
     }
 
     return stateText;
-  }, [pollingState]);
+  }, [pollingState, pollingName]);
 
   const render = () => {
     if (pollingState === AutoState.NULL) {
