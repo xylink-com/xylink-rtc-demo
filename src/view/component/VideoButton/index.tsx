@@ -1,41 +1,45 @@
 import React, { memo } from 'react';
+import { IDeviceInfo, DEVICE_KIND } from '@xylink/xy-rtc-sdk';
 import SVG from '@/component/Svg';
+import DebounceButton from '@/component/DebounceButton';
+import DeviceSelect from '../DeviceSelect';
 
 interface IProps {
-  permission: any;
   video: string;
+  onSwitchDevice: (key: DEVICE_KIND, device: IDeviceInfo) => void;
+  onToggleSetting: () => void;
   videoOperate: () => void;
 }
 
-
 const VideoButton = (props: IProps) => {
-  const { permission, video, videoOperate } = props;
+  const { video, videoOperate, onSwitchDevice, onToggleSetting } = props;
 
-  let videoClass = 'mute_camera';
+  let videoClass = 'button-warn mute_camera';
   let svgIcon = 'camera';
   let svgType: 'default' | 'danger' = 'default';
 
-  if (permission.camera === 'denied') {
-    videoClass = 'button-warn mute_camera_error';
-    svgIcon = 'mute_camera_error';
-    svgType = 'danger';
-  } else if (video === 'unmuteVideo') {
+  if (video === 'unmuteVideo') {
     videoClass = 'camera';
     svgIcon = 'camera';
   } else {
-    videoClass = 'mute_camera';
+    videoClass = 'button-warn mute_camera';
     svgIcon = 'mute_camera';
     svgType = 'danger';
   }
 
   return (
-    <div className={`button ${videoClass}`} onClick={videoOperate}>
-      <SVG icon={svgIcon} type={svgType} />
-      <div className="title">
-        {video === 'unmuteVideo' ? '关闭摄像头' : '开启摄像头'}
-      </div>
+    <div className="button-box">
+      <DebounceButton className={`button ${videoClass}`} onClick={videoOperate}>
+        <SVG icon={svgIcon} type={svgType} />
+        <div className="title">{video === 'unmuteVideo' ? '关闭摄像头' : '开启摄像头'}</div>
+      </DebounceButton>
+      <DeviceSelect type="video" onSwitchDevice={onSwitchDevice} onToggleSetting={onToggleSetting}>
+        <div className="arrow">
+          <SVG icon="arrow" />
+        </div>
+      </DeviceSelect>
     </div>
   );
-}
+};
 
 export default memo(VideoButton);

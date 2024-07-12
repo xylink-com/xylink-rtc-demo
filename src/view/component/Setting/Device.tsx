@@ -1,502 +1,351 @@
 /**
  * 设备检测、设置
  */
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Button, Row, Select, Tooltip, Alert } from 'antd';
-import xyRTC, {
-  DeviceManager,
+import React, { useState, useEffect, useRef, memo, useCallback } from 'react';
+import { Tooltip, Alert, message } from 'antd';
+import { LoadingOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
+import XYRTC, {
   IDeviceInfo,
-  IDeviceList,
   IDeviceManagerChangeValue,
-  IMediaSupportedConstraints,
   PermissionType,
   ICurrentPermission,
+  XYRTCClient,
+  Logger,
+  DEVICE_KIND,
+  VideoAudioTrack,
+  setOutputAudioDevice,
 } from '@xylink/xy-rtc-sdk';
-import { ISetting, IDeviceType } from '@/type/index';
-import { AudioOutlined, SoundOutlined, LoadingOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
+import ring from '@/assets/ring.wav';
+import SVG from '@/component/Svg';
+import Select from '@/component/Select';
+import AudioLevel from './AudioLevel';
 
-import ring from '@/assets/ring.ogg';
-import Guide from '../Guide';
-
-interface IProps {
-  current: string;
-  setting?: ISetting;
-  onSetting: (data: ISetting) => void;
-}
+import { ChangeEntry, useDeviceList, useSpecifiedDevice } from '@/store/device';
 
 const { Option } = Select;
+const { AUDIOINPUT, AUDIOOUTPUT, VIDEOINPUT } = DEVICE_KIND;
+const { UNKNOWN, GRANTED } = PermissionType;
 
-const Device = (props: IProps) => {
-  const DEFAULT_DEVICE_LABEL = '选择设备';
-  const DEVICE_ABNORMAL_MAP = {
-    DENIED: '未授权限',
-    NONE: '未发现设备',
-  };
-  const { current, setting, onSetting } = props;
-  const { selectedDevice } = setting || {
-    selectedDevice: { audioInput: null, audioOutput: null, videoInput: null },
-  };
-  const stream = useRef<any>();
-
-  const [audioInputList, setAudioInputList] = useState<IDeviceInfo[]>([]);
-  const [audioOutputList, setAudioOutputList] = useState<IDeviceInfo[]>([]);
-  const [videoInList, setVideoInList] = useState<IDeviceInfo[]>([]);
-  const [audioLevel, setAudioLevel] = useState(0);
-  const [select, setSelect] = useState({
-    audioInputValue: selectedDevice?.audioInput?.deviceId || 'default',
-    audioOutputValue: selectedDevice?.audioOutput?.deviceId || 'default',
-    videoInValue: selectedDevice?.videoInput?.deviceId || '',
-  });
-
-  const [testAudioStatus, setTestAudioStatus] = useState(false);
-  const [iauth, setIauth] = useState('pending');
-  const [permission, setPermission] = useState<ICurrentPermission>({
-    camera: PermissionType.UNKNOWN,
-    microphone: PermissionType.UNKNOWN,
-  });
-  const [videoStatusVisible, setVideoStatusVisible] = useState(false);
-  const [guideVisible, setGuideVisible] = useState(false);
-
-  const deviceManager = useRef<any>(null);
-  const previewStream = useRef<MediaStream | null>(null);
-  const audioLevelTimmer = useRef<any>(null);
+const Device = memo(() => {
+  const client = useRef<XYRTCClient | null>(null);
+  const videoAudioTrack = useRef<VideoAudioTrack | null>(null);
+  const logger = useRef<Logger | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  const getDevices = useCallback(async () => {
-    try {
-      const devices = await deviceManager.current.getDevices();
+  const isFirstCall = useRef(true);
 
-      setDevices(devices);
-    } catch (error) {}
+  // Loading
+  const [loading, setLoading] = useState(true);
+  // 权限状态
+  const [permission, setPermission] = useState<ICurrentPermission>({
+    camera: UNKNOWN,
+    microphone: UNKNOWN,
+  });
+  // 测试扬声器状态
+  const [testAudioStatus, setTestAudioStatus] = useState(false);
+  // 摄像头预览不可用
+  const [isPreviewUnavailable, setPreviewUnavailable] = useState(false);
+
+  // 设备列表
+  const { audioInput, audioOutput, videoInput, setAudioInput, setAudioOutput, setVideoInput } = useDeviceList(
+    (state) => {
+      return {
+        audioInput: state.audioInput,
+        audioOutput: state.audioOutput,
+        videoInput: state.videoInput,
+        setAudioInput: state.setAudioInput,
+        setAudioOutput: state.setAudioOutput,
+        setVideoInput: state.setVideoInput,
+      };
+    }
+  );
+  // 指定设备
+  const { specifiedDevice, setSpecifiedDevice } = useSpecifiedDevice((state) => {
+    return {
+      specifiedDevice: state.specifiedDevice,
+      setSpecifiedDevice: state.setSpecifiedDevice,
+    };
+  });
+
+  const virtualProcessor = useRef<any>(null);
+
+  const stop = async () => {
+    setTestAudioStatus(false);
+
+    await client.current?.destroy();
+
+    virtualProcessor.current?.removeOptions();
+
+    client.current = null;
+    logger.current = null;
+  };
+
+  const start = useCallback(async () => {
+    logger.current = XYRTC.createLogger({
+      dbName: 'XYRTC_SETTING_DEVICE_LOG',
+      tableName: 'LOG',
+      scope: 'SETTING',
+      maxSize: 10000,
+    });
+
+    client.current = XYRTC.createClient(
+      {
+        clientId: '',
+        clientSecret: '',
+        extId: '',
+      },
+      logger.current
+    );
+
+    const { audioInput, audioOutput, videoInput } = specifiedDevice;
+
+    try {
+      videoAudioTrack.current = await client.current.createVideoAudioTrack();
+
+      videoAudioTrack.current.on('permission', handlePermission);
+      videoAudioTrack.current.on('device', handleDevice);
+      videoAudioTrack.current.on('track-error', handleError);
+
+      await videoAudioTrack.current.capture({
+        audioInputId: audioInput?.isDefault ? '' : audioInput?.deviceId,
+        audioOutputId: audioOutput?.isDefault ? '' : audioOutput?.deviceId,
+        videoInputId: videoInput?.isDefault ? '' : videoInput?.deviceId,
+      });
+    } catch (error) {
+      console.log('create video audio track error: ', error);
+    }
+
+    setLoading(false);
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // 页面初始化，创建Client和Stream模块
   useEffect(() => {
-    async function start() {
-      deviceManager.current = new DeviceManager();
-
-      await deviceManager.current.init();
-
-      // 在某些浏览器需要先采流授权，才能得到对应的设备信息
-      await getStream();
-
-      await getDevices();
-
-      await initDeviceManagerEvent();
-    }
-
-    if (current === 'device') {
-      start();
-    }
-
-    if (current !== 'device') {
-      stop();
-    }
+    start();
 
     return () => {
       stop();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [current]);
+  }, []);
 
+  // 摄像头权限变化，重新启用视频预览
   useEffect(() => {
-    const { deviceId } = selectedDevice?.audioOutput || { deviceId: '' };
-
-    if (deviceId && audioRef.current) {
-      audioRef.current && xyRTC.setOutputAudioDevice(audioRef.current, deviceId);
-    }
-  }, [selectedDevice]);
-
-  const initDeviceManagerEvent = async () => {
-    deviceManager.current.on('permission', async (e: ICurrentPermission) => {
-      const { camera, microphone } = e;
-      if (camera === 'denied' && microphone === 'denied') {
-        setIauth('denied');
-      } else {
-        await getStream();
-      }
-
-      setPermission(e);
-    });
-
-    deviceManager.current.on('device', (e: IDeviceManagerChangeValue) => {
-      const { detail, nextDevice } = e;
-      const { videoInput, audioInput, audioOutput } = nextDevice;
-      const nextDevices: IDeviceList = detail;
-
-      if (videoInput) {
-        handleChange('videoInValue', videoInput.deviceId);
-      }
-
-      if (audioInput) {
-        handleChange('audioInputValue', audioInput.deviceId);
-      }
-
-      if (audioOutput) {
-        handleChange('audioOutputValue', audioOutput.deviceId);
-      }
-      setDevices(nextDevices);
-    });
-  };
-
-  // 设置设备数据
-  const setDevices = (devices: IDeviceList) => {
-    const { audioInputList, audioOutputList, videoInList } = devices;
-
-    setAudioInputList(audioInputList);
-    setAudioOutputList(audioOutputList);
-    setVideoInList(videoInList);
-  };
-
-  const clearAudioLevelTimmer = () => {
-    if (audioLevelTimmer.current) {
-      clearInterval(audioLevelTimmer.current);
-    }
-  };
-
-  const clearStream = () => {
-    if (previewStream.current) {
-      xyRTC.closePreviewStream(previewStream.current);
-    }
-  };
-
-  const stop = () => {
-    clearAudioLevelTimmer();
-
-    if (deviceManager.current) {
-      deviceManager.current.destroy();
-    }
-
-    clearStream();
-
-    stream?.current?.close();
-
-    setTestAudioStatus(false);
-  };
-
-  const replaceTrack = async (key: IDeviceType, deviceId: string | undefined = undefined) => {
-    if (previewStream.current) {
-      // 音量level clear
-      if (key === 'audioInputValue') {
-        clearInterval(audioLevelTimmer.current);
-        setAudioLevel(0);
-
-        // 因为在Firefox中 无法同时采集两个麦克风的流，所以先停止之前的audioTrack
-        const localAudioTrack = previewStream.current.getAudioTracks()[0];
-
-        if (localAudioTrack) {
-          previewStream.current.removeTrack(localAudioTrack);
-          localAudioTrack.stop();
-        }
-      }
-
-      if (key === 'videoInValue') {
-        // 1. remove && stop
-        const localVideoTrack = previewStream.current.getVideoTracks()[0];
-
-        if (localVideoTrack) {
-          previewStream.current.removeTrack(localVideoTrack);
-          localVideoTrack.stop();
-        }
-      }
-
-      // 2. add new track
-      try {
-        let params: { video?: any; audio?: any } = {};
-
-        if (key === 'videoInValue') {
-          params.video = {
-            deviceId: deviceId ? { exact: deviceId || select.videoInValue } : undefined,
-          };
-        }
-
-        if (key === 'audioInputValue') {
-          params.audio = {
-            deviceId: deviceId ? { exact: deviceId || select.audioInputValue } : undefined,
-          };
-        }
-
-        const newConstraintsStream = await stream.current.getPreviewStream(!!params.video, !!params.audio, params);
-        const newTrack =
-          key === 'audioInputValue'
-            ? newConstraintsStream.getAudioTracks()[0]
-            : newConstraintsStream.getVideoTracks()[0];
-
-        previewStream.current.addTrack(newTrack);
-
-        key === 'videoInValue' && setVideoStatusVisible(false);
-      } catch (err) {
-        key === 'videoInValue' && setVideoStatusVisible(true);
-
+    const videoOperate = async () => {
+      if (loading || !client.current) {
         return;
       }
 
-      // 音量level重置
-      if (key === 'audioInputValue') {
-        stream.current.clearAudioLevel();
+      try {
+        if (isFirstCall.current && permission.camera === GRANTED) {
+          isFirstCall.current = false;
+          setVideoRender();
+          return;
+        }
 
-        audioLevelTimmer.current = setInterval(async () => {
-          try {
-            const level = await stream.current.getAudioLevel(previewStream.current);
-
-            // 更新Audio的实时音量显示
-            setAudioLevel(level);
-          } catch (err) {
-            clearAudioLevelTimmer();
-          }
-        }, 100);
+        if (permission.camera === GRANTED) {
+          await client.current.unmuteVideo();
+          setVideoRender();
+        } else {
+          await client.current.muteVideo();
+          setPreviewUnavailable(true);
+        }
+      } catch (error) {
+        console.log('video operate error: ', error);
       }
+    };
+
+    videoOperate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [permission.camera, loading]);
+
+  // 麦克风权限变化，重新启用麦克风
+  useEffect(() => {
+    const audioOperate = async () => {
+      if (loading || !client.current) {
+        return;
+      }
+
+      try {
+        if (permission.microphone === GRANTED) {
+          await client.current.unmuteAudio();
+        } else {
+          await client.current.muteAudio();
+        }
+      } catch (error) {
+        console.log('audio operate error: ', error);
+      }
+    };
+
+    audioOperate();
+  }, [permission.microphone, loading]);
+
+  // 启用本地视频预览
+  const setVideoRender = useCallback(() => {
+    if (!client.current) return;
+
+    const mediaStream = client.current.getVideoStream();
+
+    if (videoRef.current && mediaStream) {
+      videoRef.current.srcObject = mediaStream as MediaStream;
+    }
+
+    setPreviewUnavailable(false);
+  }, []);
+
+  // 监听SDK上报的device消息，更新最新的设备列表数据，包含isDefault和isSelected状态
+  const handleDevice = (e: IDeviceManagerChangeValue) => {
+    console.log('demo get device change : ', e);
+
+    // 获取最新的设备列表，直接更新
+    const { audioInputList, audioOutputList, videoInputList } = e.detail;
+
+    setAudioInput(audioInputList);
+    setAudioOutput(audioOutputList);
+    setVideoInput(videoInputList);
+
+    // 切换设备
+    // 扬声器因为在外部，所以需要业务自行切换设备ID
+    const { audioOutput, audioInput } = e.nextDevice;
+
+    if (audioOutput) {
+      switchLocalAudioOutput(audioOutput.deviceId);
+    }
+
+    if (audioInput) {
+      console.log('audio input change');
     }
   };
 
-  const findDeviceById = (deviceId: string, list: IDeviceInfo[]) => {
-    return (
-      list.find((item: IDeviceInfo) => {
-        return item.deviceId === deviceId;
-      }) || { deviceId: '', label: '' }
-    );
+  // 监听SDK上报的权限消息
+  const handlePermission = (e: ICurrentPermission) => {
+    console.log('demo get permission: ', e);
+
+    setPermission(e);
   };
 
-  // 保存设置信息
-  const handleOk = () => {
-    stop();
+  const handleError = (e: any) => {
+    console.log('demo get error event: ', e);
+    const { msg = '' } = e;
 
-    let { audioInputValue, audioOutputValue, videoInValue } = select;
-
-    audioInputValue = audioInputValue === DEFAULT_DEVICE_LABEL ? 'default' : audioInputValue;
-    audioOutputValue = audioOutputValue === DEFAULT_DEVICE_LABEL ? 'default' : audioOutputValue;
-    videoInValue = videoInValue === DEFAULT_DEVICE_LABEL ? '' : videoInValue;
-
-    onSetting({
-      selectedDevice: {
-        audioInput: findDeviceById(audioInputValue, audioInputList),
-        audioOutput: findDeviceById(audioOutputValue, audioOutputList),
-        videoInput: findDeviceById(videoInValue, videoInList),
-      },
-      deviceList: {
-        audioInputList,
-        audioOutputList,
-        videoInList,
-      },
-    });
+    msg && message.info(msg);
   };
 
-  // 获取随机数
-  const getRangeRandom = (min = 50, max = 500) => {
-    const num = Math.floor(Math.random() * (max - min + 1) + min);
+  // 切换设备
+  const handleChange = async (kind: DEVICE_KIND, e: string, option?: any) => {
+    const device: IDeviceInfo = option.data;
+    console.log('switch device: ', kind, device);
 
-    return num;
-  };
-
-  // 启动stream成功，打开界面显示
-  const hideCheckingPage = () => {
-    const randomTimer = getRangeRandom();
-
-    setTimeout(() => {
-      setIauth('granted');
-    }, randomTimer);
-  };
-
-  // 获取流并更新到video组件显示
-  const getStream = async () => {
-    if (!stream.current) {
-      stream.current = xyRTC.createStream();
+    if (kind === AUDIOINPUT) {
+      await switchAudioInputDevice(device);
     }
 
-    try {
-      let params: IMediaSupportedConstraints = {};
-      let isVideo = true;
-      let isAudio = true;
+    if (kind === AUDIOOUTPUT) {
+      await switchAudioOutputDevice(device);
+    }
 
-      previewStream.current?.getTracks().forEach((track: any) => {
-        track.stop();
-      });
-
-      const { FAILED, GRANTED, DENIED} = PermissionType;
-
-      if (isVideo) {
-        let cameraPermission: PermissionType = FAILED;
-
-        if (selectedDevice?.videoInput?.deviceId) {
-          params['video'] = {
-            deviceId: { exact: selectedDevice.videoInput.deviceId },
-          };
-        }
-
-        try {
-          previewStream.current = await stream.current.getPreviewStream(isVideo, false, {
-            video: params['video'],
-          });
-
-          cameraPermission = GRANTED;
-        } catch (err: any) {
-          console.log('video err:', err);
-
-          if (err?.code === 'XYSDK:950404') {
-            cameraPermission = DENIED;
-          }
-
-          isVideo = false;
-        }
-
-        setPermission((permission) => ({
-          ...permission,
-          camera: cameraPermission,
-        }));
-      }
-
-      if (isAudio) {
-        let microphonePermission = FAILED;
-
-        if (selectedDevice?.audioInput?.deviceId) {
-          params['audio'] = {
-            deviceId: { exact: selectedDevice.audioInput.deviceId },
-          };
-        }
-
-        try {
-          const audioTempStream = await stream.current.getPreviewStream(false, isAudio, {
-            audio: params['audio'],
-          });
-          if (isVideo) {
-            const audioTrack = audioTempStream.getAudioTracks()[0];
-            previewStream.current?.addTrack(audioTrack);
-          } else {
-            previewStream.current = audioTempStream;
-          }
-
-          microphonePermission = GRANTED
-        } catch (err: any) {
-          console.log('audio err:', err);
-
-          if (err?.code === 'XYSDK:950404') {
-            microphonePermission = DENIED
-          }
-
-          isAudio = false;
-        }
-
-        setPermission((permission) => ({
-          ...permission,
-          microphone: microphonePermission,
-        }));
-      }
-
-      setVideoStatusVisible(!isVideo);
-
-      if (previewStream.current) {
-        const videoTrack = previewStream.current.getVideoTracks()[0];
-        const audioTrack = previewStream.current.getAudioTracks()[0];
-
-        const audioInput = audioTrack?.getSettings()['deviceId'] || 'default';
-        const videoInput = videoTrack?.getSettings()['deviceId'] || '';
-
-        setSelect((select) => {
-          return {
-            ...select,
-            videoInValue: videoInput,
-            audioInputValue: audioInput,
-          };
-        });
-
-        if (videoRef.current && videoTrack) {
-          videoRef.current.srcObject = previewStream.current;
-        }
-
-        hideCheckingPage();
-
-        clearAudioLevelTimmer();
-
-        if (audioTrack) {
-          stream.current.clearAudioLevel();
-
-          await stream.current.getAudioLevel(previewStream.current);
-          // 实时获取音量大小
-          audioLevelTimmer.current = setInterval(async () => {
-            try {
-              const level = await stream.current.getAudioLevel();
-
-              // 更新Audio的实时音量显示
-              setAudioLevel(level);
-            } catch (err) {
-              clearAudioLevelTimmer();
-            }
-          }, 100);
-        }
-      }
-    } catch (err) {}
-
-    setIauth('granted');
+    if (kind === VIDEOINPUT) {
+      await switchVideoInputDevice(device);
+    }
   };
 
   /**
-   * device change
-   * @param e    deviceId
-   * @param key
+   * 切换麦克风
    */
-  const handleChange = async (key: IDeviceType, e: string) => {
-    if (!e) {
-      return;
-    }
+  const switchAudioInputDevice = async (device: IDeviceInfo) => {
+    const { deviceId, isDefault } = device;
+    const { SETTING } = ChangeEntry;
 
-    if (key === 'audioOutputValue' && audioRef.current) {
-      xyRTC.setOutputAudioDevice(audioRef.current, e);
-    }
+    setSpecifiedDevice({ audioInput: device }, SETTING);
+    try {
+      await videoAudioTrack.current?.switchDevice(DEVICE_KIND.AUDIOINPUT, deviceId, { isDefault });
+    } catch (err) {
+      console.error('switch audio input error: ', err);
 
-    if (key === 'audioInputValue' || key === 'videoInValue') {
-      replaceTrack(key, e);
+      // message.error(err?.msg || '切换麦克风设备失败');
     }
-
-    setSelect((select) => {
-      return {
-        ...select,
-        [key]: e,
-      };
-    });
   };
 
-  const play = async () => {
-    if (audioRef.current) {
-      if (audioRef.current.paused && !testAudioStatus) {
-        await audioRef.current.play();
-        setTestAudioStatus(true);
-      } else {
-        await audioRef.current.pause();
-        setTestAudioStatus(false);
-      }
+  /**
+   * 切换摄像头
+   */
+  const switchVideoInputDevice = async (device: IDeviceInfo) => {
+    const { deviceId, isDefault } = device;
+    const { SETTING } = ChangeEntry;
+
+    try {
+      await videoAudioTrack.current?.switchDevice(DEVICE_KIND.VIDEOINPUT, deviceId, { isDefault });
+
+      setVideoRender();
+
+      setSpecifiedDevice({ videoInput: device }, SETTING);
+    } catch (err) {
+      console.warn('switch video input error: ', err);
+
+      // message.error(err?.msg || '切换摄像头设备失败');
     }
+  };
+
+  /**
+   * 切换扬声器
+   */
+  const switchAudioOutputDevice = async (device: IDeviceInfo) => {
+    const { deviceId, isDefault } = device;
+    const nextDevice = { audioOutput: device };
+    const { SETTING } = ChangeEntry;
+
+    await switchLocalAudioOutput(deviceId);
+
+    setSpecifiedDevice(nextDevice, SETTING);
+    // 调用SDK切换设备方法，通知设备切换行为
+    await videoAudioTrack.current?.switchDevice(DEVICE_KIND.AUDIOOUTPUT, deviceId, { isDefault });
+  };
+
+  /**
+   * 切换本地扬声器
+   * @param { string } deviceId - 设备ID
+   */
+  const switchLocalAudioOutput = async (deviceId: string) => {
+    // 更新设置组件的audio播放器对应的输出设备
+    try {
+      await setOutputAudioDevice(audioRef.current!, deviceId);
+    } catch (err) {
+      console.log('setOutputAudioDevice error: ', err);
+    }
+  };
+
+  useEffect(() => {
+    (async () => {
+      if (audioRef.current && testAudioStatus) {
+        const selectDevice = audioOutput.find((device) => device.isSelected);
+        console.log('play audio use selected device: ', selectDevice);
+
+        if (selectDevice) {
+          try {
+            await audioRef.current.play();
+            await switchLocalAudioOutput(selectDevice?.deviceId || '');
+          } catch (err) {
+            console.log('test audio error: ', err);
+          }
+        }
+      }
+    })();
+  }, [audioOutput, testAudioStatus]);
+
+  // 扬声器测试
+  const playAudioTest = () => {
+    setTestAudioStatus((state) => !state);
   };
 
   const renderDeviceSettingLoading = () => {
-    // 'granted' | 'denied' | 'prompt' | 'pending'
-
-    if (iauth === 'prompt') {
+    if (loading) {
       return (
         <div className="fixed">
           <div className="request__loading">
             <LoadingOutlined spin={true} className="roll" />
-            <div className="init">请求获取摄像头&麦克风权限，请点击【允许】按钮进行授权操作</div>
-          </div>
-        </div>
-      );
-    }
-
-    if (iauth === 'pending') {
-      return (
-        <div className="fixed">
-          <div className="request__loading">
-            <LoadingOutlined spin={true} className="roll" />
-            <div className="init">设备检测中...</div>
-          </div>
-        </div>
-      );
-    }
-
-    if (iauth === 'error') {
-      return (
-        <div className="fixed">
-          <div className="request__loading">
-            <div className="init">浏览器版本太低，请升级最新的Chrome浏览器访问</div>
+            <div className="init">设备检测...</div>
           </div>
         </div>
       );
@@ -505,10 +354,24 @@ const Device = (props: IProps) => {
     return null;
   };
 
+  // 提示设备异常信息
   const renderFailTips = () => {
     const { camera, microphone } = permission;
     const isShowStreamFailTips =
       camera === 'denied' || camera === 'failed' || microphone === 'denied' || microphone === 'failed';
+
+    const isCameraDeniedPermission = camera === 'denied';
+    const isMicrophoneDeniedPermission = microphone === 'denied';
+
+    let tips = '设备启用失败，请检查授权状态或设备可用性';
+
+    if (isCameraDeniedPermission && isMicrophoneDeniedPermission) {
+      tips = '摄像头和麦克风授权失败，请重新授权';
+    } else if (isCameraDeniedPermission) {
+      tips = '摄像头授权失败，请重新授权';
+    } else if (isMicrophoneDeniedPermission) {
+      tips = '麦克风授权失败，请重新授权';
+    }
 
     if (isShowStreamFailTips) {
       return (
@@ -516,15 +379,7 @@ const Device = (props: IProps) => {
           message={
             <div className="stream-fail">
               <ExclamationCircleOutlined className="stream-fail-icon" />
-              <span className="stream-fail-tip">摄像头或麦克风打开失败</span>
-              <span
-                className="click-me"
-                onClick={() => {
-                  setGuideVisible(true);
-                }}
-              >
-                点我
-              </span>
+              <span className="stream-fail-tip">{tips}</span>
             </div>
           }
           type="info"
@@ -536,158 +391,136 @@ const Device = (props: IProps) => {
     return null;
   };
 
-  if (current !== 'device') {
-    return null;
-  }
-
   return (
-    <div className="setting__content-device">
+    <div
+      className={`setting__content-device ${
+        permission.microphone !== 'granted' || permission.camera !== 'granted' ? 'tip' : ''
+      }`}
+    >
       {renderFailTips()}
-
       {renderDeviceSettingLoading()}
 
-      <div className={`setting__content-device-main ${iauth === 'granted' ? 'visible' : 'hidden'}`}>
-        <div>
-          <div className="item">
-            <div className="key">
-              <Tooltip
-                title="进行设备检测及音视频设备设置，此设置仅对当前会议有效"
-                placement="rightBottom"
-                overlayStyle={{ fontSize: '12px' }}
-              >
-                摄像头
-                <ExclamationCircleOutlined className={'setting-tips'} />
-              </Tooltip>
-            </div>
-            <div className="value">
-              {permission.camera === 'denied' ? (
-                <div className="setting__select-disabled">{DEVICE_ABNORMAL_MAP.DENIED}</div>
-              ) : (
-                <Select
-                  value={select.videoInValue || DEFAULT_DEVICE_LABEL}
-                  onChange={(e) => handleChange('videoInValue', e)}
-                >
-                  {videoInList.map(({ deviceId, label }) => (
-                    <Option key={deviceId} value={deviceId}>
-                      {label}
-                    </Option>
-                  ))}
-                </Select>
-              )}
-            </div>
+      <div className={`setting__content-device-main ${!loading ? 'visible' : 'hidden'}`}>
+        {/* 摄像头 */}
+        <div className="item">
+          <div className="key">
+            <Tooltip title={'进行设备检测及音视频设备设置'} placement="rightBottom" overlayStyle={{ fontSize: '12px' }}>
+              <div className="camera">
+                <span>摄像头</span>
+                <SVG icon="message" className="setting-tips" />
+              </div>
+            </Tooltip>
           </div>
 
-          <div className="item">
-            <div className="key"></div>
-            <div className="value video-value">
-              <div className={`preview-video-bg ${videoStatusVisible ? 'visible' : 'hidden'}`}>预览不可用</div>
-              <div className="preview-video-box">
-                <video
-                  className="preview-video"
-                  autoPlay
-                  muted={true}
-                  ref={videoRef}
-                  controls={false}
-                  playsInline
-                ></video>
-              </div>
-            </div>
+          <div className="value">
+            <Select
+              notFoundContent="暂无设备可选"
+              onChange={(e: any, option: any) => handleChange(VIDEOINPUT, e, option)}
+            >
+              {videoInput.map((device) => {
+                const { label, isDefault, isSelected, key = '' } = device;
+
+                return (
+                  <Option key={key} isSelected={isSelected} value={key} data={device}>
+                    {isDefault ? `系统默认-${label}` : label}
+                  </Option>
+                );
+              })}
+            </Select>
           </div>
-
-          <div className="item">
-            <div className="key">麦克风</div>
-            <div className="value">
-              {permission.microphone !== 'granted' || audioInputList.length === 0 ? (
-                <div className="setting__select-disabled">
-                  {permission.microphone !== 'granted' ? DEVICE_ABNORMAL_MAP.DENIED : DEVICE_ABNORMAL_MAP.NONE}
-                </div>
-              ) : (
-                <Select
-                  value={
-                    audioInputList.length === 1 && !audioInputList[0].deviceId
-                      ? DEFAULT_DEVICE_LABEL
-                      : select.audioInputValue
-                  }
-                  onChange={(e) => handleChange('audioInputValue', e)}
-                >
-                  {audioInputList.map(({ deviceId, label }) => (
-                    <Option key={deviceId} value={deviceId}>
-                      {label}
-                    </Option>
-                  ))}
-                </Select>
-              )}
-            </div>
-          </div>
-
-          <div className="item">
-            <div className="key"></div>
-            <div className="value">
-              <AudioOutlined style={{ marginRight: '5px' }} />
-              <div className="level-process">
-                <div className="level-value" style={{ transform: `translateX(${audioLevel}%)` }}></div>
-              </div>
-            </div>
-          </div>
-
-          {audioOutputList.length > 0 && (
-            <>
-              <div className="item">
-                <div className="key">扬声器</div>
-                <div className="value">
-                  <Select
-                    value={
-                      audioOutputList.length === 1 && !audioOutputList[0].deviceId
-                        ? DEFAULT_DEVICE_LABEL
-                        : select.audioOutputValue
-                    }
-                    onChange={(e) => handleChange('audioOutputValue', e)}
-                  >
-                    {audioOutputList.map(({ deviceId, label }) => (
-                      <Option key={deviceId} value={deviceId}>
-                        {label}
-                      </Option>
-                    ))}
-                  </Select>
-                </div>
-              </div>
-
-              <div className="item">
-                <div className="key"></div>
-                <div className="value">
-                  <SoundOutlined style={{ marginRight: '5px' }} />
-                  <span className="play-audio" onClick={play}>
-                    {testAudioStatus ? '停止扬声器' : '测试扬声器'}
-                  </span>
-                  {testAudioStatus && <span className="play-audio-status">正在播放...</span>}
-                  <audio className="preview-audio" ref={audioRef} loop={true} src={ring}></audio>
-                </div>
-              </div>
-            </>
-          )}
-
-          <div className="item">
-            <div className="key">详细检测</div>
-            <div className="value">
-              <a href="https://cdn.xylink.com/webrtc/web/index.html#/detect" rel="noopener noreferrer" target="_blank">
-                开始检测
-              </a>
+        </div>
+        <div className="item">
+          <div className="key"></div>
+          <div className="value video-value">
+            <div className="preview-video-box">
+              <div className={`preview-video-bg ${isPreviewUnavailable ? 'visible' : 'hidden'}`}>预览不可用</div>
+              <video
+                className="preview-video"
+                autoPlay
+                muted={true}
+                ref={videoRef}
+                controls={false}
+                playsInline
+              ></video>
+              <video autoPlay muted={true} controls={false} playsInline></video>
             </div>
           </div>
         </div>
 
-        <div className="setting__content-device-footer">
-          <Row justify="end" style={{ paddingTop: '15px' }}>
-            <Button type="primary" onClick={handleOk}>
-              保存
-            </Button>
-          </Row>
+        {/* 麦克风 */}
+        <div className="item">
+          <div className="key">麦克风</div>
+          <div className="value">
+            <Select
+              notFoundContent="暂无设备可选"
+              onChange={(e: any, option: any) => handleChange(AUDIOINPUT, e, option)}
+            >
+              {audioInput.map((device) => {
+                const { label, isDefault, isSelected, key = '' } = device;
+
+                return (
+                  <Option key={key} isSelected={isSelected} value={key} data={device}>
+                    {isDefault ? `系统默认-${label}` : label}
+                  </Option>
+                );
+              })}
+            </Select>
+          </div>
+        </div>
+        <div className="item audioLevel">
+          <div className="key">音量</div>
+          <div className="value">
+            <SVG icon="volume" className="volume" />
+            <AudioLevel track={videoAudioTrack.current} permission={permission.microphone} />
+          </div>
+        </div>
+
+        {/* 扬声器 */}
+        {audioOutput.length > 0 && (
+          <>
+            <div className="item loudspeaker">
+              <div className="key">扬声器</div>
+              <div className="value">
+                <Select
+                  notFoundContent="暂无设备可选"
+                  onChange={(e: any, option: any) => handleChange(AUDIOOUTPUT, e, option)}
+                >
+                  {audioOutput.map((device) => {
+                    const { label, isDefault, isSelected, key = '' } = device;
+
+                    return (
+                      <Option key={key} isSelected={isSelected} value={key} data={device}>
+                        {isDefault ? `系统默认-${label}` : label}
+                      </Option>
+                    );
+                  })}
+                </Select>
+              </div>
+            </div>
+
+            <div className="item speaker">
+              <div className="key"></div>
+              <div className="value">
+                <span className="play-audio" onClick={playAudioTest}>
+                  {testAudioStatus ? '停止扬声器' : '测试扬声器'}
+                </span>
+                {testAudioStatus && <span className="play-audio-status">正在播放声音...</span>}
+                {testAudioStatus && <audio className="preview-audio" ref={audioRef} loop={true} src={ring}></audio>}
+              </div>
+            </div>
+          </>
+        )}
+        <div className="item">
+          <div className="key">详细检测</div>
+          <div className="value">
+            <a href="https://cdn.xylink.com/webrtc/web/index.html#/detect" rel="noopener noreferrer" target="_blank">
+              开始检测
+            </a>
+          </div>
         </div>
       </div>
-
-      <Guide visible={guideVisible} onClose={setGuideVisible} />
     </div>
   );
-};
+});
 
 export default Device;

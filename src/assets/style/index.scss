@@ -13,6 +13,7 @@
   align-items: center;
   justify-content: center;
   transition: width ease 0.2s;
+
   &-mini {
     width: calc(100% - 300px);
   }
@@ -40,6 +41,69 @@
     padding: 0 24px;
   }
 
+
+  .button-box {
+    height: 100%;
+    margin: 0 6px 0 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    cursor: pointer;
+
+    .button {
+      margin-right: 0px;
+      margin-left: 0;
+    }
+
+    .arrow {
+      width: 12px;
+      height: 42px;
+      margin: 9px 0 9px 4px;
+      transition: transform ease 0.3s;
+      display: flex;
+      align-items: center;
+
+      .svg-icon {
+        width: 12px;
+        height: 12px;
+      }
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+      }
+
+      &.ant-popover-open {
+        .svg-icon {
+          transform: rotateZ(180deg);
+          fill: #44b5ff;
+        }
+      }
+    }
+  }
+
+  .disabled-button-box {
+    .button {
+      cursor: default;
+      opacity: 0.6;
+
+      &:hover {
+        .svg-icon {
+          fill: #fff;
+          fill-opacity: 0.8;
+        }
+
+        .title {
+          color: #e7e7e7;
+        }
+      }
+    }
+
+    .arrow {
+      display: none;
+    }
+  }
+
   .disabled-button {
     cursor: not-allowed;
     pointer-events: none;
@@ -59,11 +123,13 @@
     display: flex;
     align-items: center;
     white-space: nowrap;
+
     span {
       display: inline-block;
       margin-left: 8px;
       color: $primary-color;
     }
+
     .tip-close {
       display: inline-block;
       margin-left: 16px;
@@ -174,6 +240,7 @@
 
   .button.host {
     overflow: initial;
+
     .tag {
       overflow: hidden;
     }
@@ -199,6 +266,7 @@
       justify-content: center;
       position: relative;
     }
+
     svg {
       width: 36px;
       height: 26px;
@@ -246,6 +314,7 @@
 .xy-btn-box {
   .xy-btn {
     margin-bottom: 8px;
+
     &:last-child {
       margin-bottom: 0;
     }
@@ -283,15 +352,18 @@
   align-items: center;
   flex-direction: column;
   color: #fff;
+
   &:hover {
     background: rgba(56, 118, 255, 0.8);
   }
+
   .svg-icon {
     width: 24px;
     height: 24px;
     margin-top: 12px;
     margin-bottom: 12px;
   }
+
   .page-number {
     font-size: 12px;
     font-weight: 400;
@@ -300,6 +372,7 @@
     margin-bottom: 2px;
   }
 }
+
 .home-button {
   margin-top: 2px;
   font-size: 12px;

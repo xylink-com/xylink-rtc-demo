@@ -85,7 +85,13 @@ const Common = ({ layoutMode, isThird, localHide, isInMeeting, speakerName, isLo
         title="显示正在讲话者名称"
       />
       {/*是否开启低性能模式 */}
-      <Operate type="isLowResolution" defaultValue={isLowResolution} onChangeEvent={onChangeOperate} title="流畅模式" />
+      <Operate
+        type="isLowResolution"
+        defaultValue={isLowResolution}
+        disabled={isInMeeting}
+        onChangeEvent={onChangeOperate}
+        title="流畅模式"
+      />
     </div>
   );
 };

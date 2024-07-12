@@ -1,4 +1,6 @@
+import { ILayoutMode } from '@/type';
 import { THIRD } from '@/utils/config';
+import { DEVICE_KIND } from '@xylink/xy-rtc-sdk';
 
 // 会议container ID
 export const ELEMENT_ID = 'meeting';
@@ -9,8 +11,6 @@ export const LAYOUT_MODE_MAP = {
 };
 
 export const LAYOUT_MODE_LIST = ['AUTO', 'CUSTOM'] as const;
-
-export const SETTING_KEYS = ['selectedDevice', 'localHide'] as const;
 
 export const DEFAULT_LOCAL_USER = {
   phone: '',
@@ -24,7 +24,7 @@ export const DEFAULT_LOCAL_USER = {
 };
 
 export const DEFAULT_SETTING = {
-  layoutMode: 'AUTO', // 默认自动布局
+  layoutMode: 'AUTO' as ILayoutMode, // 默认自动布局
   isThird: THIRD, // 默认三方账号登录
   localHide: false, // 默认不隐藏本地画面
   speakerName: true, //默认显示正在讲话人
@@ -56,7 +56,10 @@ export const DEFAULT_CALL_INFO = {
 const NEXT_DEVICE = {
   deviceId: '',
   label: '',
+  kind: DEVICE_KIND.AUDIOINPUT,
+  groupId: '',
 };
+
 export const DEFAULT_DEVICE = {
   detail: {
     audioInputList: [],
@@ -64,8 +67,20 @@ export const DEFAULT_DEVICE = {
     videoInList: [],
   },
   nextDevice: {
-    audioInput: NEXT_DEVICE,
-    videoInput: NEXT_DEVICE,
-    audioOutput: NEXT_DEVICE,
+    audioInput: { ...NEXT_DEVICE, kind: DEVICE_KIND.AUDIOINPUT },
+    videoInput: { ...NEXT_DEVICE, kind: DEVICE_KIND.VIDEOINPUT },
+    audioOutput: { ...NEXT_DEVICE, kind: DEVICE_KIND.AUDIOOUTPUT },
   },
+};
+
+export const STORAGE_KEY = {
+  audioInput: 'XY-SETTING-AUDIO-INPUT-DEVICE-LIST',
+  audioOutput: 'XY-SETTING-AUDIO-OUTPUT-DEVICE-LIST',
+  videoInput: 'XY-SETTING-VIDEO-INPUT-DEVICE-LIST',
+  specifiedDeviceV1: 'XY-SETTING-SPECIFIED-DEVICE',
+  specifiedDeviceV2: 'XY-SETTING-SPECIFIED-DEVICE-V2',
+  virtualBgOption: 'XY-SETTING-VIRTUAL-BG-OPTION',
+  virtualHeadOption: 'XY-SETTING-VIRTUAL-HEAD-OPTION',
+  virtualStickyOption: 'XY-SETTING-VIRTUAL-STICKY-OPTION',
+  xySetting: 'xy-setting'
 };

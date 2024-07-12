@@ -3,7 +3,7 @@
  */
 import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { useDrag } from '@use-gesture/react';
-import { ICurrentPermission, IVideoAudioType, SpeakersInfoObj, Stream } from '@xylink/xy-rtc-sdk';
+import { ICurrentPermission, IVideoAudioType, SpeakersInfoItem, VideoAudioTrack } from '@xylink/xy-rtc-sdk';
 import SVG from '@/component/Svg';
 import DebounceButton from '@/component/DebounceButton';
 import { PARTICIPANT_WIDTH_PC } from '@/enum/participant';
@@ -11,12 +11,12 @@ import MicLevel from '../MicLevel';
 import './index.scss';
 
 interface IProps {
-  stream: Stream;
+  videoAudioTrack: VideoAudioTrack;
   audio: IVideoAudioType;
   video: IVideoAudioType;
   permission: ICurrentPermission;
   disableAudio: boolean;
-  speakersInfo: SpeakersInfoObj[];
+  speakersInfo: SpeakersInfoItem[];
   participantVisible: boolean;
   videoOperate: () => void;
   audioOperate: () => void;
@@ -24,7 +24,7 @@ interface IProps {
 const INITIAL_POSITION = { x: -20, y: 44 };
 
 const Speaker = memo((props: IProps) => {
-  const { stream, speakersInfo, participantVisible, audio, video, permission, disableAudio } = props;
+  const { videoAudioTrack, speakersInfo, participantVisible, audio, video, permission, disableAudio } = props;
 
   const speakerOuterRef = useRef(null);
   const speakerRef = useRef(null);
@@ -56,7 +56,7 @@ const Speaker = memo((props: IProps) => {
         >
           <div className="media-icon">
             {permission.microphone !== 'denied' && !disableAudio && (
-              <MicLevel audio={audio} stream={stream} className="micLevel" />
+              <MicLevel audio={audio} videoAudioTrack={videoAudioTrack} className="micLevel" />
             )}
             <SVG icon={svgIcon} />
 

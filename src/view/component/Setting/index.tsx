@@ -7,9 +7,7 @@ import Feedback from './Feedback';
 import Version from './Version';
 import Common from './Common';
 import { ISetting, TSettingType } from '@/type/index';
-import store from '@/utils/store';
 import SVG from '@/component/Svg';
-import { SETTING_KEYS } from '@/enum';
 
 import './style/index.scss';
 
@@ -33,20 +31,6 @@ const Setting = (props: IProps) => {
   const [current, setCurrent] = useState<TSettingType>('common');
 
   const onHandleSetting = (data: ISetting) => {
-    const values: Record<string, any> = {};
-
-    SETTING_KEYS.forEach((key) => {
-      if (data.hasOwnProperty(key)) {
-        if (key === 'selectedDevice') {
-          store.set('selectedDevice', data.selectedDevice);
-
-          onCancel();
-        } else {
-          values[key] = data[key];
-        }
-      }
-    });
-
     onSetting && onSetting(data);
   };
 
@@ -113,7 +97,7 @@ const Setting = (props: IProps) => {
             />
           )}
 
-          {current === 'device' && <Device setting={setting} onSetting={onHandleSetting} current={current} />}
+          {current === 'device' && <Device />}
 
           {current === 'feedback' && <Feedback />}
           {current === 'about' && <Version />}

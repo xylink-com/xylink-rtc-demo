@@ -1,18 +1,18 @@
 /**
  * 声量组件
  */
-import { IVideoAudioType, Stream } from '@xylink/xy-rtc-sdk';
+import { IVideoAudioType, VideoAudioTrack } from '@xylink/xy-rtc-sdk';
 import React, { memo, useEffect, useState, useRef, useCallback } from 'react';
 import './index.scss';
 
 interface IProps {
   audio: IVideoAudioType;
-  stream: Stream;
+  videoAudioTrack: VideoAudioTrack | null;
   className?: string;
 }
 
 const MicLevel = memo((props: IProps) => {
-  const { audio, stream, className } = props;
+  const { audio, videoAudioTrack, className } = props;
   const [micLevel, setMicLevel] = useState(0); // 音量等级
   const audioLevelTimmer = useRef<any>(null);
 
@@ -26,9 +26,9 @@ const MicLevel = memo((props: IProps) => {
     if (audio === 'unmuteAudio') {
       if (!audioLevelTimmer.current) {
         audioLevelTimmer.current = setInterval(async () => {
-          if (stream) {
+          if (videoAudioTrack) {
             try {
-              const level = await stream.getAudioLevel();
+              const level = await videoAudioTrack.getAudioLevel();
               // 更新Audio的实时音量显示
               setMicLevel(level);
             } catch (err) {
@@ -46,7 +46,7 @@ const MicLevel = memo((props: IProps) => {
       // 组件卸载时，清理定时器
       clearTimmer();
     };
-  }, [audio, clearTimmer, stream]);
+  }, [audio, clearTimmer, videoAudioTrack]);
 
   return (
     <>

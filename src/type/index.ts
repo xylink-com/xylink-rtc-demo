@@ -4,7 +4,7 @@
  * @date  2020-04-01 17:46:13
  */
 
-import { DEFAULT_LOCAL_USER, LAYOUT_MODE_LIST, SETTING_KEYS } from '@/enum';
+import { DEFAULT_LOCAL_USER, LAYOUT_MODE_LIST } from '@/enum';
 import { IDeviceList, ISelectedDevice, IMode } from '@xylink/xy-rtc-sdk';
 
 export type TSettingType = 'device' | 'common' | 'feedback' | 'about';
@@ -18,8 +18,6 @@ export type TMeetingVideoStatus = {
 export type TMeetingAudioStatus = {
   status: 'muteAudio' | 'unmuteAudio';
 };
-
-export type ISettingKey = typeof SETTING_KEYS[number];
 
 export type ILayoutMode = typeof LAYOUT_MODE_LIST[number];
 

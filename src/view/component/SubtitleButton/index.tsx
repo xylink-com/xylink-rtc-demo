@@ -2,7 +2,7 @@
  * 同传字幕按钮
  */
 import React, { useEffect, useMemo, useState } from 'react';
-import { Client, TLocalLanguage } from '@xylink/xy-rtc-sdk';
+import { XYRTCClient, TLocalLanguage } from '@xylink/xy-rtc-sdk';
 import { ISubtitle, TShowLanguage } from '@/type';
 import { Popover } from 'antd';
 import DebounceButton from '@/component/DebounceButton';
@@ -12,7 +12,7 @@ import { subtitleLanguage } from '@/enum/subtitle';
 import './index.scss';
 
 interface IProps {
-  client: Client;
+  client: XYRTCClient;
   subtitle: ISubtitle;
   setSubtitleState: (state: any) => void;
 }

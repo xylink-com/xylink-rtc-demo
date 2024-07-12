@@ -6,7 +6,7 @@
  */
 
 import React, { useRef, useEffect, useState, useMemo } from 'react';
-import { AutoState, Client, ILayout, NetworkQualityLevel } from '@xylink/xy-rtc-sdk';
+import { AutoState, XYRTCClient, ILayout, NetworkQualityLevel } from '@xylink/xy-rtc-sdk';
 import { Tooltip } from 'antd';
 import SVG from '@/component/Svg';
 import './index.scss';
@@ -19,7 +19,7 @@ interface IProps {
   model: string;
   // pid: endpointed + mediagroupId
   id: string;
-  client: Client;
+  client: XYRTCClient;
   forceLayoutId: string;
   networkLevel?: number;
 }
@@ -136,7 +136,7 @@ const Video: React.FC<IProps> = (props) => {
                 </div>
               </div>
 
-              <div className={`video-bg ${state === 'MUTE' || state === 'INVALID' ? 'video-show' : 'video-hidden'}`}>
+              <div className={`video-bg ${state === 'MUTE' ? 'video-show' : 'video-hidden'}`}>
                 <div className="center">
                   {isFullScreen && <div className="displayname">{displayName || ''}</div>}
 
@@ -155,7 +155,7 @@ const Video: React.FC<IProps> = (props) => {
             </div>
           </div>
 
-          <video style={item.rotate}></video>
+          <video style={item.rotate || {}}></video>
         </div>
       </div>
     );

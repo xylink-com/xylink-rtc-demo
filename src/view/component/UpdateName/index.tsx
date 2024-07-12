@@ -4,10 +4,10 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import PromptModel from '../PromptModel';
 import { Input, message } from 'antd';
-import { Client } from '@xylink/xy-rtc-sdk';
+import { XYRTCClient } from '@xylink/xy-rtc-sdk';
 
 interface IProps {
-  client: Client | null;
+  client: XYRTCClient | null;
   visible: boolean;
   setVisible: (visible: boolean) => void;
 }
@@ -44,7 +44,7 @@ const UpdateName = (props: IProps) => {
       await props.client?.rename(newName!);
 
       setVisible(false);
-    } catch (err:any) {
+    } catch (err: any) {
       let { code, msg } = err;
 
       if (code !== 'XYSDK:950120') {

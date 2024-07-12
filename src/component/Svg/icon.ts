@@ -42,6 +42,8 @@ import { ReactComponent as signal_2 } from '@/assets/img/signal/signal_2.svg';
 import { ReactComponent as signal_1 } from '@/assets/img/signal/signal_1.svg';
 import { ReactComponent as focus } from '@/assets/img/svg/focus.svg';
 
+import { ReactComponent as volume } from '@/assets/img/setting/icon_device_volume.svg';
+
 const IconMap: { [key: string]: any } = {
   signal: Signal,
   meeting_host: MeetingHost,
@@ -85,7 +87,8 @@ const IconMap: { [key: string]: any } = {
   signal_3,
   signal_2,
   signal_1,
-  focus
+  focus,
+  volume
 };
 
 export { IconMap };

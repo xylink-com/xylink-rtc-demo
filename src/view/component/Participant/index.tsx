@@ -4,7 +4,7 @@
  */
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Drawer, Pagination } from 'antd';
-import { IRoster, Client } from '@xylink/xy-rtc-sdk';
+import { IRoster, XYRTCClient } from '@xylink/xy-rtc-sdk';
 import { MAX_PARTICIPANT_COUNT, PARTICIPANT_PAGE_SIZE } from '@/enum/participant';
 import { isPc } from '@/utils/browser';
 import './index.scss';
@@ -26,7 +26,7 @@ interface IProps {
   contentUri: string;
   rosters: IRoster[];
   count: number;
-  client: Client;
+  client: XYRTCClient;
   isOwner: boolean;
   enableRename?: boolean;
   setShowDrawer: (visible: boolean) => void;
@@ -234,7 +234,7 @@ const Participant = memo((props: IProps) => {
   );
 });
 
-const ParticipantItem = ({ client, item, enableRename }: { client: Client; item: IRoster; enableRename: boolean }) => {
+const ParticipantItem = ({ client, item, enableRename }: { client: XYRTCClient; item: IRoster; enableRename: boolean }) => {
   const {
     participantId,
     mediagroupid,
