@@ -1,4 +1,4 @@
-# XYLINK WEBRTC SDK
+# XYLink WebRTC SDK
 
 小鱼易连 WebRTC SDK demo 项目。
 
@@ -11,6 +11,7 @@
 - clientId
 - clientSecret
 - extId
+- SERVER
 
 ## 运行
 

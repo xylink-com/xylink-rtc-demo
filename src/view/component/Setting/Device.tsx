@@ -67,15 +67,10 @@ const Device = memo(() => {
       setSpecifiedDevice: state.setSpecifiedDevice,
     };
   });
-
-  const virtualProcessor = useRef<any>(null);
-
   const stop = async () => {
     setTestAudioStatus(false);
 
     await client.current?.destroy();
-
-    virtualProcessor.current?.removeOptions();
 
     client.current = null;
     logger.current = null;
@@ -97,6 +92,8 @@ const Device = memo(() => {
       },
       logger.current
     );
+
+    client.current.setFeatureConfig({ enableV2States: false });
 
     const { audioInput, audioOutput, videoInput } = specifiedDevice;
 
@@ -197,8 +194,6 @@ const Device = memo(() => {
 
   // 监听SDK上报的device消息，更新最新的设备列表数据，包含isDefault和isSelected状态
   const handleDevice = (e: IDeviceManagerChangeValue) => {
-    console.log('demo get device change : ', e);
-
     // 获取最新的设备列表，直接更新
     const { audioInputList, audioOutputList, videoInputList } = e.detail;
 
@@ -208,26 +203,19 @@ const Device = memo(() => {
 
     // 切换设备
     // 扬声器因为在外部，所以需要业务自行切换设备ID
-    const { audioOutput, audioInput } = e.nextDevice;
+    const { audioOutput } = e.nextDevice;
 
     if (audioOutput) {
       switchLocalAudioOutput(audioOutput.deviceId);
-    }
-
-    if (audioInput) {
-      console.log('audio input change');
     }
   };
 
   // 监听SDK上报的权限消息
   const handlePermission = (e: ICurrentPermission) => {
-    console.log('demo get permission: ', e);
-
     setPermission(e);
   };
 
   const handleError = (e: any) => {
-    console.log('demo get error event: ', e);
     const { msg = '' } = e;
 
     msg && message.info(msg);
@@ -236,7 +224,6 @@ const Device = memo(() => {
   // 切换设备
   const handleChange = async (kind: DEVICE_KIND, e: string, option?: any) => {
     const device: IDeviceInfo = option.data;
-    console.log('switch device: ', kind, device);
 
     if (kind === AUDIOINPUT) {
       await switchAudioInputDevice(device);
@@ -320,12 +307,11 @@ const Device = memo(() => {
     (async () => {
       if (audioRef.current && testAudioStatus) {
         const selectDevice = audioOutput.find((device) => device.isSelected);
-        console.log('play audio use selected device: ', selectDevice);
 
         if (selectDevice) {
           try {
             await audioRef.current.play();
-            await switchLocalAudioOutput(selectDevice?.deviceId || '');
+            await switchLocalAudioOutput(selectDevice.deviceId || '');
           } catch (err) {
             console.log('test audio error: ', err);
           }

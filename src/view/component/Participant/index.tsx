@@ -208,7 +208,7 @@ const Participant = memo((props: IProps) => {
                 isContent,
               };
 
-              return <ParticipantItem client={client} item={item} enableRename={enableRename} />;
+              return <ParticipantItem key={endpointId} client={client} item={item} enableRename={enableRename} />;
             })}
 
             {data.length === 0 && <div className="member__tips">未找到符合条件的结果</div>}

@@ -26,7 +26,7 @@ import XYRTC, {
   IRecordStatusNotification,
   RecordingState,
   IMCVideoEvent,
-  unMuteVideoQueryToastValue,
+  XYUnMuteVideoQueryToastValue,
   IExportUserInfo,
   XYSpeakersInfo,
   SpeakersInfoItem,
@@ -137,7 +137,7 @@ function Home() {
     chairmanUri: '', // 主会场是否入会
     hasChairman: false, // 是否有设置主会场(预设主会场)
   });
-  // current forceLayout roster id
+  // current forceLayout layout id
   const [forceLayoutId, setForceLayoutId] = useState('');
   // 桌面布局模式（语音激励模式/画廊模式）
   const [templateMode, setTemplateMode] = useState('speaker');
@@ -702,22 +702,6 @@ function Home() {
       }
     });
 
-    // 设备切换
-    client.on('device', async (e: IDeviceManagerChangeValue) => {
-      const { audioInput, videoInput, audioOutput } = e.nextDevice;
-
-      videoInput && message.info(`视频设备已自动切换至 ${videoInput.label}`);
-      audioInput && message.info(`音频输入设备已自动切换至 ${audioInput.label}`);
-      setTimeout(() => {
-        audioOutput && message.info(`音频输出设备已自动切换至 ${audioOutput.label}`);
-      }, 500);
-    });
-
-    // 设备权限
-    client.on('permission', async (e: ICurrentPermission) => {
-      setPermission(e);
-    });
-
     // 被移入等候室
     client.on('onhold', (e: boolean) => {
       onholdRef.current = e;
@@ -846,7 +830,7 @@ function Home() {
           setVideoModelVisible(true);
         }
       } else if (key === 'toast') {
-        const { message: msg } = value as unMuteVideoQueryToastValue;
+        const { message: msg } = value as XYUnMuteVideoQueryToastValue;
 
         if (msg) {
           message.info(msg);

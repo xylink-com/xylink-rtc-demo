@@ -79,8 +79,5 @@ export const STORAGE_KEY = {
   videoInput: 'XY-SETTING-VIDEO-INPUT-DEVICE-LIST',
   specifiedDeviceV1: 'XY-SETTING-SPECIFIED-DEVICE',
   specifiedDeviceV2: 'XY-SETTING-SPECIFIED-DEVICE-V2',
-  virtualBgOption: 'XY-SETTING-VIRTUAL-BG-OPTION',
-  virtualHeadOption: 'XY-SETTING-VIRTUAL-HEAD-OPTION',
-  virtualStickyOption: 'XY-SETTING-VIRTUAL-STICKY-OPTION',
   xySetting: 'xy-setting'
 };
