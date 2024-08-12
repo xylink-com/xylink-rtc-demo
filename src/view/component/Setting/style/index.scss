@@ -644,16 +644,14 @@
   }
 
   &__footer {
-    .item {
-      // align-items: baseline !important;
+    margin-top: 10px;
+    padding: 0 0 5px;
 
+    .item {
       .key {
         min-width: 58px;
       }
     }
-
-    margin-top: 10px;
-    padding: 0 0 5px;
 
     .download {
       color: $primary-color;
