@@ -8,6 +8,7 @@ import Version from './Version';
 import Common from './Common';
 import { ISetting, TSettingType } from '@/type/index';
 import SVG from '@/component/Svg';
+import { LayoutMode } from '@xylink/xy-rtc-sdk';
 
 import './style/index.scss';
 
@@ -23,7 +24,7 @@ const Setting = (props: IProps) => {
   const { isInMeeting = false, visible = false, setting, onCancel, onSetting } = props;
   const {
     localHide = false,
-    layoutMode = 'AUTO',
+    layoutMode = LayoutMode.AUTO,
     isThird = false,
     speakerName = true,
     isLowResolution = false,

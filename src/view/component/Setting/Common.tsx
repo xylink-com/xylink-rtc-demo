@@ -4,13 +4,14 @@
 import React from 'react';
 import { Select } from 'antd';
 import { CheckboxChangeEvent } from 'antd/lib/checkbox';
-import { ILayoutMode, ISetting } from '@/type';
+import {  ISetting } from '@/type';
 import { LAYOUT_MODE_LIST, LAYOUT_MODE_MAP } from '@/enum';
 import Operate from './components/operate';
+import { LayoutMode } from '@xylink/xy-rtc-sdk';
 
 interface IProp {
   isThird: boolean;
-  layoutMode: ILayoutMode;
+  layoutMode: LayoutMode;
   localHide: boolean;
   isInMeeting: boolean;
   speakerName: boolean;
@@ -36,7 +37,7 @@ const Common = ({ layoutMode, isThird, localHide, isInMeeting, speakerName, isLo
             <div className="value">
               <Select
                 defaultValue={layoutMode}
-                onChange={(value: ILayoutMode) => {
+                onChange={(value: LayoutMode) => {
                   onSetting({
                     layoutMode: value,
                   });

@@ -46,6 +46,7 @@ import XYRTC, {
   IRotateStyle,
   IDeviceList,
   DEVICE_KIND,
+  LayoutMode,
 } from '@xylink/xy-rtc-sdk';
 import {
   IRotationInfoTotalItem,
@@ -953,7 +954,7 @@ function Home() {
 
     try {
       const { meeting = '', meetingPassword, meetingName, muteAudio, muteVideo, extUserId = '' } = user;
-      const { layoutMode = 'AUTO', localHide = false, isThird = true } = setting;
+      const { layoutMode = LayoutMode.AUTO, localHide = false, isThird = true } = setting;
       const { clientId, clientSecret, extId } = ACCOUNT;
 
       setConferenceInfo((info) => ({
@@ -971,7 +972,7 @@ function Home() {
         // 使用哪一种布局方式：
         // AUTO：自动布局，第三方只需要监听layout回调消息即可渲染布局和视频画面
         // CUSTOM：自定义布局，灵活性更高，但是实现较为复杂，自定义控制参会成员的位置、大小和画面质量
-        layout: layoutMode || 'AUTO',
+        layout: layoutMode || LayoutMode.AUTO,
         container: {
           // AUTO布局时，自定义指定Layout显示容器
           // CUSTOM布局时，可以使用此元素自行计算显示容器的大小和每个参会成员的位置&大小信息
@@ -984,7 +985,7 @@ function Home() {
         clientId,
         // 网关密钥 (必填)
         clientSecret,
-        // 企业ID (必填)  
+        // 企业ID (必填)
         extId,
       });
 
@@ -1002,6 +1003,10 @@ function Home() {
         enableBandwidthSetting: true,
         // 隐藏 Local 画面配置项
         enableHideLocalView: localHide,
+      });
+
+      client.current.setLayoutConfig({
+        layoutGap: 1,
       });
 
       initEventListener(client.current);

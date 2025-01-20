@@ -5,7 +5,7 @@
  */
 
 import { DEFAULT_LOCAL_USER, LAYOUT_MODE_LIST } from '@/enum';
-import { IDeviceList, ISelectedDevice, IMode } from '@xylink/xy-rtc-sdk';
+import { IDeviceList, ISelectedDevice, IMode, LayoutMode } from '@xylink/xy-rtc-sdk';
 
 export type TSettingType = 'device' | 'common' | 'feedback' | 'about';
 
@@ -35,7 +35,7 @@ export interface IAudioTrack {
 export interface ISetting {
   selectedDevice?: ISelectedDevice;
   deviceList?: IDeviceList;
-  layoutMode?: ILayoutMode;
+  layoutMode?: LayoutMode;
   isThird?: boolean;
   localHide?: boolean; // 是否隐藏本地画面
   speakerName?: boolean; // 是否显示正在讲话人

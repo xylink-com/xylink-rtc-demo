@@ -1,6 +1,5 @@
-import { ILayoutMode } from '@/type';
 import { THIRD } from '@/utils/config';
-import { DEVICE_KIND } from '@xylink/xy-rtc-sdk';
+import { DEVICE_KIND, LayoutMode } from '@xylink/xy-rtc-sdk';
 
 // 会议container ID
 export const ELEMENT_ID = 'meeting';
@@ -24,7 +23,7 @@ export const DEFAULT_LOCAL_USER = {
 };
 
 export const DEFAULT_SETTING = {
-  layoutMode: 'AUTO' as ILayoutMode, // 默认自动布局
+  layoutMode: LayoutMode.AUTO, // 默认自动布局
   isThird: THIRD, // 默认三方账号登录
   localHide: false, // 默认不隐藏本地画面
   speakerName: true, //默认显示正在讲话人
