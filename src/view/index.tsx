@@ -47,6 +47,7 @@ import XYRTC, {
   IDeviceList,
   DEVICE_KIND,
   LayoutMode,
+  XYSubTitleAction,
 } from '@xylink/xy-rtc-sdk';
 import {
   IRotationInfoTotalItem,
@@ -130,7 +131,7 @@ function Home() {
   // 举手状态
   const [handStatus, setHandStatus] = useState(false);
   // 是否有字幕或点名
-  const [subTitle, setSubTitle] = useState<ISubTitleContent>({ action: 'cancel', content: '' });
+  const [subTitle, setSubTitle] = useState<ISubTitleContent>({ action: XYSubTitleAction.CANCEL, content: '' });
   // content
   const [content, setContent] = useState<IRoster | null>(null);
   // 主会场
@@ -383,7 +384,7 @@ function Home() {
     setVideo(user.muteVideo ? 'muteVideo' : 'unmuteVideo');
 
     // 重置字幕信息
-    setSubTitle({ action: 'cancel', content: '' });
+    setSubTitle({ action: XYSubTitleAction.CANCEL, content: '' });
 
     // 重置onhold
     setOnhold(false);

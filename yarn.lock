@@ -2207,10 +2207,10 @@
   resolved "https://registry.npmjs.org/@xtuc/long/-/long-4.2.2.tgz#d291c6a4e97989b5c61d9acf396ae4fe133a718d"
   integrity sha512-NuHqBY1PB/D8xU6s/thBgOAiAP7HOYDQ32+BFZILJ8ivkUkAHQnWfn6WhL79Owj1qmUnoN/YPhktdIoucipkAQ==
 
-"@xylink/xy-rtc-sdk@4.0.4":
-  version "4.0.4"
-  resolved "https://registry.npmmirror.com/@xylink/xy-rtc-sdk/-/xy-rtc-sdk-4.0.4.tgz#d19f359455865afb1622b5043c481b9c6805405c"
-  integrity sha512-XXjsLXYw9RlvPxieCa3NbQ2GlOI5LI55pdZyKBt1apa4r1xtSI+SJTMyR4GfU8kDP6mMXlLRXWbhwwiVA5DR0A==
+"@xylink/xy-rtc-sdk@4.0.5":
+  version "4.0.5"
+  resolved "https://registry.npmjs.org/@xylink/xy-rtc-sdk/-/xy-rtc-sdk-4.0.5.tgz#5175fa65121a513f15dcc793aa17449d9638b61e"
+  integrity sha512-1/TXCL+Tb/v0bjVolWFspRnWVQki9Uno15sWqmckLqmaQhexX6bOAk4jJuqPTBZBKvNwVS2EK1OpZrMkOaYYZA==
   dependencies:
     "@xylink/xy-toolkit" "^0.1.0"
 
